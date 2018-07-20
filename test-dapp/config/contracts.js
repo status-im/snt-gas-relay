@@ -32,6 +32,8 @@ module.exports = {
     ],
     gas: "auto",
     contracts: {
+      // TODO: Update to reference 000-gas-relayer branch.
+      
       "Identity": {"deploy": false},
       "SafeMath": {"deploy": false},
       "DelayedUpdatableInstance": {"deploy": false},

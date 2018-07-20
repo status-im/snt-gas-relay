@@ -10,7 +10,7 @@ class CallGasRelayed extends React.Component {
       super(props);
 
       this.state = {
-        account: '0x1847ab5a71eaa95315c3fc2d3dfb53b7e6e8f313',
+        account: '',
         address: this.props.IdentityGasRelay.options.address,
         topic: '0x4964656e',
         to: '0x0000000000000000000000000000000000000000',
@@ -37,6 +37,11 @@ class CallGasRelayed extends React.Component {
 
         let web3W = new Web3('ws://localhost:8546');
 
+        let accounts = await this.props.web3.eth.getAccounts();
+        this.setState({
+          account: accounts[0]
+        })
+
         let _skid = await web3W.shh.addSymKey(this.state.symKey);
         let _kid = await web3W.shh.newKeyPair();
         
@@ -60,9 +65,6 @@ class CallGasRelayed extends React.Component {
               this.setState({messages: this.state.messages})
             }
         });
-
-
-
       });
     }
 
@@ -234,7 +236,7 @@ class CallGasRelayed extends React.Component {
               <ControlLabel>Symmetric Key</ControlLabel>
               <InputGroup> 
                 <InputGroup.Addon>0x</InputGroup.Addon>
-                <FormControl type="text" placeholder="Sym Key" defaultValue={this.state.symKey} readOnly={true}  />
+                <FormControl type="text" placeholder="Sym Key" defaultValue={this.state.symKey}  />
               </InputGroup>
             </Col>
             <Col md={2}>
