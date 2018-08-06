@@ -24,7 +24,7 @@ class MessageProcessor {
     async _validateInput(message){
         const contract = this.settings.getContractByTopic(message.topic);
 
-        if(!/^0x[0-9a-f]{40}$/i.test(message.input.address)){
+        if(!(/^0x[0-9a-f]{40}$/i).test(message.input.address)){
             this._reply('Invalid address', message);
             return false;
         }
@@ -73,12 +73,12 @@ class MessageProcessor {
     }
 
     /*
-    _getFactor(input, contract, gasToken){	
-        if(contract.allowedFunctions[input.functionName].isToken){	
-            return this.web3.utils.toBN(this.settings.getToken(gasToken).pricePlugin.getFactor());	
-        } else {	
-            return this.web3.utils.toBN(1);	
-        }	
+    _getFactor(input, contract, gasToken){
+        if(contract.allowedFunctions[input.functionName].isToken){
+            return this.web3.utils.toBN(this.settings.getToken(gasToken).pricePlugin.getFactor());
+        } else {
+            return this.web3.utils.toBN(1);
+        }
     } */
 
     async process(error, message){
@@ -110,15 +110,15 @@ class MessageProcessor {
 
             this.web3.eth.estimateGas(p)
             .then((estimatedGas) => {
-                p.gas = parseInt(estimatedGas * 1.1)
+                p.gas = parseInt(estimatedGas * 1.1, 10);
                 return this.web3.eth.sendTransaction(p);
             })
             .then((receipt) => {
-                return this._reply("Transaction mined;" 
-                                    + receipt.transactionHash 
-                                    + ';' 
-                                    + JSON.stringify(receipt)
-                                    , message);
+                return this._reply("Transaction mined;" +
+                                    receipt.transactionHash +
+                                    ';' +
+                                    JSON.stringify(receipt),
+                                    message);
             }).catch((err) => {
                 this._reply("Couldn't mine transaction: " + err.message, message);
                 // TODO log this?

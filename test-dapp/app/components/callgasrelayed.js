@@ -1,8 +1,7 @@
-import Web3 from 'web3';
-
-import React from 'react';
-import { Grid, Row, Form, FormGroup, FormControl, HelpBlock, Button, ControlLabel, Col, InputGroup, Alert } from 'react-bootstrap';
+import {Alert, Button, Col, ControlLabel, Form, FormControl, Grid, HelpBlock, InputGroup, Row} from 'react-bootstrap';
 import AccountBalance from './accountBalance'; 
+import React from 'react';
+import Web3 from 'web3';
 
 class CallGasRelayed extends React.Component {
 
@@ -40,7 +39,7 @@ class CallGasRelayed extends React.Component {
         let accounts = await this.props.web3.eth.getAccounts();
         this.setState({
           account: accounts[0]
-        })
+        });
 
         let _skid = await web3W.shh.addSymKey(this.state.symKey);
         let _kid = await web3W.shh.newKeyPair();
@@ -59,22 +58,22 @@ class CallGasRelayed extends React.Component {
         }, (error, message, subscription) => {
             if(error) {
               console.log(error);
-              this.setState({errorMessage: error.message})
+              this.setState({errorMessage: error.message});
             } else {
               this.state.messages.push(this.props.web3.utils.hexToAscii(message.payload));
-              this.setState({messages: this.state.messages})
+              this.setState({messages: this.state.messages});
             }
         });
       });
     }
 
     handleChange(e, name){
-      this.state[name] = e.target.value;
-      this.setState(this.state);
+      const newState = {};
+      newState[name] = e.target.value;
+      this.setState(newState);
     }
 
-    async sendMessage(e){
-      
+    sendMessage(e){
       e.preventDefault();
 
       this.setState({
@@ -83,15 +82,17 @@ class CallGasRelayed extends React.Component {
       });
 
       try {
-        let jsonAbi = this.props.IdentityGasRelay._jsonInterface.filter(x => x.name == "callGasRelayed")[0]
-        let funCall = this.props.web3.eth.abi.encodeFunctionCall(jsonAbi, [this.state.to, 
+        let jsonAbi = this.props.IdentityGasRelay._jsonInterface.filter(x => x.name == "callGasRelayed")[0];
+        let funCall = this.props.web3.eth.abi.encodeFunctionCall(jsonAbi, [
+                                                                this.state.to, 
                                                                 this.state.value, 
                                                                 this.state.data, 
                                                                 this.state.nonce, 
                                                                 this.state.gasPrice, 
                                                                 this.state.gasLimit,
                                                                 this.state.gasToken,
-                                                                this.state.signature]);
+                                                                this.state.signature
+                                                              ]);
         let msgObj = { 
           symKeyID: this.state.skid, 
           sig: this.state.kid,
@@ -115,7 +116,7 @@ class CallGasRelayed extends React.Component {
           });
       } catch(error){
         console.error(error);
-        this.setState({errorMessage: error.message})
+        this.setState({errorMessage: error.message});
       }
     }
 
@@ -147,17 +148,14 @@ class CallGasRelayed extends React.Component {
         this.setState({signature: _signature});
       } catch(error){
         console.error(error);
-        this.setState({errorMessage: error.message})
+        this.setState({errorMessage: error.message});
       }
     }
 
     render(){
       return (<Grid>
         {
-            this.state.errorMessage != '' ?
-            <React.Fragment>
-              <Alert bsStyle="danger">{this.state.errorMessage}</Alert>
-            </React.Fragment> : ''
+            this.state.errorMessage != '' && <React.Fragment><Alert bsStyle="danger">{this.state.errorMessage}</Alert></React.Fragment>
         }
         <Form>
           <Row>
@@ -268,4 +266,4 @@ class CallGasRelayed extends React.Component {
     }
   }
 
-  export default CallGasRelayed;
+export default CallGasRelayed;

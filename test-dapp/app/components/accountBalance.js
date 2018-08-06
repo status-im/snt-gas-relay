@@ -1,7 +1,7 @@
-import web3 from 'Embark/web3';
 import EmbarkJS from 'Embark/EmbarkJS';
 import React from 'react';
- 
+import web3 from 'Embark/web3';
+
 class AccountBalance extends React.Component {
 
     constructor(props) {
@@ -15,8 +15,7 @@ class AccountBalance extends React.Component {
 
     componentDidMount(){
         EmbarkJS.onReady(err => {
-            if(!err)
-                this.updateBalances();
+            if(!err) this.updateBalances();
         });
     }
 
@@ -25,13 +24,13 @@ class AccountBalance extends React.Component {
 
         web3.eth.getBalance(this.props.address)
             .then(eth => { 
-                this.setState({ eth });
+                this.setState({eth});
             });
         
         this.props.RND.methods.balanceOf(this.props.address)
             .call()
             .then(rnd => { 
-                this.setState({ rnd });
+                this.setState({rnd});
             });
     }
 
@@ -42,7 +41,7 @@ class AccountBalance extends React.Component {
                 .then(() => {
                     this.updateBalances();
                     return true;
-                })
+                });
     }
 
     generateTokens(ev){
@@ -71,6 +70,6 @@ class AccountBalance extends React.Component {
 
             </div>;
     }
-};
+}
 
 export default AccountBalance;

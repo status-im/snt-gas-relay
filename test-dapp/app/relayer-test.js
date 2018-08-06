@@ -1,15 +1,12 @@
+import './relayer-test.css';
+import {Tab, Tabs} from 'react-bootstrap';
+import ApproveAndCallGasRelayed from './components/approveandcallgasrelayed';
+import CallGasRelayed from './components/callgasrelayed';
+import IdentityGasRelay from 'Embark/contracts/IdentityGasRelay';
+import RND from 'Embark/contracts/RND';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Tabs, Tab } from 'react-bootstrap';
-
-import EmbarkJS from 'Embark/EmbarkJS';
-import RND from 'Embark/contracts/RND';
-import IdentityGasRelay from 'Embark/contracts/IdentityGasRelay';
-
-import CallGasRelayed from './components/callgasrelayed';
-import ApproveAndCallGasRelayed from './components/approveandcallgasrelayed';
-
-import './relayer-test.css';
+import web3 from 'Embark/web3';
 
 class App extends React.Component {
 

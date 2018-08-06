@@ -15,19 +15,19 @@ class IdentityStrategy  {
         const parameterList = this.web3.eth.abi.decodeParameters(this.contract.allowedFunctions[message.input.functionName].inputs, message.input.functionParameters);
         return function(parameterName){
             return parameterList[parameterName];
-        }
+        };
     }
 
     async _validateInstance(message){
         const instanceCodeHash = this.web3.utils.soliditySha3(await this.web3.eth.getCode(message.input.address));
         const kernelVerifSignature = this.web3.utils.soliditySha3(this.contract.kernelVerification).slice(0, 10);
-        if(instanceCodeHash == null) return false;
+        if(instanceCodeHash === null) return false;
     
         let verificationResult = await this.web3.eth.call({
             to: this.contract.factoryAddress, 
             data: kernelVerifSignature + instanceCodeHash.slice(2)});
     
-        return this.web3.eth.abi.decodeParameter('bool', verificationResult);;
+        return this.web3.eth.abi.decodeParameter('bool', verificationResult);
     }
 
     async getBalance(token, message, gasToken){
@@ -67,7 +67,7 @@ class IdentityStrategy  {
         if(this.contract.isIdentity){
             let validInstance = await this._validateInstance(message);
             if(!validInstance){
-                return { success: false, message: "Invalid identity instance" };
+                return {success: false, message: "Invalid identity instance"};
             }
         }
 
@@ -75,9 +75,7 @@ class IdentityStrategy  {
 
         // Verifying if token is allowed
         const token = this.settings.getToken(params('_gasToken'));
-        if(token == undefined)
-            return { success: false, message: "Token not allowed" };
-
+        if(token == undefined) return {success: false, message: "Token not allowed"};
         
         // Determine if enough balance for baseToken
         const gasPrice = this.web3.utils.toBN(params('_gasPrice'));
@@ -85,9 +83,9 @@ class IdentityStrategy  {
         if(this.contract.allowedFunctions[message.input.functionName].isToken){
             const Token = new this.web3.eth.Contract(erc20ABI);
             Token.options.address = params('_baseToken');
-            const baseToken = new this.web3.utils.BN(await Token.methods.balanceOf(message.input.address).call()); 
+            // const baseToken = new this.web3.utils.BN(await Token.methods.balanceOf(message.input.address).call()); 
             if(balance.lt(this.web3.utils.BN(params('_value')))){
-                return { success: false, message: "Identity has not enough balance for specified value" };
+                return {success: false, message: "Identity has not enough balance for specified value"};
             }
         }
 
@@ -95,7 +93,7 @@ class IdentityStrategy  {
         const gasToken = params('_gasToken');
         const balance = await this.getBalance(token, message, gasToken);
         if(balance.lt(this.web3.utils.toBN(gasPrice.mul(gasLimit)))) {
-            return { success: false, message: "Identity has not enough tokens for gasPrice*gasLimit"};
+            return {success: false, message: "Identity has not enough tokens for gasPrice*gasLimit"};
         }
 
 
@@ -104,11 +102,10 @@ class IdentityStrategy  {
         try {
             estimatedGas = await this._estimateGas(message, latestBlock.gasLimit);
             if(gasLimit.lt(estimatedGas)) {
-                return { success: false, message: "Gas limit below estimated gas" };
+                return {success: false, message: "Gas limit below estimated gas"};
             } 
         } catch(exc){
-            if(exc.message.indexOf("revert") > -1)
-                return { success: false, message: "Transaction will revert" };
+            if(exc.message.indexOf("revert") > -1) return {success: false, message: "Transaction will revert"};
         }
 
         return {

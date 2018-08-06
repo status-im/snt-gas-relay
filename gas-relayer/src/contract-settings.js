@@ -17,13 +17,13 @@ class ContractSettings {
         this._processContracts();
     }
 
-    _setTokenPricePlugin(){	
-        for(let token in this.tokens){	
-            if(this.tokens[token].pricePlugin !== undefined){	
-                let PricePlugin = require(this.tokens[token].pricePlugin);	
-                this.tokens[token].pricePlugin = new PricePlugin(this.tokens[token]);	
-            }	
-        }	
+    _setTokenPricePlugin(){
+        for(let token in this.tokens){
+            if(this.tokens[token].pricePlugin !== undefined){
+                let PricePlugin = require(this.tokens[token].pricePlugin);
+                this.tokens[token].pricePlugin = new PricePlugin(this.tokens[token]);
+            }
+        }
     }
 
     getTokens(){
@@ -53,7 +53,7 @@ class ContractSettings {
             if(this.pendingToLoad == 0) this.events.emit("setup:complete", this);
             })
         .catch((err) => {
-            console.error("Invalid contract for " + contractName);
+            console.error("Invalid contract for " + topicName);
             console.error(err);
             process.exit();
             });
@@ -93,7 +93,7 @@ class ContractSettings {
 
             // Obtaining strategy
             if(this.contracts[topicName].strategy){
-                const strategy = require(this.contracts[topicName].strategy);	
+                const strategy = require(this.contracts[topicName].strategy);
                 this.contracts[topicName].strategy = new strategy(this.web3, this.config, this, this.contracts[topicName]);
             }
             

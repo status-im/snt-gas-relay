@@ -17,7 +17,7 @@ let connectionURL = `${config.node.local.protocol}://${config.node.local.host}:$
 const web3 = new Web3(connectionURL);
 
 web3.eth.net.isListening()
-.then(listening => events.emit('web3:connected', connectionURL))
+.then(() => events.emit('web3:connected', connectionURL))
 .catch(error => {
   console.error(error);
   process.exit();
@@ -34,13 +34,10 @@ events.on('web3:connected', connURL => {
 // Setting up Whisper options
 const shhOptions = {
   ttl: config.node.whisper.ttl,
-  minPow: config.node.whisper.minPow,
+  minPow: config.node.whisper.minPow
 };
 
 events.on('setup:complete', (settings) => {
-  
-
-  let kId;
   let symKId;
 
   // Listening to whisper
@@ -61,11 +58,8 @@ events.on('setup:complete', (settings) => {
       events.emit('server:listen', shhOptions, settings);
     }
 
-
-
     if(config.heartbeat.enabled){
 
-      let heartbeatSymKeyId;
       web3.shh.addSymKey(config.heartbeat.symKey)
         .then(heartbeatSymKeyId => { 
 
@@ -100,16 +94,17 @@ events.on('setup:complete', (settings) => {
 
 events.on('server:listen', (shhOptions, settings) => {
   let processor = new MessageProcessor(config, settings, web3, shhOptions.kId);
-  web3.shh.subscribe('messages', shhOptions, (error, message, subscription) => processor.process(error, message));
+  web3.shh.subscribe('messages', shhOptions, (error, message) => processor.process(error, message));
 });
 
 
 // Daemon helper functions
 
 process.on("uncaughtException", function(err) {
-    
+  // TODO
+  console.error(err);  
 });
 
 process.once("SIGTERM", function() {
-    log("Stopping...");
+  console.log("Stopping...");
 });

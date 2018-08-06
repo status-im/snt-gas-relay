@@ -1,9 +1,7 @@
-import Web3 from 'web3';
-
-import React from 'react';
-import { Grid, Row, Form, FormGroup, FormControl, HelpBlock, Button, ControlLabel, Col, InputGroup, Alert } from 'react-bootstrap';
+import {Alert, Button, Col, ControlLabel, Form, FormControl, Grid, HelpBlock, InputGroup, Row} from 'react-bootstrap';
 import AccountBalance from './accountBalance'; 
-
+import React from 'react';
+import Web3 from 'web3';
 
 class ApproveAndCallGasRelayed extends React.Component {
 
@@ -42,7 +40,7 @@ class ApproveAndCallGasRelayed extends React.Component {
         let accounts = await this.props.web3.eth.getAccounts();
         this.setState({
           account: accounts[0]
-        })
+        });
 
         let _skid = await web3W.shh.addSymKey(this.state.symKey);
         let _kid = await web3W.shh.newKeyPair();
@@ -58,24 +56,25 @@ class ApproveAndCallGasRelayed extends React.Component {
           "ttl": 20,
           "minPow": 0.8,
           "powTime": 1000
-        }, (error, message, subscription) => {
+        }, (error, message) => {
             if(error) {
               console.log(error);
-              this.setState({errorMessage: error.message})
+              this.setState({errorMessage: error.message});
             } else {
               this.state.messages.push(this.props.web3.utils.hexToAscii(message.payload));
-              this.setState({messages: this.state.messages})
+              this.setState({messages: this.state.messages});
             }
         });
       });
     }
 
     handleChange(e, name){
-      this.state[name] = e.target.value;
-      this.setState(this.state);
+      const newState = {};
+      newState[name] = e.target.value;
+      this.setState(newState);
     }
 
-    async sendMessage(e){
+    sendMessage(e){
       
       e.preventDefault();
 
@@ -85,8 +84,9 @@ class ApproveAndCallGasRelayed extends React.Component {
       });
 
       try {
-        let jsonAbi = this.props.IdentityGasRelay._jsonInterface.filter(x => x.name == "approveAndCallGasRelayed")[0]
-        let funCall = this.props.web3.eth.abi.encodeFunctionCall(jsonAbi, [this.state.baseToken,
+        let jsonAbi = this.props.IdentityGasRelay._jsonInterface.filter(x => x.name == "approveAndCallGasRelayed")[0];
+        let funCall = this.props.web3.eth.abi.encodeFunctionCall(jsonAbi, [
+                                                                           this.state.baseToken,
                                                                            this.state.to, 
                                                                            this.state.value, 
                                                                            this.state.data, 
@@ -94,7 +94,8 @@ class ApproveAndCallGasRelayed extends React.Component {
                                                                            this.state.gasPrice, 
                                                                            this.state.gasLimit,
                                                                            this.state.gasToken,
-                                                                           this.state.signature]);
+                                                                           this.state.signature
+                                                                          ]);
         let msgObj = { 
           symKeyID: this.state.skid, 
           sig: this.state.kid,
@@ -118,7 +119,7 @@ class ApproveAndCallGasRelayed extends React.Component {
           });
       } catch(error){
         console.error(error);
-        this.setState({errorMessage: error.message})
+        this.setState({errorMessage: error.message});
       }
     }
 
@@ -151,17 +152,14 @@ class ApproveAndCallGasRelayed extends React.Component {
         this.setState({signature: _signature});
       } catch(error){
         console.error(error);
-        this.setState({errorMessage: error.message})
+        this.setState({errorMessage: error.message});
       }
     }
 
     render(){
       return (<Grid>
         {
-            this.state.errorMessage != '' ?
-            <React.Fragment>
-              <Alert bsStyle="danger">{this.state.errorMessage}</Alert>
-            </React.Fragment> : ''
+            this.state.errorMessage != '' && <React.Fragment><Alert bsStyle="danger">{this.state.errorMessage}</Alert></React.Fragment>
         }
         <Form>
           <Row>
@@ -283,4 +281,4 @@ class ApproveAndCallGasRelayed extends React.Component {
     }
   }
 
-  export default ApproveAndCallGasRelayed;
+export default ApproveAndCallGasRelayed;
