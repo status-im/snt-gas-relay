@@ -12,6 +12,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import PropTypes from 'prop-types';
 import RefreshIcon from '@material-ui/icons/Refresh';
+import STT from 'Embark/contracts/STT';
 import Typography from '@material-ui/core/Typography';
 import config from '../config';
 import web3 from 'Embark/web3';
@@ -19,7 +20,10 @@ import {withStyles} from '@material-ui/core/styles';
 
 const styles = theme => ({
     button: {
-        marginRight: theme.spacing.unit * 10
+        marginRight: theme.spacing.unit * 2
+    },
+    icon: {
+        marginRight: theme.spacing.unit
     },
     container: {
         width: '100%',
@@ -43,12 +47,15 @@ class Status extends Component {
         super(props);
         this.state = {
             'identityEthBalance': 0,
+            'identitySTTBalance': 0,
             'relayerAddress': null,
             'relayerEthBalance': 0,
+            'relayerSTTBalance': 0,
             'block': 0,
             'submitState': {
                 'etherSend': false,
-                'createIdentity': false
+                'createIdentity': false,
+                'generateSTT': false
             }
         };
     }
@@ -81,11 +88,44 @@ class Status extends Component {
             .then(identityEthBalance => { 
                 this.setState({identityEthBalance});
             });
+
+            STT.methods.balanceOf(this.props.identityAddress)
+            .call()
+            .then(identitySTTBalance => {
+                this.setState({identitySTTBalance: web3.utils.fromWei(identitySTTBalance, 'ether')});
+            });
         }
 
         web3.eth.getBalance(this.state.relayerAddress)
         .then(relayerEthBalance => { 
             this.setState({relayerEthBalance});
+        });
+
+        STT.methods.balanceOf(this.state.relayerAddress)
+        .call()
+        .then(relayerSTTBalance => {
+            this.setState({relayerSTTBalance: web3.utils.fromWei(relayerSTTBalance, 'ether')});
+        });
+    }
+
+    generateSTT = (event) => {
+        event.preventDefault();
+
+        let submitState = this.state.submitState;
+        submitState.generateSTT = true;
+        this.setState({submitState});
+
+        let toSend = STT.methods.generateTokens(this.props.identityAddress, web3.utils.toWei(5000, 'ether'));
+        toSend.estimateGas()
+        .then(estimatedGas => {
+            return toSend.send({gas: estimatedGas + 10000});
+        })
+        .then((receipt) => {
+            console.log(receipt);
+
+            submitState = this.state.submitState;
+            submitState.generateSTT = false;
+            this.setState({submitState});
         });
     }
 
@@ -121,19 +161,25 @@ class Status extends Component {
 
     render(){
         const {classes, identityAddress} = this.props;
-        const {identityEthBalance, relayerAddress, relayerEthBalance, submitState, block} = this.state;
+        const {identityEthBalance, relayerAddress, relayerEthBalance, identitySTTBalance, relayerSTTBalance, submitState, block} = this.state;
 
         return <div className={classes.container}>
-            { (submitState.createIdentity || submitState.etherSend) && <LinearProgress /> }
+            { (submitState.createIdentity || submitState.etherSend || submitState.generateSTT) && <LinearProgress /> }
             <List dense={true}>
                 <ListItem>
                     <Typography variant="display1">
                         Identity
                     </Typography>
                     <Button className={classes.button} color="primary" aria-label="New Identity" onClick={this.createIdentity} disabled={submitState.createIdentity}>
-                        <RefreshIcon />
+                        <RefreshIcon className={classes.icon} />
                         Create new identity
+                    </Button>
+                    {
+                    <Button className={classes.button} color="primary" aria-label="Generate STT" onClick={this.generateSTT} disabled={submitState.generateSTT}>
+                        <AddIcon className={classes.icon} />
+                        Generate 5K STT (only on dev)
                     </Button> 
+                    }
                 </ListItem>
                 <ListItem className={classes.root}>
                     <ListItemIcon>
@@ -153,8 +199,8 @@ class Status extends Component {
                     secondary="ETH Balance  (wei)"
                     />
                     <ListItemText
-                    primary={0}
-                    secondary="STT Balance  (wei)"
+                    primary={identitySTTBalance}
+                    secondary="STT Balance"
                     />
                 </ListItem>
             </List>
@@ -165,7 +211,7 @@ class Status extends Component {
                         Miner
                     </Typography>
                     <Button className={classes.button} color="primary" aria-label="Add ether" onClick={this.sendEther} disabled={submitState.etherSend}>
-                        <AddIcon />
+                        <AddIcon className={classes.icon} />
                         Send ether
                     </Button> 
                 </ListItem>
@@ -187,7 +233,7 @@ class Status extends Component {
                     secondary="ETH Balance (wei)"
                     />
                     <ListItemText
-                    primary={0}
+                    primary={relayerSTTBalance}
                     secondary="STT Balance (wei)"
                     />
                 </ListItem>
