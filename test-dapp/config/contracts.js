@@ -7,7 +7,7 @@ module.exports = {
       port: 8545, // Port of the blockchain node
       type: "rpc" // Type of connection (ws or rpc),
       // Accounts to use instead of the default account to populate your wallet
-      /*,accounts: [
+       /*,accounts: [
         {
           privateKey: "your_private_key",
           balance: "5 ether"  // You can set the balance of the account in the dev environment
@@ -35,6 +35,8 @@ module.exports = {
       // TODO: Update to reference 000-gas-relayer branch.
       
       "Identity": {"deploy": false},
+      "ERC20Receiver": {"deploy": false},
+      "TestToken": {"deploy": false},
       "SafeMath": {"deploy": false},
       "DelayedUpdatableInstance": {"deploy": false},
       "DelayedUpdatableInstanceStorage": {"deploy": false},
@@ -43,9 +45,9 @@ module.exports = {
       "InstanceStorage": {"deploy": false},
       "MiniMeTokenFactory": {"args":[]},
       "MiniMeToken": {"deploy": false},
-      "RND": {
+      "STT": {
         "instanceOf": "MiniMeToken",
-        "args":["$MiniMeTokenFactory", "0x0", "0x0", "Random Test Token", 18, "RND", true],
+        "args":["$MiniMeTokenFactory", "0x0", "0x0", "Status Test Token", 18, "STT", true],
         "gasLimit": 4000000
       },
       "UpdatableInstance": {"deploy": false},
