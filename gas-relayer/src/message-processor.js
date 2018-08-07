@@ -9,6 +9,7 @@ class MessageProcessor {
 
     _reply(text, message, receipt){
         if(message.sig !== undefined){
+            console.log(text);
             this.web3.shh.post({ 
                 pubKey: message.sig, 
                 sig: this.kId,
@@ -86,7 +87,6 @@ class MessageProcessor {
           console.error(error);
         } else {
             this._extractInput(message);
-
             const contract = this.settings.getContractByTopic(message.topic);
 
             console.info("Processing request to: %s, %s", message.input.address, message.input.functionName);

@@ -81,10 +81,10 @@ class IdentityStrategy  {
         const gasPrice = this.web3.utils.toBN(params('_gasPrice'));
         const gasLimit = this.web3.utils.toBN(params('_gasLimit'));
         if(this.contract.allowedFunctions[message.input.functionName].isToken){
-            const Token = new this.web3.eth.Contract(erc20ABI);
+            const Token = new this.web3.eth.Contract(erc20ABI.abi);
             Token.options.address = params('_baseToken');
-            // const baseToken = new this.web3.utils.BN(await Token.methods.balanceOf(message.input.address).call()); 
-            if(balance.lt(this.web3.utils.BN(params('_value')))){
+            const tokenBalance = new this.web3.utils.BN(await Token.methods.balanceOf(message.input.address).call()); 
+            if(tokenBalance.lt(this.web3.utils.toBN(params('_value')))){
                 return {success: false, message: "Identity has not enough balance for specified value"};
             }
         }
