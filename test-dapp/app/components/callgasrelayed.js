@@ -283,7 +283,7 @@ class CallGasRelayed extends Component {
 
         { this.state.messagingError && <MySnackbarContentWrapper variant="error" message={this.state.messagingError} /> }
         <Card className={classes.card}>
-            <CardHeader title="2 Message" />
+            <CardHeader title="2. Message" />
             <CardContent>   
                 <TextField
                     id="signature"

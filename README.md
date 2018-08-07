@@ -9,9 +9,10 @@ Gas relayer mplementation for economic abstraction. This project consists of two
 ```
 cd test-dapp
 chmod a+x setup_dev_env.sh
-embark blockchain
+embark reset
+embark run
 ```
-- Execute ./setup_dev_env.sh to create the test account
+- When Embark finishes loading, execute ./setup_dev_env.sh to create the test account
 
 ## Node
 
