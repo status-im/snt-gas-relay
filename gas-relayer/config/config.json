@@ -36,7 +36,7 @@
                 "currency": "USD"
             }
         },
-        "0x064f4044ed9f0aD71b0d9261dC60b05F534d0cf0": {
+        "%STT_ADDRESS%": {
             "name": "Status Test Token",
             "symbol": "STT",
             "minAccepted":{
@@ -51,7 +51,7 @@
         "IdentityGasRelay": {
             "abiFile": "../abi/IdentityGasRelay.json",
             "isIdentity": true,
-            "factoryAddress": "0xB0e275864E946449C18b08E392647AC0c79626Ed",
+            "factoryAddress": "%IdentityFactoryAddress%",
             "kernelVerification": "isKernel(bytes32)",
             "allowedFunctions": [
                 { 
