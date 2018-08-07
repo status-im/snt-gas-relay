@@ -51,8 +51,7 @@ module.exports = {
       "Controlled": {"deploy": false},
       "Owned": {"deploy": false},
       "IdentityKernel": {"deploy": false},
-
-      // Test Contracts
+     
       "STT": {
         "instanceOf": "MiniMeToken",
         "args":["$MiniMeTokenFactory", "0x0", "0x0", "Status Test Token", 18, "STT", true],
@@ -67,7 +66,9 @@ module.exports = {
         "gasLimit": 5000000,
         "onDeploy": ["IdentityFactory.methods.setKernel('$IdentityGasRelay').send({gasLimit: 6000000})"]
       },
-      "TestContract": {}
+      "TestContract": {
+        "args": ["$STT"]
+      }
     }
   }
 };

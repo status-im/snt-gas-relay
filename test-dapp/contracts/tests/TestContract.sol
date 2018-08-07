@@ -1,16 +1,26 @@
 pragma solidity ^0.4.23;
-
+import "../token/ERC20Token.sol";
 
 contract TestContract {
 
     event TestFunctionExecuted(uint val);
 
     uint public val = 0;
+    ERC20Token public token;
+
+    constructor(address _token) public {
+        token = ERC20Token(_token);
+    }
 
     function test() public {
         val++;
         emit TestFunctionExecuted(val);
-    }   
+    }
+
+    function sentSTT(uint _amount) public {
+        require(token.allowance(msg.sender, address(this)) >= _amount);
+        require(token.transferFrom(msg.sender, address(this), _amount));
+    }
 
     /*
     Helper function to be used in unit testing due to error in web3

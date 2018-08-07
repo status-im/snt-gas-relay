@@ -4,17 +4,13 @@ import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import CardHeader from '@material-ui/core/CardHeader';
-import EmbarkJS from 'Embark/EmbarkJS';
-import ErrorIcon from '@material-ui/icons/Error';
 import Grid from '@material-ui/core/Grid';
 import IdentityGasRelay from 'Embark/contracts/IdentityGasRelay';
+import MySnackbarContentWrapper from './snackbar';
 import PropTypes from 'prop-types';
 import STT from 'Embark/contracts/STT';
-import SnackbarContent from '@material-ui/core/SnackbarContent';
 import TestContract from 'Embark/contracts/TestContract';
 import TextField from '@material-ui/core/TextField';
-import Typography from '@material-ui/core/Typography';
-import classNames from 'classnames';
 import config from '../config';
 import web3 from 'Embark/web3';
 import {withStyles} from '@material-ui/core/styles';
@@ -47,45 +43,13 @@ class CallGasRelayed extends Component {
             msgSent: '',
             payload: '',
             message: '',
-            web3W: null, 
+            web3js: null, 
             transactionError: '',
             messagingError: '',
             submitting: false
         };
     }
 
-    componentDidMount(){
-        EmbarkJS.onReady(() => {
-            web3.shh.addSymKey(config.relaySymKey)
-            .then((skid) => {
-                this.setState({skid});
-
-                const subsOptions = {
-                    topic: [this.state.topic],
-                    symKeyID: skid
-                };
-
-                EmbarkJS.Messages.listenTo(subsOptions, (error, message) => {
-                    if(error){
-                        console.error(error);
-                    } else {
-                        console.groupCollapsed("Message Sent");
-                        console.log(message);
-                        console.groupEnd();
-                    }
-                    this.setState({submitting: false});
-                });
-
-                EmbarkJS.Messages.listenTo({usePrivateKey: true}, (error, message) => {
-                    if(error){
-                        console.error(error);
-                    } else {
-                        this.setState({message: JSON.stringify(message.data, null, " ")});
-                    }
-                });
-            });
-        });
-    }
 
     handleChange = name => event => {
         this.setState({
@@ -98,8 +62,6 @@ class CallGasRelayed extends Component {
   
         this.setState({
           msgSent: false,
-          payload: '',
-          message: '',
           transactionError: ''
         });
   
@@ -129,13 +91,15 @@ class CallGasRelayed extends Component {
 
     sendMessage = event => {
         event.preventDefault();
-  
+
+        const {web3, kid, skid} = this.props;
+
         this.setState({
-          message: '',
           messagingError: '',
           submitting: true
         });
-  
+        this.props.clearMessages();
+        
         try {
             let jsonAbi = IdentityGasRelay._jsonInterface.filter(x => x.name == "callGasRelayed")[0];
             let funCall = web3.eth.abi.encodeFunctionCall(jsonAbi, [
@@ -150,17 +114,23 @@ class CallGasRelayed extends Component {
                                                                 ]);
             const sendOptions = {
                 ttl: 1000, 
+                sig: kid,
                 powTarget: 1, 
                 powTime: 20, 
                 topic: this.state.topic,
-                symKeyID: this.state.skid,
-                data: {
+                symKeyID: skid,
+                payload: web3.utils.toHex({
                     'address': this.props.identityAddress,
                     'encodedFunctionCall': funCall
-                }
+                })
             };
-            EmbarkJS.Messages.sendMessage(sendOptions);
-            
+
+            web3.shh.post(sendOptions)
+            .then(() => {
+               this.setState({submitting: false});
+               console.log("Message sent");
+               return true;
+            });
         } catch(error){
             this.setState({messagingError: error.message, submitting: false});
         }
@@ -173,7 +143,7 @@ class CallGasRelayed extends Component {
     }
 
     testContractDataCall = () => {
-        TestContract.methods.val().call().then(value => this.setState({message: "TestContract.val(): " + value}));
+        TestContract.methods.val().call().then(value => console.log({message: "TestContract.val(): " + value}));
     }
 
     render(){
@@ -321,14 +291,6 @@ class CallGasRelayed extends Component {
                 </Button>
             </CardActions>   
         </Card>
-        <Card className={classes.card}>
-                <CardContent>
-                    <Typography>
-                    Message Received: 
-                    </Typography>
-                    <pre>{this.state.message}</pre>
-                </CardContent>
-        </Card>
         </div>;
     }
 }
@@ -336,57 +298,11 @@ class CallGasRelayed extends Component {
 CallGasRelayed.propTypes = {
     classes: PropTypes.object.isRequired,
     nonce: PropTypes.string.isRequired,
-    identityAddress: PropTypes.string
+    identityAddress: PropTypes.string,
+    web3: PropTypes.object,
+    kid: PropTypes.string,
+    skid: PropTypes.string,
+    clearMessages: PropTypes.func
 };
-
-const variantIcon = {
-    error: ErrorIcon
-};
-  
-const styles1 = theme => ({
-error: {
-    backgroundColor: theme.palette.error.dark
-},
-icon: {
-    fontSize: 20
-},
-iconVariant: {
-    opacity: 0.9,
-    marginRight: theme.spacing.unit
-},
-message: {
-    display: 'flex',
-    alignItems: 'center'
-}
-});
-
-function MySnackbarContent(props) {
-    const {classes, className, message, variant, ...other} = props;
-    const Icon = variantIcon[variant];
-  
-    return (
-    <SnackbarContent
-      className={classNames(classes[variant], className)}
-      aria-describedby="client-snackbar"
-      message={
-        <span id="client-snackbar" className={classes.message}>
-          <Icon className={classNames(classes.icon, classes.iconVariant)} />
-          {message}
-        </span>
-      }
-      {...other}
-    />
-  );
-}
-
-MySnackbarContent.propTypes = {
-  classes: PropTypes.object.isRequired,
-  className: PropTypes.string,
-  message: PropTypes.node,
-  onClose: PropTypes.func,
-  variant: PropTypes.oneOf(['success', 'warning', 'error', 'info']).isRequired
-};
-
-const MySnackbarContentWrapper = withStyles(styles1)(MySnackbarContent);
 
 export default withStyles(styles)(CallGasRelayed);

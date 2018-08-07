@@ -2,6 +2,8 @@ import React, {Component} from 'react';
 import AddIcon from '@material-ui/icons/Add';
 import BalanceIcon from '@material-ui/icons/AccountBalance';
 import Button from '@material-ui/core/Button';
+import Card from '@material-ui/core/Card';
+import CardContent from '@material-ui/core/CardContent';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import EmbarkJS from 'Embark/EmbarkJS';
 import Identity from 'Embark/contracts/Identity';
@@ -24,6 +26,9 @@ const styles = theme => ({
     button: {
         marginRight: theme.spacing.unit * 2
     },
+    card: {
+        marginBottom: theme.spacing.unit * 2
+    },
     icon: {
         marginRight: theme.spacing.unit
     },
@@ -38,7 +43,7 @@ const styles = theme => ({
       },
     right: {
         position: 'absolute',
-        top: theme.spacing.unit * 2,
+        top: theme.spacing.unit * 12,
         right: theme.spacing.unit * 2
     }
   });
@@ -73,17 +78,16 @@ class Status extends Component {
                 relayerAddress: config.relayAccount
             });
 
-            setInterval(() => {
-                this.getBlock();
-            }, 5000);
+            this.getBlock();
         });
     }
 
     getBlock = () => {
-        web3.eth.getBlock('latest')
-        .then((block) => {
+        web3.eth.subscribe('newBlockHeaders')
+        .on('data', (block) => {
             this.setState({block: block.number});
             this.readChain();
+            return true;
         });
     }
     
@@ -105,6 +109,9 @@ class Status extends Component {
             .call()
             .then((nonce) => {
                 this.props.nonceUpdateFunction(nonce);
+            })
+            .catch(() => { 
+                console.log("Address " + this.props.identityAddress + " is not an identity");
             });
         }
 
@@ -145,7 +152,7 @@ class Status extends Component {
         event.preventDefault();
 
         let submitState = this.state.submitState;
-        submitState.createIdentity = true;
+        submitState.createIdentity = false;
         this.setState({submitState});
 
         this.props.identityCreationFunction(() => {
@@ -155,11 +162,16 @@ class Status extends Component {
         });
     }
 
+    randomizeAddress = (event) => {
+        event.preventDefault();
+        this.props.randomizeAddress();
+    }
+
     sendEther = (event) => {
         event.preventDefault();
 
         let submitState = this.state.submitState;
-        submitState.etherSend = true;
+        submitState.etherSend = false;
         this.setState({submitState});
 
         web3.eth.sendTransaction({from: web3.eth.defaultAccount, to: this.state.relayerAddress, value: web3.utils.toWei('1', "ether")})
@@ -177,6 +189,16 @@ class Status extends Component {
 
         return <div className={classes.container}>
             { (submitState.createIdentity || submitState.etherSend || submitState.generateSTT) && <LinearProgress /> }
+
+            <Card className={classes.card}>
+                <CardContent>
+                    <Typography>
+                    Whisper Messages: 
+                    </Typography>
+                    <pre>{this.props.message}</pre>
+                </CardContent>
+            </Card>
+
             <List dense={true}>
                 <ListItem>
                     <Typography variant="display1">
@@ -229,7 +251,7 @@ class Status extends Component {
             <List dense={true}>
                 <ListItem>
                     <Typography variant="display1">
-                        Miner
+                        Relayer
                     </Typography>
                     <Button className={classes.button} color="primary" aria-label="Add ether" onClick={this.sendEther} disabled={submitState.etherSend}>
                         <AddIcon className={classes.icon} />
@@ -275,7 +297,9 @@ Status.propTypes = {
     identityAddress: PropTypes.string,
     nonce: PropTypes.string.isRequired,
     identityCreationFunction: PropTypes.func.isRequired,
-    nonceUpdateFunction: PropTypes.func.isRequired
+    nonceUpdateFunction: PropTypes.func.isRequired,
+    randomizeAddress: PropTypes.func.isRequired,
+    message: PropTypes.string
 };
   
 export default withStyles(styles)(Status);
