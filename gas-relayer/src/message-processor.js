@@ -7,7 +7,7 @@ class MessageProcessor {
         this.kId = kId;
     }
 
-    _reply(text, message){
+    _reply(text, message, receipt){
         if(message.sig !== undefined){
             this.web3.shh.post({ 
                 pubKey: message.sig, 
@@ -16,7 +16,7 @@ class MessageProcessor {
                 powTarget:this.config.node.whisper.minPow, 
                 powTime: this.config.node.whisper.powTime, 
                 topic: message.topic, 
-                payload: this.web3.utils.fromAscii(text)
+                payload: this.web3.utils.fromAscii(JSON.stringify({message:text, receipt}, null, " "))
             }).catch(console.error);
         }
     }
@@ -59,8 +59,8 @@ class MessageProcessor {
         };
 
         try {
-            let parsedObj = JSON.parse(this.web3.utils.toAscii(message.payload));
-           
+            const msg = this.web3.utils.toAscii(message.payload);
+            let parsedObj = JSON.parse(msg);
             obj.address = parsedObj.address;
             obj.functionName = parsedObj.encodedFunctionCall.slice(0, 10);
             obj.functionParameters = "0x" + parsedObj.encodedFunctionCall.slice(10);
@@ -114,11 +114,7 @@ class MessageProcessor {
                 return this.web3.eth.sendTransaction(p);
             })
             .then((receipt) => {
-                return this._reply("Transaction mined;" +
-                                    receipt.transactionHash +
-                                    ';' +
-                                    JSON.stringify(receipt),
-                                    message);
+                return this._reply("Transaction mined", message, receipt);
             }).catch((err) => {
                 this._reply("Couldn't mine transaction: " + err.message, message);
                 // TODO log this?

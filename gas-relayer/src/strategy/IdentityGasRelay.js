@@ -102,7 +102,7 @@ class IdentityStrategy  {
         try {
             estimatedGas = await this._estimateGas(message, latestBlock.gasLimit);
             if(gasLimit.lt(estimatedGas)) {
-                return {success: false, message: "Gas limit below estimated gas"};
+                return {success: false, message: "Gas limit below estimated gas (" + estimatedGas + ")"};
             } 
         } catch(exc){
             if(exc.message.indexOf("revert") > -1) return {success: false, message: "Transaction will revert"};
