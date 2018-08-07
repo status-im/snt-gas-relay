@@ -1,8 +1,6 @@
 {
   "contracts": ["contracts/**"],
   "app": {
-    "js/relayer-test.js": ["app/relayer-test.js"],
-    "relayer-test.html": "app/relayer-test.html",
     "js/dapp.js": ["app/dapp.js"],
     "dapp.html": "app/dapp.html",
     "css/dapp.css": ["app/css/**"],
