@@ -4,12 +4,14 @@ import BalanceIcon from '@material-ui/icons/AccountBalance';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import EmbarkJS from 'Embark/EmbarkJS';
+import Identity from 'Embark/contracts/Identity';
 import KeyIcon from '@material-ui/icons/VpnKey';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
+import NumberIcon from '@material-ui/icons/ConfirmationNumber';
 import PropTypes from 'prop-types';
 import RefreshIcon from '@material-ui/icons/Refresh';
 import STT from 'Embark/contracts/STT';
@@ -17,7 +19,7 @@ import Typography from '@material-ui/core/Typography';
 import config from '../config';
 import web3 from 'Embark/web3';
 import {withStyles} from '@material-ui/core/styles';
-
+window.Id = Identity;
 const styles = theme => ({
     button: {
         marginRight: theme.spacing.unit * 2
@@ -71,18 +73,21 @@ class Status extends Component {
                 relayerAddress: config.relayAccount
             });
 
-            this.updateBalances();
-            web3.eth.subscribe('newBlockHeaders')
-                .on("data", (blockHeader) => {
-                    if(blockHeader.number){
-                        this.setState({block: blockHeader.number});
-                        this.updateBalances();
-                    }
-                });
+            setInterval(() => {
+                this.getBlock();
+            }, 5000);
+        });
+    }
+
+    getBlock = () => {
+        web3.eth.getBlock('latest')
+        .then((block) => {
+            this.setState({block: block.number});
+            this.readChain();
         });
     }
     
-    updateBalances = () => {
+    readChain = () => {
         if(this.props.identityAddress){
             web3.eth.getBalance(this.props.identityAddress)
             .then(identityEthBalance => { 
@@ -93,6 +98,13 @@ class Status extends Component {
             .call()
             .then(identitySTTBalance => {
                 this.setState({identitySTTBalance: web3.utils.fromWei(identitySTTBalance, 'ether')});
+            });
+
+            Identity.options.address = this.props.identityAddress;
+            Identity.methods.nonce()
+            .call()
+            .then((nonce) => {
+                this.props.nonceUpdateFunction(nonce);
             });
         }
 
@@ -115,7 +127,7 @@ class Status extends Component {
         submitState.generateSTT = true;
         this.setState({submitState});
 
-        let toSend = STT.methods.generateTokens(this.props.identityAddress, web3.utils.toWei(5000, 'ether'));
+        let toSend = STT.methods.generateTokens(this.props.identityAddress, web3.utils.toWei('5000', 'ether'));
         toSend.estimateGas()
         .then(estimatedGas => {
             return toSend.send({gas: estimatedGas + 10000});
@@ -150,7 +162,7 @@ class Status extends Component {
         submitState.etherSend = true;
         this.setState({submitState});
 
-        web3.eth.sendTransaction({from: web3.eth.defaultAccount, to: this.state.relayerAddress, value: web3.utils.toWei(1, "ether")})
+        web3.eth.sendTransaction({from: web3.eth.defaultAccount, to: this.state.relayerAddress, value: web3.utils.toWei('1', "ether")})
             .then((receipt) => {
                 console.log(receipt);
                 submitState = this.state.submitState;
@@ -160,7 +172,7 @@ class Status extends Component {
     }
 
     render(){
-        const {classes, identityAddress} = this.props;
+        const {classes, identityAddress, nonce} = this.props;
         const {identityEthBalance, relayerAddress, relayerEthBalance, identitySTTBalance, relayerSTTBalance, submitState, block} = this.state;
 
         return <div className={classes.container}>
@@ -188,6 +200,15 @@ class Status extends Component {
                     <ListItemText
                     primary={identityAddress}
                     secondary="Address"
+                    />
+                </ListItem>
+                <ListItem className={classes.root}>
+                    <ListItemIcon>
+                        <NumberIcon />
+                    </ListItemIcon>
+                    <ListItemText
+                    primary={nonce}
+                    secondary="Nonce"
                     />
                 </ListItem>
                 <ListItem className={classes.root}>
@@ -252,7 +273,9 @@ class Status extends Component {
 Status.propTypes = {
     classes: PropTypes.object.isRequired,
     identityAddress: PropTypes.string,
-    identityCreationFunction: PropTypes.func.isRequired
+    nonce: PropTypes.string.isRequired,
+    identityCreationFunction: PropTypes.func.isRequired,
+    nonceUpdateFunction: PropTypes.func.isRequired
 };
   
 export default withStyles(styles)(Status);

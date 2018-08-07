@@ -22,16 +22,6 @@ class AccountBalance extends React.Component {
     updateBalances(ev){
         if(ev) ev.preventDefault();
 
-        web3.eth.getBalance(this.props.address)
-            .then(eth => { 
-                this.setState({eth});
-            });
-        
-        this.props.RND.methods.balanceOf(this.props.address)
-            .call()
-            .then(rnd => { 
-                this.setState({rnd});
-            });
     }
 
     sendEther(ev){
@@ -56,8 +46,8 @@ class AccountBalance extends React.Component {
     }
 
     render(){
-        const rnd = web3.utils.fromWei(this.state.rnd, "ether");
-        const eth = web3.utils.fromWei(this.state.eth, "ether");
+        const rnd = 1;
+        const eth =2;
 
         return <div>
               <h3>{this.props.name}</h3>
