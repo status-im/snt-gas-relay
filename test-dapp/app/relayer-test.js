@@ -1,9 +1,9 @@
 import './relayer-test.css';
 import {Tab, Tabs} from 'react-bootstrap';
 import ApproveAndCallGasRelayed from './components/approveandcallgasrelayed';
-import CallGasRelayed from './components/callgasrelayed';
+import CallGasRelayed from './components/callgasrelayed1';
 import IdentityGasRelay from 'Embark/contracts/IdentityGasRelay';
-import RND from 'Embark/contracts/RND';
+import RND from 'Embark/contracts/STT';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import web3 from 'Embark/web3';

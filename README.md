@@ -4,15 +4,17 @@ Gas relayer mplementation for economic abstraction. This project consists of two
 - `test-dapp`: DApp created for testing purposes. It allows the easy creation of the messages expected by the service.
 
 ## Installation
-- Install the latest develop version of embark: `npm install -g https://github.com/embark-framework/embark.git@develop`
+- `geth` is required for installation
+- Install the latest develop version of embark: `npm install -g https://github.com/embark-framework/embark.git`
 - If running a development version of the gas relay
 ```
 cd test-dapp
 chmod a+x setup_dev_env.sh
+npm install
 embark reset
-embark run
+embark blockchain
 ```
-- When Embark finishes loading, execute ./setup_dev_env.sh to create the test account
+- When Embark finishes loading, execute `embark run` && `./setup_dev_env.sh` to create the test account
 
 ## Node
 
