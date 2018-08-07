@@ -3,10 +3,13 @@ pragma solidity ^0.4.23;
 
 contract TestContract {
 
-    event TestFunctionExecuted();
+    event TestFunctionExecuted(uint val);
+
+    uint public val = 0;
 
     function test() public {
-        emit TestFunctionExecuted();
+        val++;
+        emit TestFunctionExecuted(val);
     }   
 
     /*

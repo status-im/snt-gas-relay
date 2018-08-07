@@ -45,27 +45,29 @@ module.exports = {
       "InstanceStorage": {"deploy": false},
       "MiniMeTokenFactory": {"args":[]},
       "MiniMeToken": {"deploy": false},
+      "SNTController": {"deploy": false},
+      "UpdatedIdentityKernel": {"deploy": false},
+      "UpdatableInstance": {"deploy": false},
+      "Controlled": {"deploy": false},
+      "Owned": {"deploy": false},
+      "IdentityKernel": {"deploy": false},
+
+      // Test Contracts
       "STT": {
         "instanceOf": "MiniMeToken",
         "args":["$MiniMeTokenFactory", "0x0", "0x0", "Status Test Token", 18, "STT", true],
         "gasLimit": 4000000
       },
-      "UpdatableInstance": {"deploy": false},
-      "Controlled": {"deploy": false},
-      "Owned": {"deploy": false},
       "IdentityGasRelay": {
         "deploy": true,
         "args": [[], [], [], 1, 1, "0x0000000000000000000000000000000000000000"] 
       },
-      "IdentityKernel": {"deploy": false},
       "IdentityFactory": {
         "args":[], 
         "gasLimit": 5000000,
-        "onDeploy": ["IdentityFactory.methods.setKernel('$IdentityGasRelay').send({gasLimit: 1000000})"]
+        "onDeploy": ["IdentityFactory.methods.setKernel('$IdentityGasRelay').send({gasLimit: 6000000})"]
       },
-      "SNTController": {"deploy": false},
-      "UpdatedIdentityKernel": {"deploy": false},
-      "TestContract": {"deploy": false}
+      "TestContract": {}
     }
   }
 };
