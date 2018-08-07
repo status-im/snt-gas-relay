@@ -12,7 +12,6 @@ import PropTypes from 'prop-types';
 import STT from 'Embark/contracts/STT';
 import TestContract from 'Embark/contracts/TestContract';
 import TextField from '@material-ui/core/TextField';
-import Typography from '@material-ui/core/Typography';
 import config from '../config';
 import web3 from 'Embark/web3';
 import {withStyles} from '@material-ui/core/styles';
@@ -49,7 +48,10 @@ class ApproveAndCallGasRelayed extends Component {
 
     componentDidMount(){
         EmbarkJS.onReady(() => {
-            this.setState({baseToken: STT.options.address});
+            this.setState({
+                baseToken: STT.options.address,
+                gasToken: STT.options.address
+            });
         });
     }
 

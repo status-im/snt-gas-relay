@@ -4,6 +4,7 @@ import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import CardHeader from '@material-ui/core/CardHeader';
+import EmbarkJS from 'Embark/EmbarkJS';
 import Grid from '@material-ui/core/Grid';
 import IdentityGasRelay from 'Embark/contracts/IdentityGasRelay';
 import MySnackbarContentWrapper from './snackbar';
@@ -50,6 +51,13 @@ class CallGasRelayed extends Component {
         };
     }
 
+    componentDidMount(){
+        EmbarkJS.onReady(() => {
+            this.setState({
+                gasToken: STT.options.address
+            });
+        });
+    }
 
     handleChange = name => event => {
         this.setState({

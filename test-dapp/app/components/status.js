@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {Component, Fragment} from 'react';
 import AddIcon from '@material-ui/icons/Add';
 import BalanceIcon from '@material-ui/icons/AccountBalance';
 import Button from '@material-ui/core/Button';
@@ -43,7 +43,7 @@ const styles = theme => ({
       },
     right: {
         position: 'absolute',
-        top: theme.spacing.unit * 12,
+        top: theme.spacing.unit * 4,
         right: theme.spacing.unit * 2
     }
   });
@@ -187,9 +187,7 @@ class Status extends Component {
         const {classes, identityAddress, nonce} = this.props;
         const {identityEthBalance, relayerAddress, relayerEthBalance, identitySTTBalance, relayerSTTBalance, submitState, block} = this.state;
 
-        return <div className={classes.container}>
-            { (submitState.createIdentity || submitState.etherSend || submitState.generateSTT) && <LinearProgress /> }
-
+        return <Fragment>
             <Card className={classes.card}>
                 <CardContent>
                     <Typography>
@@ -198,6 +196,10 @@ class Status extends Component {
                     <pre>{this.props.message}</pre>
                 </CardContent>
             </Card>
+            <div className={classes.container}>
+            { (submitState.createIdentity || submitState.etherSend || submitState.generateSTT) && <LinearProgress /> }
+
+            
 
             <List dense={true}>
                 <ListItem>
@@ -287,7 +289,8 @@ class Status extends Component {
                 Block<br />#{block}
                 </Typography>
             </div>
-        </div>;
+        </div>
+        </Fragment>;
     }
 
 }
