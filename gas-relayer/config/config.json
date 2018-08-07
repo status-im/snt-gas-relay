@@ -12,7 +12,7 @@
             "port": 8545
         },
         "blockchain": {
-            "account": "0x91b3c570ace45716010e162cbbc1b27cd1a10b65"
+            "account": "0xb8d851486d1c953e31a44374aca11151d49b8bb3"
         },
         "whisper": {
             "symKey": "0xd0d905c1c62b810b787141430417caf2b3f54cffadb395b7bb39fdeb8f17266b",
@@ -36,9 +36,9 @@
                 "currency": "USD"
             }
         },
-        "0xD10e6dAe987Dcc0B3ADaA375C9f59690a4C97a27": {
-            "name": "Status Network Token",
-            "symbol": "SNT",
+        "0x064f4044ed9f0aD71b0d9261dC60b05F534d0cf0": {
+            "name": "Status Test Token",
+            "symbol": "STT",
             "minAccepted":{
                 "value": 1,
                 "currency": "USD"
@@ -51,7 +51,7 @@
         "IdentityGasRelay": {
             "abiFile": "../abi/IdentityGasRelay.json",
             "isIdentity": true,
-            "factoryAddress": "0x0391a4eeDA5e6e9eEF5B672E3494c19bcE9Bc976",
+            "factoryAddress": "0xB0e275864E946449C18b08E392647AC0c79626Ed",
             "kernelVerification": "isKernel(bytes32)",
             "allowedFunctions": [
                 { 

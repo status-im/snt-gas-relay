@@ -3,6 +3,15 @@ Gas relayer mplementation for economic abstraction. This project consists of two
 - `gas-relayer`: nodejs service that listens to whisper on a symmetric key, with specific topics, and processes any transaction.
 - `test-dapp`: DApp created for testing purposes. It allows the easy creation of the messages expected by the service.
 
+## Installation
+- Install the latest develop version of embark: `npm install -g https://github.com/embark-framework/embark.git@develop`
+- If running a development version of the gas relay
+```
+cd test-dapp
+chmod a+x setup_dev_env.sh
+embark blockchain
+```
+- Execute ./setup_dev_env.sh to create the test account
 
 ## Node
 
@@ -14,6 +23,7 @@ Before executing this program, `config/config.json` must be setup and `npm insta
 - Symmetric key used to send the heartbeats that notify the tokens and prices accepted
 - Accepted tokens information
 - Contract configuration
+This program is configured with the default values for a embark installation run from 0
 
 A `geth` node running whisper (via `-shh` option) is required. To execute the gas-relayer, you may use any of the following three methods.
 
@@ -24,7 +34,7 @@ nodemon src/service.js
 ```
 
 ## Test DApp
-To run the test dapp, use `embark run` and then browse `http://localhost:8000/relayer-test.html`.
+To run the test dapp, use `embark run` and then browse `http://localhost:8000/dapp.html`.
 
 The gas relayer service needs to be running, and configured correctly to process the transactions. Things to take in account are: the account used in embark, and the contract addresses.
 
