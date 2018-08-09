@@ -1,10 +1,8 @@
 const EventEmitter = require('events');
 const Web3 = require('web3');
-const config = require('../config/config.json');
-
+const config = require('../config/config.js');
 const ContractSettings = require('./contract-settings');
 const MessageProcessor = require('./message-processor');
-
 
 // IDEA: A node should call an API (probably from a status node) to register itself as a 
 //      token gas relayer.

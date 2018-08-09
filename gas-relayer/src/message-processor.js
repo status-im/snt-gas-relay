@@ -23,13 +23,10 @@ class MessageProcessor {
     }
 
     async _validateInput(message){
+        console.info("Processing request to: %s, %s", message.input.address, message.input.functionName);
+
         const contract = this.settings.getContractByTopic(message.topic);
 
-        if(!(/^0x[0-9a-f]{40}$/i).test(message.input.address)){
-            this._reply('Invalid address', message);
-            return false;
-        }
-            
         if(contract == undefined){
             this._reply('Invalid topic', message);
             return false;
@@ -47,7 +44,12 @@ class MessageProcessor {
                 this._reply('Invalid contract code', message);
                 return false;
             }
-        }  
+        } else {
+            if(!(/^0x[0-9a-f]{40}$/i).test(message.input.address)){
+                this._reply('Invalid address', message);
+                return false;
+            }
+        }
         return true;
     }
 
@@ -88,8 +90,6 @@ class MessageProcessor {
         } else {
             this._extractInput(message);
             const contract = this.settings.getContractByTopic(message.topic);
-
-            console.info("Processing request to: %s, %s", message.input.address, message.input.functionName);
 
             if(!await this._validateInput(message)) return; // TODO Log
 
