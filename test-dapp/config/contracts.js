@@ -45,17 +45,18 @@ module.exports = {
       "InstanceStorage": {"deploy": false},
       "MiniMeTokenFactory": {"args":[]},
       "MiniMeToken": {"deploy": false},
-      "SNTController": {"deploy": false},
       "UpdatedIdentityKernel": {"deploy": false},
       "UpdatableInstance": {"deploy": false},
       "Controlled": {"deploy": false},
       "Owned": {"deploy": false},
       "IdentityKernel": {"deploy": false},
-     
       "STT": {
         "instanceOf": "MiniMeToken",
         "args":["$MiniMeTokenFactory", "0x0", "0x0", "Status Test Token", 18, "STT", true],
         "gasLimit": 4000000
+      },
+      "SNTController": {
+        "args": ["0x5f803F54679577fC974813E48abF012A243dD439", "$STT"]
       },
       "IdentityGasRelay": {
         "deploy": true,
