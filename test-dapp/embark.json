@@ -1,8 +1,10 @@
 {
   "contracts": ["contracts/**"],
   "app": {
-    "js/dapp.js": ["app/dapp.js"],
-    "dapp.html": "app/dapp.html",
+    "js/identity.js": ["app/identity.js"],
+    "identity.html": "app/identity.html",
+    "js/sntcontroller.js": ["app/sntcontroller.js"],
+    "sntcontroller.html": "app/sntcontroller.html",
     "css/dapp.css": ["app/css/**"],
     "images/": ["app/images/**"]
   },

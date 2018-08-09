@@ -6,13 +6,13 @@ import EmbarkJS from 'Embark/EmbarkJS';
 import IdentityFactory from 'Embark/contracts/IdentityFactory';
 import IdentityGasRelay from 'Embark/contracts/IdentityGasRelay';
 import PropTypes from 'prop-types';
-import Status from './status';
+import Status from './status-identity';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
+import Typography from '@material-ui/core/Typography';
 import Web3 from 'web3';
-import {Typography} from '@material-ui/core';
-import {withStyles} from '@material-ui/core/styles';
 import config from '../config';
+import {withStyles} from '@material-ui/core/styles';
 
 
 const styles = {};

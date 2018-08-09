@@ -37,7 +37,7 @@ nodemon src/service.js
 ```
 
 ## Test DApp
-To run the test dapp, use `embark run` and then browse `http://localhost:8000/dapp.html`.
+To run the test dapp, use `embark run` and then browse `http://localhost:8000/identity.html`.
 
 The gas relayer service needs to be running, and configured correctly to process the transactions. Things to take in account are: the account used in embark, and the contract addresses.
 

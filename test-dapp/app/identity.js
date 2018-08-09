@@ -1,5 +1,5 @@
 import React, {Component, Fragment} from 'react';
-import Body from './components/body';
+import Body from './components/body-identity';
 import Header from './components/header';
 import ReactDOM from 'react-dom';
 
