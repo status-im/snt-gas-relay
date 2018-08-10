@@ -157,6 +157,11 @@ class CallGasRelayed extends Component {
     render(){
         const {classes} = this.props;
         return <div>
+        <Card className={classes.card}>
+            <CardContent>
+                <b>This functionality is used when a Identity will invoke a contract function or transfer ether without paying fees </b>
+            </CardContent>
+        </Card>
         { this.state.transactionError && <MySnackbarContentWrapper variant="error" message={this.state.transactionError} /> }
         <Card className={classes.card}>
             <CardHeader title="1. Transaction Data" />

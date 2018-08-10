@@ -1,6 +1,7 @@
 {
   "contracts": ["contracts/**"],
   "app": {
+    "index.html": "app/index.html",
     "js/identity.js": ["app/identity.js"],
     "identity.html": "app/identity.html",
     "js/sntcontroller.js": ["app/sntcontroller.js"],

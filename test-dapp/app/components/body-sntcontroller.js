@@ -94,7 +94,7 @@ class Body extends Component {
         return <Fragment>
             <Tabs value={tab} onChange={this.handleChange}>
                 <Tab label="Transfer SNT" />
-                <Tab label="????" />
+                <Tab label="Execute" />
             </Tabs>
             {tab === 0 && <Container><TransferSNT clearMessages={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} /></Container>}
             {tab === 1 && <Container>TODO</Container>}

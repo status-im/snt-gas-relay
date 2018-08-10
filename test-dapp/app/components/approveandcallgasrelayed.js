@@ -15,6 +15,7 @@ import TextField from '@material-ui/core/TextField';
 import config from '../config';
 import web3 from 'Embark/web3';
 import {withStyles} from '@material-ui/core/styles';
+import { Typography } from '@material-ui/core';
 const styles = theme => ({
     root: {
         width: '100%',
@@ -155,6 +156,11 @@ class ApproveAndCallGasRelayed extends Component {
     render(){
         const {classes} = this.props;
         return <div>
+        <Card className={classes.card}>
+            <CardContent>
+                <b>This functionality is used when a Identity will invoke a contract function that requires a transfer of Tokens</b>
+            </CardContent>
+        </Card>
         { this.state.transactionError && <MySnackbarContentWrapper variant="error" message={this.state.transactionError} /> }
         <Card className={classes.card}>
             <CardHeader title="1. Transaction Data" />
