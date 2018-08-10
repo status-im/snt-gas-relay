@@ -14,6 +14,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import NumberIcon from '@material-ui/icons/ConfirmationNumber';
 import PropTypes from 'prop-types';
+import SNTController from 'Embark/contracts/SNTController';
 import STT from 'Embark/contracts/STT';
 import Typography from '@material-ui/core/Typography';
 import config from '../config';
@@ -101,15 +102,19 @@ class Status extends Component {
                 this.setState({addressSTTBalance: web3.utils.fromWei(addressSTTBalance, 'ether')});
             });
 
-            /*Identity.options.address = this.props.walletAddress;
-            Identity.methods.nonce()
-            .call()
-            .then((nonce) => {
-                this.props.nonceUpdateFunction(nonce);
-            })
-            .catch(() => { 
-                console.log("Address " + this.props.walletAddress + " is not a valid wallet");
-            });*/
+            web3.eth.getAccounts()
+            .then(accounts => {
+                SNTController.methods.signNonce(accounts[2])
+                .call()
+                .then((nonce) => {
+                    this.props.nonceUpdateFunction(nonce);
+                    return true;
+                })
+                .catch(() => { 
+                    console.log("Address " + this.props.walletAddress + " is not a valid wallet");
+                });
+                return true;
+            });
         }
 
         web3.eth.getBalance(this.state.relayerAddress)
@@ -142,6 +147,19 @@ class Status extends Component {
             submitState = this.state.submitState;
             submitState.generateSTT = false;
             this.setState({submitState});
+        });
+    }
+
+    changeSNTController = event => {
+        event.preventDefault();
+        const toSend = STT.methods.changeController(SNTController.options.address);
+
+        toSend.estimateGas()
+        .then(estimatedGas => {
+            return toSend.send({gasLimit: estimatedGas + 100000});
+        })
+        .then(receipt => {
+            console.log(receipt);
         });
     }
 
@@ -182,12 +200,14 @@ class Status extends Component {
                     <Typography variant="display1">
                         Address
                     </Typography>
-                    {
                     <Button className={classes.button} color="primary" aria-label="Generate STT" onClick={this.generateSTT} disabled={submitState.generateSTT}>
                         <AddIcon className={classes.icon} />
-                        Generate 5K STT (only on dev)
+                        1. Generate 5K STT (only on dev)
                     </Button> 
-                    }
+                    <Button className={classes.button} color="primary" aria-label="Generate STT" onClick={this.changeSNTController}>
+                        <AddIcon className={classes.icon} />
+                        2. Change SNT Controller
+                    </Button> 
                 </ListItem>
                 <ListItem className={classes.root}>
                     <ListItemIcon>

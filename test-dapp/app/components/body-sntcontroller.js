@@ -1,6 +1,7 @@
 import React, {Component, Fragment} from 'react';
 import Divider from '@material-ui/core/Divider';
 import EmbarkJS from 'Embark/EmbarkJS';
+import STT from 'Embark/contracts/STT';
 import PropTypes from 'prop-types';
 import Status from './status-sntcontroller';
 import Tab from '@material-ui/core/Tab';
@@ -12,6 +13,7 @@ import config from '../config';
 import web3 from 'Embark/web3';
 import {withStyles} from '@material-ui/core/styles';
 
+window.STT = STT;
 
 const styles = {};
 

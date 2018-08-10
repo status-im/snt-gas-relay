@@ -456,7 +456,7 @@ contract MiniMeToken is MiniMeTokenInterface, Controlled {
         uint _amount
     )
         public
-        onlyController
+        // onlyController TODO: UNCOMMENT THIS. THIS WAS DISABLED FOR DEMO PURPOSES
         returns (bool)
     {
         uint curTotalSupply = totalSupplyAt(block.number);

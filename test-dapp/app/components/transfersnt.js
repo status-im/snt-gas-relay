@@ -8,6 +8,8 @@ import Grid from '@material-ui/core/Grid';
 import MySnackbarContentWrapper from './snackbar';
 import PropTypes from 'prop-types';
 import SNTController from 'Embark/contracts/SNTController';
+import STT from 'Embark/contracts/STT';
+
 import TestContract from 'Embark/contracts/TestContract';
 import TextField from '@material-ui/core/TextField';
 import config from '../config';
@@ -51,6 +53,15 @@ class TransferSNT extends Component {
             [name]: event.target.value
         });
     };
+
+    getBalance = (event) => {
+        event.preventDefault();
+        STT.methods.balanceOf(this.state.to)
+        .call()
+        .then(balance => {
+            console.log("Balance of " + this.state.to + ": " + balance + " STT");
+        });
+    }
 
     sign = (event) => {
         if(event) event.preventDefault();
@@ -188,6 +199,8 @@ class TransferSNT extends Component {
                 <Button color="primary" onClick={this.sign}>
                     Sign Message
                 </Button>
+                <Button size="small" onClick={this.getBalance}>STT.methods.balanceOf(to).call()</Button>
+
             </CardActions>
         </Card>
 
