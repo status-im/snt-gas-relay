@@ -36,7 +36,7 @@ module.exports = {
                 "currency": "USD"
             }
         },
-        "0xe9da775D1563DF526F031D241082722C492c7492": {
+        "%STTAddress%": {
             "name": "Status Test Token",
             "symbol": "STT",
             "minAccepted":{
@@ -51,7 +51,7 @@ module.exports = {
         "IdentityGasRelay": {
             "abiFile": "../abi/IdentityGasRelay.json",
             "isIdentity": true,
-            "factoryAddress": "0x163b607b43002776f2901b8b5Ee33b9c0e83149C",
+            "factoryAddress": "%IdentityFactoryAddress%",
             "kernelVerification": "isKernel(bytes32)",
             "allowedFunctions": [
                 { 
@@ -68,7 +68,7 @@ module.exports = {
         "SNTController": {
             "abiFile": "../abi/SNTController.json",
             "isIdentity": false,
-            "address": "0x31B50180F8120964a689492BcE4B44f54C4A2F4e",
+            "address": "%SNTController%",
             "allowedFunctions": [
                 {
                     "function":"transferSNT(address,uint256,uint256,uint256,bytes)"
