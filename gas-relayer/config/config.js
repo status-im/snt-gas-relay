@@ -38,7 +38,7 @@ module.exports = {
         },
         "%STTAddress%": {
             "name": "Status Test Token",
-            "symbol": "STT",
+            "symbol": "SNT",
             "minAccepted":{
                 "value": 1,
                 "currency": "USD"
