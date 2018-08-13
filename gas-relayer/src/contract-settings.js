@@ -34,6 +34,16 @@ class ContractSettings {
         return this.tokens[token];
     }
 
+    getTokenBySymbol(symbol){
+        for(let token in this.tokens){
+            if(this.tokens[token].symbol == symbol){
+                const tokenObj = this.tokens[token];
+                tokenObj.address = token;
+                return tokenObj;
+            }
+        }
+    }
+
     getContractByTopic(topicName){
         return this.contracts[topicName];
     }
