@@ -43,7 +43,7 @@ class IdentityStrategy extends Strategy {
 
         // gasPrice * limit calculation
         const gasToken = params('_gasToken');
-        const balance = await this.getBalance(token, message, gasToken);
+        const balance = await this.getBalance(message.input.address, token, message, gasToken);
         if(balance.lt(this.web3.utils.toBN(gasPrice.mul(gasLimit)))) {
             return {success: false, message: "Identity has not enough tokens for gasPrice*gasLimit"};
         }

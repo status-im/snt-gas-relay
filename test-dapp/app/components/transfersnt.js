@@ -97,7 +97,7 @@ class TransferSNT extends Component {
         }
     }
 
-    sendMessage = event => {
+    sendMessage = async event => {
         event.preventDefault();
 
         const {web3, kid, skid} = this.props;
@@ -117,6 +117,9 @@ class TransferSNT extends Component {
                                                                 this.state.gasPrice, 
                                                                 this.state.signature
                                                                 ]);
+
+            const accounts = await web3.eth.getAccounts();
+
             const sendOptions = {
                 ttl: 1000, 
                 sig: kid,
@@ -126,6 +129,7 @@ class TransferSNT extends Component {
                 symKeyID: skid,
                 payload: web3.utils.toHex({
                     'address': SNTController.options.address,
+                    'wallet': accounts[2],
                     'encodedFunctionCall': funCall
                 })
             };
