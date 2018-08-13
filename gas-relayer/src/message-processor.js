@@ -65,6 +65,7 @@ class MessageProcessor {
             const msg = this.web3.utils.toAscii(message.payload);
             let parsedObj = JSON.parse(msg);
             obj.address = parsedObj.address;
+            obj.wallet = parsedObj.wallet;
             obj.functionName = parsedObj.encodedFunctionCall.slice(0, 10);
             obj.functionParameters = "0x" + parsedObj.encodedFunctionCall.slice(10);
             obj.payload = parsedObj.encodedFunctionCall;
