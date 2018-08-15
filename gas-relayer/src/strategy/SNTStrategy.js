@@ -1,6 +1,8 @@
 const Strategy = require('./BaseStrategy');
 
 const TransferSNT = "0x916b6511";
+const ExecuteGasRelayed = "0x754e6ab0";
+
 
 class SNTStrategy extends Strategy {
 
@@ -21,13 +23,33 @@ class SNTStrategy extends Strategy {
             const gas = this.web3.utils.toBN(estimatedGas);
             const balance = await this.getBalance(message.input.wallet, token, message, token.address);
             const value = this.web3.utils.toBN(params('_amount'));
-            const requiredGas = value.add(gas); // Adding 10% - TODO: tune this value
+            const requiredGas = value.add(gas);
 
             if(balance.lt(requiredGas)){
                 return {success: false, message: "Address has not enough balance to transfer specified value + fees (" + requiredGas.toString() + ")"};
             }
-        } else {
-            // TODO: logic is needed for executeGasRelayed. 
+        } else if(message.input.functionName == ExecuteGasRelayed){
+            const latestBlock = await this.web3.eth.getBlock("latest");
+            let estimatedGas = 0;
+            try {
+                estimatedGas = await this._estimateGas(message, latestBlock.gasLimit);
+            } catch(exc){
+                if(exc.message.indexOf("revert") > -1) return {success: false, message: "Transaction will revert"};
+            }
+
+            const balance = await this.getBalance(message.input.wallet, token, message, token.address);
+            if(balance.lt(estimatedGas)){
+                return {success: false, message: "Address has not enough balance to execute the transaction (" + estimatedGas.toString() + ")"};
+            }
+
+            const gasMinimal = this.web3.utils.toBN(params('_gasMinimal'));
+            if(gasMinimal.lt(estimatedGas)){
+                return {success: false, message: "Gas minimal is less than estimated gas (" + estimatedGas.toString() + ")"};
+            }
+
+            if(balance.lt(gasMinimal)){
+                return {success: false, message: "Address has not enough balance for the specified _gasMinimal"};
+            }
         }
         
         return {
