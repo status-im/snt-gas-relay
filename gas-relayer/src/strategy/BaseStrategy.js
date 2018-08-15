@@ -10,14 +10,13 @@ class BaseStrategy {
         this.config = config;
     }
 
-    async getBalance(address, token, message, gasToken){
+    async getBalance(address, token){
         // Determining balances of token used
-        // TODO: probably token and gasToken can be unified
         if(token.symbol == "ETH"){
             return new this.web3.utils.BN(await this.web3.eth.getBalance(address));
         } else {
             const Token = new this.web3.eth.Contract(erc20ABI.abi);
-            Token.options.address = gasToken;
+            Token.options.address = token.address;
             return new this.web3.utils.BN(await Token.methods.balanceOf(address).call());  
         }
     }
