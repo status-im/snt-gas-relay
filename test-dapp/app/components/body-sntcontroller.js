@@ -7,6 +7,7 @@ import Status from './status-sntcontroller';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import TransferSNT from './transfersnt';
+import Execute from './execute';
 import Typography from '@material-ui/core/Typography';
 import Web3 from 'web3';
 import config from '../config';
@@ -97,7 +98,7 @@ class Body extends Component {
                 <Tab label="Execute" />
             </Tabs>
             {tab === 0 && <Container><TransferSNT clearMessages={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} /></Container>}
-            {tab === 1 && <Container>TODO</Container>}
+            {tab === 1 && <Container><Execute clearMessage={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} /></Container>}
             <Divider />
             <Container>
                 <Status message={message} nonceUpdateFunction={this.updateNonce} nonce={nonce} walletAddress={walletAddress} />

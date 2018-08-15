@@ -9,12 +9,12 @@ import MySnackbarContentWrapper from './snackbar';
 import PropTypes from 'prop-types';
 import SNTController from 'Embark/contracts/SNTController';
 import STT from 'Embark/contracts/STT';
-
-import TestContract from 'Embark/contracts/TestContract';
 import TextField from '@material-ui/core/TextField';
 import config from '../config';
 import web3 from 'Embark/web3';
 import {withStyles} from '@material-ui/core/styles';
+import TestContract from 'Embark/contracts/TestContract';
+
 const styles = theme => ({
     root: {
         width: '100%',
@@ -25,16 +25,16 @@ const styles = theme => ({
     }
   });
 
-window.TestContract = TestContract;
-class TransferSNT extends Component {
+class Execute extends Component {
 
     constructor(props){
         super(props);
         this.state = {
             topic: '0x534e5443',
-            to: '0x0000000000000000000000000000000000000000',
-            amount: 0,
+            allowedContract: '0x0000000000000000000000000000000000000000',
+            data: '0x00',
             gasPrice: 0,
+            gasMinimal: 0,
             signature: '',
             kid: null,
             skid: null,
@@ -54,15 +54,6 @@ class TransferSNT extends Component {
         });
     };
 
-    getBalance = (event) => {
-        event.preventDefault();
-        STT.methods.balanceOf(this.state.to)
-        .call()
-        .then(balance => {
-            console.log("Balance of " + this.state.to + ": " + balance + " STT");
-        });
-    }
-
     sign = (event) => {
         if(event) event.preventDefault();
   
@@ -75,11 +66,12 @@ class TransferSNT extends Component {
         
         try {
             let message = "";
-            SNTController.methods.getTransferSNTHash(
-                this.state.to,
-                this.state.amount,
+            SNTController.methods.getExecuteGasRelayedHash(
+                this.state.allowedContract,
+                this.state.data,
                 this.props.nonce,
-                this.state.gasPrice
+                this.state.gasPrice,
+                this.state.gasMinimal
             )
             .call()
             .then(result => {
@@ -97,6 +89,16 @@ class TransferSNT extends Component {
         }
     }
 
+    testContractDataSend = () => {
+        let jsonAbi = TestContract._jsonInterface.filter(x => x.name == "test")[0];
+        let funCall = web3.eth.abi.encodeFunctionCall(jsonAbi, []);
+        this.setState({data: funCall, allowedContract: TestContract.options.address});
+    }
+
+    testContractDataCall = () => {
+        TestContract.methods.val().call().then(value => console.log({message: "TestContract.val(): " + value}));
+    }
+
     sendMessage = async event => {
         event.preventDefault();
 
@@ -109,12 +111,13 @@ class TransferSNT extends Component {
         this.props.clearMessages();
         
         try {
-            let jsonAbi = SNTController._jsonInterface.filter(x => x.name == "transferSNT")[0];
+            let jsonAbi = SNTController._jsonInterface.filter(x => x.name == "executeGasRelayed")[0];
             let funCall = web3.eth.abi.encodeFunctionCall(jsonAbi, [
-                                                                this.state.to, 
-                                                                this.state.amount, 
-                                                                this.props.nonce, 
-                                                                this.state.gasPrice, 
+                                                                this.state.allowedContract,
+                                                                this.state.data,
+                                                                this.props.nonce,
+                                                                this.state.gasPrice,
+                                                                this.state.gasMinimal,
                                                                 this.state.signature
                                                                 ]);
 
@@ -150,7 +153,7 @@ class TransferSNT extends Component {
         return <div>
         <Card className={classes.card}>
             <CardContent>
-                <b>This functionality is used for simple wallets to perform SNT transfers without paying eth fees</b>
+                <b>This functionality is used for simple wallets executing transactions and paying fees in SNT</b>
             </CardContent>
         </Card>
         { this.state.transactionError && <MySnackbarContentWrapper variant="error" message={this.state.transactionError} /> }
@@ -159,22 +162,22 @@ class TransferSNT extends Component {
             <CardContent>
                 <form noValidate autoComplete="off">
                 <Grid container spacing={24}>
-                    <Grid item xs={5}>
+                    <Grid item xs={6}>
                         <TextField
-                            id="to"
-                            label="To"
-                            value={this.state.to}
-                            onChange={this.handleChange('to')}
+                            id="allowedContract"
+                            label="Contract"
+                            value={this.state.allowedContract}
+                            onChange={this.handleChange('allowedContract')}
                             margin="normal"
                             fullWidth
                             />
                     </Grid>
-                    <Grid item xs={2}>
+                    <Grid item xs={6}>
                         <TextField
-                            id="amount"
-                            label="Amount"
-                            value={this.state.amount}
-                            onChange={this.handleChange('amount')}
+                            id="data"
+                            label="Data"
+                            value={this.state.data}
+                            onChange={this.handleChange('data')}
                             margin="normal"
                             fullWidth
                             />
@@ -201,6 +204,16 @@ class TransferSNT extends Component {
                             fullWidth
                             />
                     </Grid>
+                    <Grid item xs={2}>
+                        <TextField
+                            id="gasMinimal"
+                            label="Gas Minimal"
+                            value={this.state.gasMinimal}
+                            onChange={this.handleChange('gasMinimal')}
+                            margin="normal"
+                            fullWidth
+                            />
+                    </Grid>
                 </Grid>
                 </form>
             </CardContent>
@@ -208,7 +221,8 @@ class TransferSNT extends Component {
                 <Button color="primary" onClick={this.sign}>
                     Sign Message
                 </Button>
-                <Button size="small" onClick={this.getBalance}>STT.methods.balanceOf(to).call()</Button>
+                <Button size="small" onClick={this.testContractDataSend}>TestContract.methods.test().send()</Button>
+                <Button size="small" onClick={this.testContractDataCall}>TestContract.methods.test().call()</Button>
 
             </CardActions>
         </Card>
@@ -257,7 +271,7 @@ class TransferSNT extends Component {
     }
 }
 
-TransferSNT.propTypes = {
+Execute.propTypes = {
     classes: PropTypes.object.isRequired,
     nonce: PropTypes.string.isRequired,
     identityAddress: PropTypes.string,
@@ -267,4 +281,4 @@ TransferSNT.propTypes = {
     clearMessages: PropTypes.func
 };
 
-export default withStyles(styles)(TransferSNT);
+export default withStyles(styles)(Execute);
