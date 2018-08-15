@@ -4,7 +4,7 @@ const erc20ABI = require('../../abi/ERC20Token.json');
 class IdentityStrategy extends Strategy {
 
     async _validateInstance(message){
-        const instanceCodeHash = this.web3.utils.soliditySha3(await this.web3.eth.getCode(message.input.address));
+        const instanceCodeHash = this.web3.utils.soliditySha3(await this.web3.eth.getCode(message.input.contract));
         const kernelVerifSignature = this.web3.utils.soliditySha3(this.contract.kernelVerification).slice(0, 10);
         if(instanceCodeHash === null) return false;
     
@@ -35,14 +35,14 @@ class IdentityStrategy extends Strategy {
         if(this.contract.allowedFunctions[message.input.functionName].isToken){
             const Token = new this.web3.eth.Contract(erc20ABI.abi);
             Token.options.address = params('_baseToken');
-            const tokenBalance = new this.web3.utils.BN(await Token.methods.balanceOf(message.input.address).call()); 
+            const tokenBalance = new this.web3.utils.BN(await Token.methods.balanceOf(message.input.contract).call()); 
             if(tokenBalance.lt(this.web3.utils.toBN(params('_value')))){
                 return {success: false, message: "Identity has not enough balance for specified value"};
             }
         }
 
         // gasPrice * limit calculation
-        const balance = await this.getBalance(message.input.address, token);
+        const balance = await this.getBalance(message.input.contract, token);
         if(balance.lt(this.web3.utils.toBN(gasPrice.mul(gasLimit)))) {
             return {success: false, message: "Identity has not enough tokens for gasPrice*gasLimit"};
         }

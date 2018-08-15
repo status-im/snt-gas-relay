@@ -23,7 +23,7 @@ class MessageProcessor {
     }
 
     async _validateInput(message){
-        console.info("Processing request to: %s, %s", message.input.address, message.input.functionName);
+        console.info("Processing request to: %s, %s", message.input.contract, message.input.functionName);
 
         const contract = this.settings.getContractByTopic(message.topic);
 
@@ -37,24 +37,31 @@ class MessageProcessor {
             return false;
         }
             
-        // Get code from address and compare it against the contract code
+        // Get code from contract and compare it against the contract code
         if(!contract.isIdentity){
-            const code = this.web3.utils.soliditySha3(await this.web3.eth.getCode(message.input.address));
+            const code = this.web3.utils.soliditySha3(await this.web3.eth.getCode(message.input.contract));
             if(code != contract.code){
                 this._reply('Invalid contract code', message);
                 return false;
             }
         } else {
-            if(!(/^0x[0-9a-f]{40}$/i).test(message.input.address)){
-                this._reply('Invalid address', message);
+            if(!(/^0x[0-9a-f]{40}$/i).test(message.input.contract)){
+                this._reply('Invalid contract address', message);
                 return false;
             }
         }
+
+        if(message.input.address && !(/^0x[0-9a-f]{40}$/i).test(message.input.address)){
+            this._reply('Invalid address', message);
+            return false;
+        }
+
         return true;
     }
 
     _extractInput(message){
         let obj = {
+            contract: null,
             address: null,
             functionName: null,
             functionParameters: null,
@@ -64,8 +71,8 @@ class MessageProcessor {
         try {
             const msg = this.web3.utils.toAscii(message.payload);
             let parsedObj = JSON.parse(msg);
+            obj.contract = parsedObj.contract;
             obj.address = parsedObj.address;
-            obj.wallet = parsedObj.wallet;
             obj.functionName = parsedObj.encodedFunctionCall.slice(0, 10);
             obj.functionParameters = "0x" + parsedObj.encodedFunctionCall.slice(10);
             obj.payload = parsedObj.encodedFunctionCall;
@@ -103,7 +110,7 @@ class MessageProcessor {
 
             let p = {
                 from: this.config.node.blockchain.account,
-                to: message.input.address,
+                to: message.input.contract,
                 value: 0,
                 data: message.input.payload,
                 gasPrice: this.config.gasPrice

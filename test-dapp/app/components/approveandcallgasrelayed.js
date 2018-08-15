@@ -126,8 +126,9 @@ class ApproveAndCallGasRelayed extends Component {
                 topic: this.state.topic,
                 symKeyID: skid,
                 payload: web3.utils.toHex({
-                    'address': this.props.identityAddress,
-                    'encodedFunctionCall': funCall
+                    'contract': this.props.identityAddress,
+                    'encodedFunctionCall': funCall,
+                    'address': web3.eth.defaultAccount
                 })
             };
 

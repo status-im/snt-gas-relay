@@ -128,8 +128,8 @@ class TransferSNT extends Component {
                 topic: this.state.topic,
                 symKeyID: skid,
                 payload: web3.utils.toHex({
-                    'address': SNTController.options.address,
-                    'wallet': accounts[2],
+                    'contract': SNTController.options.address,
+                    'address': accounts[2],
                     'encodedFunctionCall': funCall
                 })
             };

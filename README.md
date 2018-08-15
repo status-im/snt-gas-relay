@@ -87,8 +87,9 @@ const msgObj = {
     powTime: 20, 
     topic: "0x4964656e", 
     payload: web3.utils.toHex({
-        'address': "0x692a70d2e424a56d2c6c27aa97d1a86395877b3a",
-        'encodedFunctionCall': funCall
+        'contract': "0x692a70d2e424a56d2c6c27aa97d1a86395877b3a",
+        'encodedFunctionCall': funCall,
+        'address': web3.eth.defaultAccount
     })
 };
 

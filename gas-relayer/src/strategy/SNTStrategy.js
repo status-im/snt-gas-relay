@@ -13,13 +13,13 @@ class SNTStrategy extends Strategy {
         const token = this.settings.getTokenBySymbol("SNT");
         if(token == undefined) return {success: false, message: "Token not allowed"};
         
-        const balance = await this.getBalance(message.input.wallet, token);
+        const balance = await this.getBalance(message.input.address, token);
 
         if(message.input.functionName == TransferSNT){
             const estimatedGas = await this.web3.eth.estimateGas({
                 data: message.input.payload,
                 from: this.config.node.blockchain.account,
-                to: message.input.address
+                to: message.input.contract
             });
 
             const gas = this.web3.utils.toBN(estimatedGas);
