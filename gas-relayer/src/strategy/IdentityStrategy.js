@@ -48,20 +48,21 @@ class IdentityStrategy extends Strategy {
         }
 
 
-        const latestBlock = await this.web3.eth.getBlock("latest");
         let estimatedGas = 0;
         try {
-            estimatedGas = await this._estimateGas(message, latestBlock.gasLimit);
+            estimatedGas = await this._estimateGas(message);
             if(gasLimit.lt(estimatedGas)) {
                 return {success: false, message: "Gas limit below estimated gas (" + estimatedGas + ")"};
             } 
         } catch(exc){
             if(exc.message.indexOf("revert") > -1) return {success: false, message: "Transaction will revert"};
+            
         }
 
         return {
             success: true,
-            message: "Valid transaction"
+            message: "Valid transaction",
+            estimatedGas
         };
     }
 

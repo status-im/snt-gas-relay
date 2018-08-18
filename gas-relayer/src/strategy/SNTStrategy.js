@@ -15,13 +15,13 @@ class SNTStrategy extends Strategy {
         
         const balance = await this.getBalance(message.input.address, token);
 
-        if(message.input.functionName == TransferSNT){
-            const estimatedGas = await this.web3.eth.estimateGas({
-                data: message.input.payload,
-                from: this.config.node.blockchain.account,
-                to: message.input.contract
-            });
+        const estimatedGas = await this.web3.eth.estimateGas({
+            data: message.input.payload,
+            from: this.config.node.blockchain.account,
+            to: message.input.contract
+        });
 
+        if(message.input.functionName == TransferSNT){
             const gas = this.web3.utils.toBN(estimatedGas);
             const value = this.web3.utils.toBN(params('_amount'));
             const requiredGas = value.add(gas);
@@ -54,7 +54,8 @@ class SNTStrategy extends Strategy {
         
         return {
             success: true,
-            message: "Valid transaction"
+            message: "Valid transaction",
+            estimatedGas
         };
     }
 

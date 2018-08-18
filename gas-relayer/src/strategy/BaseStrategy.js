@@ -28,7 +28,20 @@ class BaseStrategy {
         };
     }
 
-    async _estimateGas(message, gasLimit){
+    async _estimateGas(message){
+        let p = {
+            from: this.config.node.blockchain.account,
+            to: message.input.contract,
+            data: message.input.payload
+        };
+        const estimatedGas = await this.web3.eth.estimateGas(p);
+        return this.web3.utils.toBN(estimatedGas);
+    }
+
+    /**
+     * Simulate transaction using ganache. Useful for obtaining events
+     */
+    async _simulateTransaction(message){
         let web3Sim = new Web3(ganache.provider({
             fork: `${this.config.node.ganache.protocol}://${this.config.node.ganache.host}:${this.config.node.ganache.port}`,
             locked: false,
@@ -42,11 +55,11 @@ class BaseStrategy {
             to: message.input.address,
             value: 0,
             data: message.input.payload, 
-            gasLimit: gasLimit * 0.95 // 95% of current chain latest gas block limit
+            gasLimit: 9500000 // 95% of current chain latest gas block limit
 
         });
 
-        return web3Sim.utils.toBN(simulatedReceipt.gasUsed);
+        return simulatedReceipt;
     }
 
     /*

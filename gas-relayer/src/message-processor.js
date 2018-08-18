@@ -1,10 +1,11 @@
 class MessageProcessor {
 
-    constructor(config, settings, web3, kId){
+    constructor(config, settings, web3, kId, events){
         this.config = config;
         this.settings = settings;
         this.web3 = web3;
         this.kId = kId;
+        this.events = events;
     }
 
     _reply(text, message, receipt){
@@ -97,12 +98,15 @@ class MessageProcessor {
           console.error(error);
         } else {
             this._extractInput(message);
+
             const contract = this.settings.getContractByTopic(message.topic);
 
             if(!await this._validateInput(message)) return; // TODO Log
 
+            let validationResult;
+
             if(contract.strategy){
-                let validationResult = await contract.strategy.execute(message);
+                validationResult = await contract.strategy.execute(message);
                 if(!validationResult.success){
                     return this._reply(validationResult.message, message);
                 }
@@ -116,18 +120,31 @@ class MessageProcessor {
                 gasPrice: this.config.gasPrice
             };
 
-            this.web3.eth.estimateGas(p)
-            .then((estimatedGas) => {
-                p.gas = parseInt(estimatedGas * 1.1, 10);
-                return this.web3.eth.sendTransaction(p);
-            })
-            .then((receipt) => {
-                return this._reply("Transaction mined", message, receipt);
-            }).catch((err) => {
-                this._reply("Couldn't mine transaction: " + err.message, message);
-                // TODO log this?
-                console.error(err);
-            });
+            if(!validationResult.estimatedGas){
+                validationResult.estimatedGas = await this.web3.eth.estimateGas(p);
+            }
+
+            p.gas = parseInt(validationResult.estimatedGas * 1.1, 10);
+            
+            const nodeBalance =  await this.web3.eth.getBalance(this.config.node.blockchain.account);
+        
+            if(nodeBalance < p.gas){
+                this._reply("Relayer unavailable", message);
+                console.error("Relayer doesn't have enough gas to process trx: %s, required %s", nodeBalance, p.gas);
+                this.events.emit('exit');
+            } else {
+                try {
+                    const receipt = await this.web3.eth.sendTransaction(p);
+                    // TODO: parse events
+                    return this._reply("Transaction mined", message, receipt);
+                } catch(err){
+                    this._reply("Couldn't mine transaction: " + err.message, message);
+                    // TODO log this?
+                    console.error(err);
+                }
+            }
+
+            
         }
     }  
 }
