@@ -31,7 +31,9 @@ class ContractSettings {
     }
 
     getToken(token){
-        return this.tokens[token];
+        const tokenObj = this.tokens[token];
+        tokenObj.address = token;
+        return tokenObj;
     }
 
     getTokenBySymbol(symbol){
