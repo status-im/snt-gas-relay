@@ -21,18 +21,20 @@ class BaseStrategy {
         }
     }
 
-    _obtainParametersFunc(message){
-        const parameterList = this.web3.eth.abi.decodeParameters(this.contract.allowedFunctions[message.input.functionName].inputs, message.input.functionParameters);
+    _obtainParametersFunc(input){
+        const parameterList = this.web3.eth.abi.decodeParameters(this.contract.allowedFunctions[input.functionName].inputs, input.functionParameters);
         return function(parameterName){
             return parameterList[parameterName];
         };
     }
 
-    async _estimateGas(message){
+    async _estimateGas(input){
+console.dir(input);
+
         let p = {
             from: this.config.node.blockchain.account,
-            to: message.input.contract,
-            data: message.input.payload
+            to: input.contract,
+            data: input.payload
         };
         const estimatedGas = await this.web3.eth.estimateGas(p);
         return this.web3.utils.toBN(estimatedGas);
@@ -41,7 +43,7 @@ class BaseStrategy {
     /**
      * Simulate transaction using ganache. Useful for obtaining events
      */
-    async _simulateTransaction(message){
+    async _simulateTransaction(input){
         let web3Sim = new Web3(ganache.provider({
             fork: `${this.config.node.ganache.protocol}://${this.config.node.ganache.host}:${this.config.node.ganache.port}`,
             locked: false,
@@ -52,9 +54,9 @@ class BaseStrategy {
         
         let simulatedReceipt = await web3Sim.eth.sendTransaction({
             from: simAccounts[0],
-            to: message.input.address,
+            to: input.address,
             value: 0,
-            data: message.input.payload, 
+            data: input.payload, 
             gasLimit: 9500000 // 95% of current chain latest gas block limit
 
         });
@@ -63,7 +65,7 @@ class BaseStrategy {
     }
 
     /*
-    async execute(message){
+    async execute(message, reply){
         return {
             success: true,
             message: "Valid transaction"

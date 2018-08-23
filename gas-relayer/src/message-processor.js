@@ -1,150 +1,90 @@
 class MessageProcessor {
 
-    constructor(config, settings, web3, kId, events){
+    constructor(config, settings, web3, events){
         this.config = config;
         this.settings = settings;
         this.web3 = web3;
-        this.kId = kId;
         this.events = events;
     }
 
-    _reply(text, message, receipt){
-        if(message.sig !== undefined){
-            console.log(text);
-            this.web3.shh.post({ 
-                pubKey: message.sig, 
-                sig: this.kId,
-                ttl: this.config.node.whisper.ttl, 
-                powTarget:this.config.node.whisper.minPow, 
-                powTime: this.config.node.whisper.powTime, 
-                topic: message.topic, 
-                payload: this.web3.utils.fromAscii(JSON.stringify({message:text, receipt}, null, " "))
-            }).catch(console.error);
-        }
-    }
-
-    async _validateInput(message){
-        console.info("Processing request to: %s, %s", message.input.contract, message.input.functionName);
-
-        const contract = this.settings.getContractByTopic(message.topic);
+    async _validateInput(contract, input){
+        console.info("Processing request to: %s, %s", input.contract, input.functionName);
 
         if(contract == undefined){
-            this._reply('Invalid topic', message);
-            return false;
+            return {success: false, message: 'Unknown contract'};
         }
         
-        if(!contract.functionSignatures.includes(message.input.functionName)){
-            this._reply('Function not allowed', message);
-            return false;
+        if(!contract.functionSignatures.includes(input.functionName)){
+            return {success: false, message: 'Function not allowed'};
         }
             
         // Get code from contract and compare it against the contract code
         if(!contract.isIdentity){
-            const code = this.web3.utils.soliditySha3(await this.web3.eth.getCode(message.input.contract));
+            const code = this.web3.utils.soliditySha3(await this.web3.eth.getCode(input.contract));
             if(code != contract.code){
-                this._reply('Invalid contract code', message);
-                return false;
+                return {success: false, message: 'Invalid contract code'};
             }
         } else {
-            if(!(/^0x[0-9a-f]{40}$/i).test(message.input.contract)){
-                this._reply('Invalid contract address', message);
-                return false;
+            if(!(/^0x[0-9a-f]{40}$/i).test(input.contract)){
+                return {success: false, message: 'Invalid contract address'};
             }
         }
 
-        if(message.input.address && !(/^0x[0-9a-f]{40}$/i).test(message.input.address)){
-            this._reply('Invalid address', message);
-            return false;
+        if(input.address && !(/^0x[0-9a-f]{40}$/i).test(input.address)){
+            return {success: false, message: 'Invalid address'};
         }
 
-        return true;
+        return {success: true};
     }
 
-    _extractInput(message){
-        let obj = {
-            contract: null,
-            address: null,
-            functionName: null,
-            functionParameters: null,
-            payload: null
+    async process(contract, input, reply){
+        const inputValidation = await this._validateInput(contract, input);
+        if(!inputValidation.success){
+            // TODO Log?
+            reply(inputValidation);
+            return;
+        }
+
+        let validationResult;
+
+        if(contract.strategy){
+            validationResult = await contract.strategy.execute(input, reply);
+            if(!validationResult.success){
+                reply(validationResult.message);
+                return;
+            }
+        }
+
+        let p = {
+            from: this.config.node.blockchain.account,
+            to: input.contract,
+            value: 0,
+            data: input.payload,
+            gasPrice: this.config.gasPrice
         };
 
-        try {
-            const msg = this.web3.utils.toAscii(message.payload);
-            let parsedObj = JSON.parse(msg);
-            obj.contract = parsedObj.contract;
-            obj.address = parsedObj.address;
-            obj.functionName = parsedObj.encodedFunctionCall.slice(0, 10);
-            obj.functionParameters = "0x" + parsedObj.encodedFunctionCall.slice(10);
-            obj.payload = parsedObj.encodedFunctionCall;
-        } catch(err){
-            console.error("Couldn't parse " + message);
+        if(!validationResult.estimatedGas){
+            validationResult.estimatedGas = await this.web3.eth.estimateGas(p);
         }
+
+        p.gas = parseInt(validationResult.estimatedGas * 1.05, 10); // Tune this
         
-        message.input = obj;
-    }
-
-    /*
-    _getFactor(input, contract, gasToken){
-        if(contract.allowedFunctions[input.functionName].isToken){
-            return this.web3.utils.toBN(this.settings.getToken(gasToken).pricePlugin.getFactor());
+        const nodeBalance =  await this.web3.eth.getBalance(this.config.node.blockchain.account);
+    
+        if(nodeBalance < p.gas){
+            reply("Relayer unavailable");
+            console.error("Relayer doesn't have enough gas to process trx: %s, required %s", nodeBalance, p.gas);
+            this.events.emit('exit');
         } else {
-            return this.web3.utils.toBN(1);
-        }
-    } */
-
-    async process(error, message){
-        if(error){
-          console.error(error);
-        } else {
-            this._extractInput(message);
-
-            const contract = this.settings.getContractByTopic(message.topic);
-
-            if(!await this._validateInput(message)) return; // TODO Log
-
-            let validationResult;
-
-            if(contract.strategy){
-                validationResult = await contract.strategy.execute(message);
-                if(!validationResult.success){
-                    return this._reply(validationResult.message, message);
-                }
+            try {
+                const receipt = await this.web3.eth.sendTransaction(p);
+                // TODO: parse events
+                return reply("Transaction mined", receipt);
+            } catch(err){
+                reply("Couldn't mine transaction: " + err.message);
+                // TODO log this?
+                console.error(err);
             }
-
-            let p = {
-                from: this.config.node.blockchain.account,
-                to: message.input.contract,
-                value: 0,
-                data: message.input.payload,
-                gasPrice: this.config.gasPrice
-            };
-
-            if(!validationResult.estimatedGas){
-                validationResult.estimatedGas = await this.web3.eth.estimateGas(p);
-            }
-
-            p.gas = parseInt(validationResult.estimatedGas * 1.1, 10);
-            
-            const nodeBalance =  await this.web3.eth.getBalance(this.config.node.blockchain.account);
-        
-            if(nodeBalance < p.gas){
-                this._reply("Relayer unavailable", message);
-                console.error("Relayer doesn't have enough gas to process trx: %s, required %s", nodeBalance, p.gas);
-                this.events.emit('exit');
-            } else {
-                try {
-                    const receipt = await this.web3.eth.sendTransaction(p);
-                    // TODO: parse events
-                    return this._reply("Transaction mined", message, receipt);
-                } catch(err){
-                    this._reply("Couldn't mine transaction: " + err.message, message);
-                    // TODO log this?
-                    console.error(err);
-                }
-            }
-
-            
         }
     }  
 }

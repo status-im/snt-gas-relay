@@ -6,22 +6,22 @@ const ExecuteGasRelayed = "0x754e6ab0";
 
 class SNTStrategy extends Strategy {
 
-    async execute(message){
-        const params = this._obtainParametersFunc(message);
+    async execute(input){
+        const params = this._obtainParametersFunc(input);
 
         // Verifying if token is allowed
         const token = this.settings.getTokenBySymbol("SNT");
         if(token == undefined) return {success: false, message: "Token not allowed"};
         
-        const balance = await this.getBalance(message.input.address, token);
+        const balance = await this.getBalance(input.address, token);
 
         const estimatedGas = await this.web3.eth.estimateGas({
-            data: message.input.payload,
+            data: input.payload,
             from: this.config.node.blockchain.account,
-            to: message.input.contract
+            to: input.contract
         });
 
-        if(message.input.functionName == TransferSNT){
+        if(input.functionName == TransferSNT){
             const gas = this.web3.utils.toBN(estimatedGas);
             const value = this.web3.utils.toBN(params('_amount'));
             const requiredGas = value.add(gas);
@@ -29,11 +29,11 @@ class SNTStrategy extends Strategy {
             if(balance.lt(requiredGas)){
                 return {success: false, message: "Address has not enough balance to transfer specified value + fees (" + requiredGas.toString() + ")"};
             }
-        } else if(message.input.functionName == ExecuteGasRelayed){
+        } else if(input.functionName == ExecuteGasRelayed){
             const latestBlock = await this.web3.eth.getBlock("latest");
             let estimatedGas = 0;
             try {
-                estimatedGas = await this._estimateGas(message, latestBlock.gasLimit);
+                estimatedGas = await this._estimateGas(input, latestBlock.gasLimit);
             } catch(exc){
                 if(exc.message.indexOf("revert") > -1) return {success: false, message: "Transaction will revert"};
             }

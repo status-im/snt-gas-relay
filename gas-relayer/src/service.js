@@ -102,11 +102,59 @@ events.on('setup:complete', async (settings) => {
   }*/
 });
 
+const reply = (message) => (text, receipt) => {
+  if(message.sig !== undefined){
+      console.log(text);
+      web3.shh.post({ 
+          pubKey: message.sig, 
+          sig: shhOptions.kId,
+          ttl: config.node.whisper.ttl, 
+          powTarget:config.node.whisper.minPow, 
+          powTime: config.node.whisper.powTime, 
+          topic: message.topic, 
+          payload: web3.utils.fromAscii(JSON.stringify({message:text, receipt}, null, " "))
+      }).catch(console.error);
+  }
+};
+
+const extractInput = (message) => {
+    let obj = {
+        contract: null,
+        address: null,
+        functionName: null,
+        functionParameters: null,
+        payload: null
+    };
+
+    try {
+        const msg = web3.utils.toAscii(message.payload);
+        let parsedObj = JSON.parse(msg);
+        obj.contract = parsedObj.contract;
+        obj.address = parsedObj.address;
+        obj.functionName = parsedObj.encodedFunctionCall.slice(0, 10);
+        obj.functionParameters = "0x" + parsedObj.encodedFunctionCall.slice(10);
+        obj.payload = parsedObj.encodedFunctionCall;
+    } catch(err){
+        console.error("Couldn't parse " + message);
+    }
+    
+    return obj;
+};
+
+
 events.on('server:listen', (shhOptions, settings) => {
-  let processor = new MessageProcessor(config, settings, web3, shhOptions.kId, events);
+  let processor = new MessageProcessor(config, settings, web3, events);
   web3.shh.subscribe('messages', shhOptions, (error, message) => {
+    if(error){
+      console.error(error);
+      return;
+    }
+
     verifyBalance(true);
-    processor.process(error, message);
+
+    processor.process(settings.getContractByTopic(message.topic), 
+                      extractInput(message), 
+                      reply(message));
   });
 });
 
