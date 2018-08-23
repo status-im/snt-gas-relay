@@ -54,21 +54,21 @@ class ContractSettings {
         return this.web3.utils.toHex(contractName).slice(0, 10);
     }
 
-    _obtainContractBytecode(topicName){
+    async _obtainContractBytecode(topicName){
         if(this.contracts[topicName].isIdentity) return;
 
         this.pendingToLoad++;
-        this.web3.eth.getCode(this.contracts[topicName].address)
-        .then(code => {
+
+        try {
+            const code = await this.web3.eth.getCode(this.contracts[topicName].address)
             this.contracts[topicName].code = this.web3.utils.soliditySha3(code);
             this.pendingToLoad--;
             if(this.pendingToLoad == 0) this.events.emit("setup:complete", this);
-            })
-        .catch((err) => {
+        } catch(err) {
             console.error("Invalid contract for " + topicName);
             console.error(err);
             process.exit();
-            });
+        }
     }
 
     _extractFunctions(topicName){

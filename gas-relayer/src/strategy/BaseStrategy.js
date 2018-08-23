@@ -29,8 +29,6 @@ class BaseStrategy {
     }
 
     async _estimateGas(input){
-console.dir(input);
-
         let p = {
             from: this.config.node.blockchain.account,
             to: input.contract,
