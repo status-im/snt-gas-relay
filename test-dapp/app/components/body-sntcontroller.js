@@ -28,7 +28,8 @@ class Body extends Component {
             nonce: '0',
             kid: null,
             skid: null,
-            message: ''
+            message: '',
+            relayers: []
         };
     }
 
@@ -53,7 +54,21 @@ class Body extends Component {
                         "minPow": 0.1,
                         "powTime": 1000
                       }, (error, message) => {
-                          console.log(message);
+                        console.log(message);
+
+                        const msg = web3js.utils.toAscii(message.payload);
+                        const msgObj = JSON.parse(msg);
+
+                        if(msgObj.message == 'available'){
+                            // found a relayer
+                            console.log("Relayer available: " + message.sig);
+
+                            let relayers = this.state.relayers;
+                            relayers.push(message.sig);
+                            relayers = relayers.filter((value, index, self) => self.indexOf(value) === index);
+                            this.setState({relayers});
+                        }
+                        
                         if(error){
                             console.error(error);
                         } else {
@@ -90,15 +105,15 @@ class Body extends Component {
     }
 
     render(){
-        const {tab, walletAddress, nonce, web3js, message, kid, skid} = this.state;
+        const {tab, walletAddress, nonce, web3js, message, kid, skid, relayers} = this.state;
 
         return <Fragment>
             <Tabs value={tab} onChange={this.handleChange}>
                 <Tab label="Transfer SNT" />
                 <Tab label="Execute" />
             </Tabs>
-            {tab === 0 && <Container><TransferSNT clearMessages={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} /></Container>}
-            {tab === 1 && <Container><Execute clearMessage={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} /></Container>}
+            {tab === 0 && <Container><TransferSNT clearMessages={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} relayers={relayers} /></Container>}
+            {tab === 1 && <Container><Execute clearMessage={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} relayers={relayers} /></Container>}
             <Divider />
             <Container>
                 <Status message={message} nonceUpdateFunction={this.updateNonce} nonce={nonce} walletAddress={walletAddress} />
