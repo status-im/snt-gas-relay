@@ -121,7 +121,7 @@ class CallGasRelayed extends Component {
                     'contract': this.props.identityAddress,
                     'address': web3.eth.defaultAccount,
                     'action': 'availability',
-                    'token': this.state.gasToken,
+                    'gasToken': this.state.gasToken,
                     'gasPrice': this.state.gasPrice
                 })
             };

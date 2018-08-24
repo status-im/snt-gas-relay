@@ -77,9 +77,53 @@ shh.post({
 
 
 #### Polling for gas relayers
-TODO
+The first step is asking the relayers for their availability. The message payload needs to be the hex string representation of a JSON object with a specific structure:
 
+```
+const payload = web3.utils.toHex({
+        'contract': "0xContractToInvoke",
+        'address': web3.eth.defaultAccount,
+        'action': 'availability',
+        'token': "0xGasTokenAddress",
+        'gasPrice': 1234
+    });
+```
 
+- `contract` is the address of the contract that will perform the operation, in this case it can be an Identity, or the SNTController.
+- `address` The address that will sign the transactions. Normally it's `web3.eth.defaultAccount`
+- `gasToken`: token used for paying the gas cost
+- `gasPrice`: The gas price used for the transaction
+
+This is a example code of how to send an 'availability' message:
+
+```
+const whisperKeyPairID = await web3W.shh.newKeyPair();
+
+const msgObj = { 
+    symKeyId: "0xd0d905c1c62b810b787141430417caf2b3f54cffadb395b7bb39fdeb8f17266b", 
+    sig: whisperKeyPairID,
+    ttl: 1000, 
+    powTarget: 1, 
+    powTime: 20, 
+    topic: "0x4964656e", 
+    payload: web3.utils.toHex({
+        'contract': "0x692a70d2e424a56d2c6c27aa97d1a86395877b3a",
+        'address': web3.eth.defaultAccount
+        'action': 'availability',
+        'gasToken': "0x744d70fdbe2ba4cf95131626614a1763df805b9e",
+        'gasPrice': 40000000000 // 40 gwei equivalent in SNT
+    })
+};
+
+        
+web3.shh.post(msgObj)
+.then((err, result) => {
+    console.log(result);
+    console.log(err);
+});
+```
+
+When it replies, you need to extract the `sig` attribute to obtain the relayer's public key
 
 #### Sending transaction details
 

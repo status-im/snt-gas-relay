@@ -127,7 +127,7 @@ class Execute extends Component {
                     'contract': SNTController.options.address,
                     'address': accounts[2],
                     'action': 'availability',
-                    'token': STT.options.address,
+                    'gasToken': STT.options.address,
                     'gasPrice': this.state.gasPrice
                 })
             };
