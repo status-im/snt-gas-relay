@@ -113,7 +113,7 @@ class Body extends Component {
                 <Tab label="Execute" />
             </Tabs>
             {tab === 0 && <Container><TransferSNT clearMessages={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} relayers={relayers} /></Container>}
-            {tab === 1 && <Container><Execute clearMessage={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} relayers={relayers} /></Container>}
+            {tab === 1 && <Container><Execute clearMessages={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} relayers={relayers} /></Container>}
             <Divider />
             <Container>
                 <Status message={message} nonceUpdateFunction={this.updateNonce} nonce={nonce} walletAddress={walletAddress} />
