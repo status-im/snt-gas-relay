@@ -4,10 +4,10 @@
 class MessageProcessor {
 
     /**
-     * @param {object} config Configuration object obtained from `./config/config.js`
-     * @param {object} settings Settings obtained from parsing the configuration object
-     * @param {object} web3 Web3 object already configured
-     * @param {object} events Event emitter
+     * @param {object} config - Configuration object obtained from `./config/config.js`
+     * @param {object} settings - Settings obtained from parsing the configuration object
+     * @param {object} web3 - Web3 object already configured
+     * @param {object} events - Event emitter
      */
     constructor(config, settings, web3, events){
         this.config = config;
@@ -18,8 +18,8 @@ class MessageProcessor {
 
     /**
      * Validate input message content
-     * @param {object} contract Contract object obtained from the settings based on the message topic
-     * @param {object} input Input object obtained from a message. 
+     * @param {object} contract - Object obtained from the settings based on the message topic
+     * @param {object} input - Object obtained from a message. 
      * @returns {object} State of validation
      */
     async _validateInput(contract, input){
@@ -54,10 +54,10 @@ class MessageProcessor {
 
     /**
      * Process strategy and return validation result
-     * @param {object} contract Contract object obtained from the settings based on the message topic
-     * @param {object} input Input object obtained from a message. 
-     * @param {function} reply Reply function to return message
-     * @param {object} strategy Strategy to apply. If undefined, it will use a strategy based on the contract
+     * @param {object} contract - Object obtained from the settings based on the message topic
+     * @param {object} input - Object obtained from a message. 
+     * @param {function} reply - Function to reply a message
+     * @param {object} strategy - Strategy to apply. If undefined, it will use a strategy based on the contract
      * @returns {object} State of validation
      */
     async processStrategy(contract, input, reply, strategy){
@@ -87,9 +87,9 @@ class MessageProcessor {
 
     /**
      * Process strategy and based on its result, send a transaction to the blockchain
-     * @param {object} contract Contract object obtained from the settings based on the message topic
-     * @param {object} input Input object obtained from a message. 
-     * @param {function} reply Reply function to return message
+     * @param {object} contract - Object obtained from the settings based on the message topic
+     * @param {object} input - Object obtained from a message. 
+     * @param {function} reply - function to reply a message
      * @returns {undefined}
      */
     async processTransaction(contract, input, reply){

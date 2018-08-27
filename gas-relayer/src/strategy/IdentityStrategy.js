@@ -9,7 +9,7 @@ class IdentityStrategy extends Strategy {
 
     /**
      * Validates if the contract being invoked represents an Identity instance 
-     * @param {object} input Input object obtained from a `transaction` request.
+     * @param {object} input - Object obtained from a `transaction` request.
      * @returns {bool} Valid instance or not
      */
     async _validateInstance(input){
@@ -26,7 +26,7 @@ class IdentityStrategy extends Strategy {
 
     /**
      * Process Identity strategy
-     * @param {object} input Input object obtained from an 'transaction' request. It expects an object with this structure `{contract, address, action, functionName, functionParameters, payload}`
+     * @param {object} input - Object obtained from an 'transaction' request. It expects an object with this structure `{contract, address, action, functionName, functionParameters, payload}`
      * @returns {object} Status of validation and estimated gas
      */
     async execute(input){

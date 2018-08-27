@@ -8,10 +8,10 @@ const erc20ABI = require('../../abi/ERC20Token.json');
 class BaseStrategy {
 
     /**
-     * @param {object} web3 Web3 object already configured
-     * @param {object} config Configuration object obtained from `./config/config.js`
-     * @param {object} settings Settings obtained from parsing the configuration object
-     * @param {object} contract Contract object obtained from the settings based on the message topic
+     * @param {object} web3 - Web3 object already configured
+     * @param {object} config - Configuration object obtained from `./config/config.js`
+     * @param {object} settings - Settings obtained from parsing the configuration object
+     * @param {object} contract - Object obtained from the settings based on the message topic
      */
     constructor(web3, config, settings, contract){
         this.web3 = web3;
@@ -22,8 +22,8 @@ class BaseStrategy {
 
     /**
      * Obtain the balance in tokens or ETH from an address
-     * @param {string} address ETH address to obtain the balance from
-     * @param {object} token Token obtained from `settings.getToken(tokenSymbol)`
+     * @param {string} address - ETH address to obtain the balance from
+     * @param {object} token - Obtained from `settings.getToken(tokenSymbol)`
      * @returns {web3.utils.BN} Balance
      */
     async getBalance(address, token){
@@ -39,7 +39,7 @@ class BaseStrategy {
 
     /**
      * Build Parameters Function
-     * @param {object} input Input object obtained from an `transaction` request. 
+     * @param {object} input - Object obtained from an `transaction` request. 
      * @returns {function} Function that simplifies accessing contract functions' parameters
      */
     _obtainParametersFunc(input){
@@ -51,7 +51,7 @@ class BaseStrategy {
 
     /**
      * Estimate gas using web3
-     * @param {object} input Input object obtained from an `transaction` request.
+     * @param {object} input - Object obtained from an `transaction` request.
      * @returns {web3.utils.toBN} Estimated gas fees
      */
     async _estimateGas(input){
@@ -66,7 +66,7 @@ class BaseStrategy {
 
     /**
      * Simulate transaction using ganache. Useful for obtaining events
-     * @param {object} input Input object obtained from an `transaction` request.
+     * @param {object} input - Object obtained from an `transaction` request.
      * @returns {object} Simulated transaction receipt
      */
     async _simulateTransaction(input){

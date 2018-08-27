@@ -8,7 +8,7 @@ class AvailabilityStrategy extends Strategy {
 
     /**
      * Process availability strategy
-     * @param {object} input Input object obtained from an 'availability' request. It expects an object with this structure `{contract, address, action, gasToken, gasPrice}`
+     * @param {object} input - Object obtained from an 'availability' request. It expects an object with this structure `{contract, address, action, gasToken, gasPrice}`
      * @returns {object} Status of validation, and minimum price
      */
     execute(input){

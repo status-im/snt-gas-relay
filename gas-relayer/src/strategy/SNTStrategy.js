@@ -11,7 +11,7 @@ class SNTStrategy extends Strategy {
 
     /**
      * Process SNTController strategy
-     * @param {object} input Input object obtained from an 'transaction' request. It expects an object with this structure `{contract, address, action, functionName, functionParameters, payload}`
+     * @param {object} input - Object obtained from an 'transaction' request. It expects an object with this structure `{contract, address, action, functionName, functionParameters, payload}`
      * @returns {object} Status of validation and estimated gas
      */
     async execute(input){

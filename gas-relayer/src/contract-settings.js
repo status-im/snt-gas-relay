@@ -1,5 +1,13 @@
+/**
+ * Configuration Settings related to contracts
+ */
 class ContractSettings {
 
+    /**
+     * @param {object} config - Configuration object obtained from `./config/config.js`
+     * @param {object} web3 - Web3 object already configured
+     * @param {object} eventEmitter - Event Emitter
+     */
     constructor(config, web3, eventEmitter){
         this.tokens = config.tokens;
         this.topics = [];
@@ -12,11 +20,17 @@ class ContractSettings {
         this.pendingToLoad = 0;
     }
 
+    /**
+     * Process configuration file
+     */
     process(){
         this._setTokenPricePlugin();
         this._processContracts();
     }
 
+    /**
+     * Set price plugin for token
+     */
     _setTokenPricePlugin(){
         for(let token in this.tokens){
             if(this.tokens[token].pricePlugin !== undefined){
@@ -26,16 +40,30 @@ class ContractSettings {
         }
     }
 
+    /**
+     * Get allowed tokens
+     * @return {object} - Dictionary with allowed tokens (address as key)
+     */
     getTokens(){
         return this.tokens;
     }
 
+    /**
+     * Get token by address
+     * @param {string} - Token address
+     * @return {object} - Token details
+     */
     getToken(token){
         const tokenObj = this.tokens[token];
         tokenObj.address = token;
         return tokenObj;
     }
 
+    /**
+     * Get token by symbol
+     * @param {string} - Token symbol
+     * @return {object} - Token details
+     */
     getTokenBySymbol(symbol){
         for(let token in this.tokens){
             if(this.tokens[token].symbol == symbol){
@@ -46,14 +74,28 @@ class ContractSettings {
         }
     }
 
+    /**
+     * Get contract by topicName
+     * @param {string} topicName - Topic name that represents a contract
+     * @return {object} - Contract details
+     */
     getContractByTopic(topicName){
         return this.contracts[topicName];
     }
 
+    /**
+     * Calculate the topic based on the contract's name
+     * @param {string} contractName - Name of the contract as it appears in the configuration
+     * @return {string} - Topic
+     */
     getTopicName(contractName){
         return this.web3.utils.toHex(contractName).slice(0, 10);
     }
 
+    /**
+     * Set contract's bytecode in the configuration
+     * @param {string} topicName - Topic name that represents a contract
+     */
     async _obtainContractBytecode(topicName){
         if(this.contracts[topicName].isIdentity) return;
 
@@ -71,6 +113,10 @@ class ContractSettings {
         }
     }
 
+    /**
+     * Extract function details based on topicName
+     * @param {string} topicName - Topic name that represents a contract
+     */
     _extractFunctions(topicName){
         const contract = this.getContractByTopic(topicName);
 
@@ -90,6 +136,9 @@ class ContractSettings {
         this.contracts[topicName] = contract;
     }
 
+    /**
+     * Process contracts and setup the settings object
+     */
     _processContracts(){
         for(let contractName in this.contracts){
             // Obtaining the abis
@@ -114,6 +163,11 @@ class ContractSettings {
         }
     }
 
+    /**
+     * Create strategy object based on source code and topicName
+     * @param {string} strategyFile - Souce code path of strategy to build
+     * @param {string} topicName - Hex string that represents a contract's topic
+     */
     buildStrategy(strategyFile, topicName){
         const strategy = require(strategyFile);
         return new strategy(this.web3, this.config, this, this.contracts[topicName]);
