@@ -23,9 +23,9 @@ Before executing this program, `config/config.json` must be setup and `npm insta
 - Host, port and protocol Ganache will use when forking the blockchain for gas estimations and other operations
 - Wallet account used for processing the transactions
 - Symmetric key used to receive the Whisper messages
-- Symmetric key used to send the heartbeats that notify the tokens and prices accepted
 - Accepted tokens information
 - Contract configuration
+
 This program is configured with the default values for a embark installation run from 0
 
 A `geth` node running whisper (via `-shh` option) is required. To execute the gas-relayer, you may use any of the following three methods.

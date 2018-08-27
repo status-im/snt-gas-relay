@@ -105,14 +105,18 @@ class ContractSettings {
 
             // Obtaining strategy
             if(this.contracts[topicName].strategy){
-                const strategy = require(this.contracts[topicName].strategy);
-                this.contracts[topicName].strategy = new strategy(this.web3, this.config, this, this.contracts[topicName]);
+                this.contracts[topicName].strategy = this.buildStrategy(this.contracts[topicName].strategy, topicName);
             }
             
             this._obtainContractBytecode(topicName);
 
             this._extractFunctions(topicName);
         }
+    }
+
+    buildStrategy(strategyFile, topicName){
+        const strategy = require(strategyFile);
+        return new strategy(this.web3, this.config, this, this.contracts[topicName]);
     }
 }
 

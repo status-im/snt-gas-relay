@@ -4,9 +4,6 @@ const config = require('../config/config.js');
 const ContractSettings = require('./contract-settings');
 const MessageProcessor = require('./message-processor');
 
-// IDEA: A node should call an API (probably from a status node) to register itself as a 
-//      token gas relayer.
-
 console.info("Starting...");
 const events = new EventEmitter();
 
@@ -84,7 +81,14 @@ events.on('setup:complete', async (settings) => {
 
 const replyFunction = (message) => (text, receipt) => {
   if(message.sig !== undefined){
-      console.log(text);
+
+      let payloadContent;
+      if(typeof text === 'object'){
+        payloadContent = {...text, receipt};
+      } else {
+        payloadContent = {text, receipt};
+      }
+
       web3.shh.post({ 
           pubKey: message.sig, 
           sig: shhOptions.kId,
@@ -92,7 +96,7 @@ const replyFunction = (message) => (text, receipt) => {
           powTarget:config.node.whisper.minPow, 
           powTime: config.node.whisper.powTime, 
           topic: message.topic, 
-          payload: web3.utils.fromAscii(JSON.stringify({message:text, receipt}, null, " "))
+          payload: web3.utils.fromAscii(JSON.stringify(payloadContent, null, " "))
       }).catch(console.error);
   }
 };
@@ -115,7 +119,7 @@ const extractInput = (message) => {
           obj.functionParameters = "0x" + parsedObj.encodedFunctionCall.slice(10);
           obj.payload = parsedObj.encodedFunctionCall;
         } else if(obj.action == 'availability') {
-          obj.token = parsedObj.token;
+          obj.gasToken = parsedObj.gasToken;
           obj.gasPrice = parsedObj.gasPrice;
         }
     } catch(err){
@@ -128,7 +132,7 @@ const extractInput = (message) => {
 
 events.on('server:listen', (shhOptions, settings) => {
   let processor = new MessageProcessor(config, settings, web3, events);
-  web3.shh.subscribe('messages', shhOptions, (error, message) => {
+  web3.shh.subscribe('messages', shhOptions, async (error, message) => {
     if(error){
       console.error(error);
       return;
@@ -138,15 +142,22 @@ events.on('server:listen', (shhOptions, settings) => {
 
     const input = extractInput(message);
     const reply = replyFunction(message);
-    
+    let validationResult; 
+
     switch(input.action){
       case 'transaction':
-        processor.process(settings.getContractByTopic(message.topic), 
+        processor.processTransaction(settings.getContractByTopic(message.topic), 
                       input, 
                       reply);
         break;
       case 'availability':
-        reply("available");
+        validationResult = await processor.processStrategy(settings.getContractByTopic(message.topic), 
+                              input, 
+                              reply,
+                              settings.buildStrategy("./strategy/AvailabilityStrategy", message.topic)
+                            );
+        if(validationResult.success) reply(validationResult.message);
+
         break;
       default: 
         reply("unknown-action");        

@@ -8,13 +8,13 @@ class MessageProcessor {
     }
 
     async _validateInput(contract, input){
-        console.info("Processing request to: %s, %s", input.contract, input.functionName);
+        console.info("Processing '%s' request to contract: %s", input.action, input.contract);
 
         if(contract == undefined){
             return {success: false, message: 'Unknown contract'};
         }
         
-        if(!contract.functionSignatures.includes(input.functionName)){
+        if(input.functionName && !contract.functionSignatures.includes(input.functionName)){
             return {success: false, message: 'Function not allowed'};
         }
             
@@ -37,7 +37,7 @@ class MessageProcessor {
         return {success: true};
     }
 
-    async process(contract, input, reply){
+    async processStrategy(contract, input, reply, strategy){
         const inputValidation = await this._validateInput(contract, input);
         if(!inputValidation.success){
             // TODO Log?
@@ -45,16 +45,26 @@ class MessageProcessor {
             return;
         }
 
-        let validationResult;
+        if(strategy || contract.strategy){
+            let validationResult;
+            if(strategy){
+                validationResult = await strategy.execute(input, reply);
+            } else {
+                validationResult = await contract.strategy.execute(input, reply);
+            }
 
-        if(contract.strategy){
-            validationResult = await contract.strategy.execute(input, reply);
             if(!validationResult.success){
                 reply(validationResult.message);
                 return;
             }
-        }
 
+            return validationResult;
+        }
+    }
+
+    async processTransaction(contract, input, reply){
+        const validationResult = await this.processStrategy(contract, input, reply);
+        
         let p = {
             from: this.config.node.blockchain.account,
             to: input.contract,

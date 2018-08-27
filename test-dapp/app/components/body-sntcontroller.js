@@ -59,7 +59,7 @@ class Body extends Component {
                         const msg = web3js.utils.toAscii(message.payload);
                         const msgObj = JSON.parse(msg);
 
-                        if(msgObj.message == 'available'){
+                        if(msgObj.message == 'Available'){
                             // found a relayer
                             console.log("Relayer available: " + message.sig);
 
