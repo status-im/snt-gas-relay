@@ -123,7 +123,7 @@ class TransferSNT extends Component {
                     'contract': SNTController.options.address,
                     'address': accounts[2],
                     'action': 'availability',
-                    'gasToken': this.state.gasToken,
+                    'gasToken': STT.options.address,
                     'gasPrice': this.state.gasPrice
                 })
             };

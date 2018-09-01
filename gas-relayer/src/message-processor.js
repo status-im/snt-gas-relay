@@ -78,7 +78,6 @@ class MessageProcessor {
 
             if(!validationResult.success){
                 reply(validationResult.message);
-                return;
             }
 
             return validationResult;
@@ -95,6 +94,8 @@ class MessageProcessor {
     async processTransaction(contract, input, reply){
         const validationResult = await this.processStrategy(contract, input, reply);
         
+        if(!validationResult.success) return;
+
         let p = {
             from: this.config.node.blockchain.account,
             to: input.contract,
@@ -108,7 +109,7 @@ class MessageProcessor {
         }
 
         p.gas = parseInt(validationResult.estimatedGas * 1.05, 10); // Tune this
-        
+
         const nodeBalance =  await this.web3.eth.getBalance(this.config.node.blockchain.account);
     
         if(nodeBalance < p.gas){

@@ -65,12 +65,15 @@ class IdentityStrategy extends Strategy {
         let estimatedGas = 0;
         try {
             // Geth tends to fail estimation with proxies, so we simulate it with ganache
-            estimatedGas = await this._simulateTransaction(input);
-            if(gasLimit.mul(this.web3.utils.toBN(1.05)).lt(estimatedGas)) {
+            const simReceipt = await this._simulateTransaction(input);
+            estimatedGas = this.web3.utils.toBN(simReceipt.gasUsed);
+            if(gasLimit.lt(estimatedGas)) {
                 return {success: false, message: "Gas limit below estimated gas (" + estimatedGas + ")"};
             } 
         } catch(exc){
             if(exc.message.indexOf("revert") > -1) return {success: false, message: "Transaction will revert"};
+
+            console.log(exc);
         }
 
         return {
