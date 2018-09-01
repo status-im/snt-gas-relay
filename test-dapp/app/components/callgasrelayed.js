@@ -15,6 +15,10 @@ import TextField from '@material-ui/core/TextField';
 import config from '../config';
 import web3 from 'Embark/web3';
 import {withStyles} from '@material-ui/core/styles';
+
+import StatusGasRelayer, {Contracts} from '../status-gas-relayer';
+
+
 const styles = theme => ({
     root: {
         width: '100%',
@@ -98,7 +102,7 @@ class CallGasRelayed extends Component {
         }
     }
 
-    obtainRelayers = event => {
+    obtainRelayers = async event => {
         event.preventDefault();
 
         const {web3, kid, skid} = this.props;
@@ -110,28 +114,15 @@ class CallGasRelayed extends Component {
         this.props.clearMessages();
         
         try {
-            const sendOptions = {
-                ttl: 1000, 
-                sig: kid,
-                powTarget: 1, 
-                powTime: 20, 
-                topic: this.state.topic,
-                symKeyID: skid,
-                payload: web3.utils.toHex({
-                    'contract': this.props.identityAddress,
-                    'address': web3.eth.defaultAccount,
-                    'action': 'availability',
-                    'gasToken': this.state.gasToken,
-                    'gasPrice': this.state.gasPrice
-                })
-            };
+            const s = new StatusGasRelayer.AvailableRelayers(Contracts.Identity, this.props.identityAddress, web3.eth.defaultAccount)
+                                          .setRelayersSymKeyID(skid)
+                                          .setAsymmetricKeyID(kid)
+                                          .setGas(this.state.gasToken, this.state.gasPrice);
+            await s.post(web3);
+            
+            console.log("Message sent");
+            this.setState({submitting: false});
 
-            web3.shh.post(sendOptions)
-            .then(() => {
-               this.setState({submitting: false});
-               console.log("Message sent");
-               return true;
-            });
         } catch(error){
             this.setState({messagingError: error.message, submitting: false});
         }
