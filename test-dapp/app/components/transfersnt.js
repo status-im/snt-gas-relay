@@ -41,6 +41,7 @@ class TransferSNT extends Component {
             msgSent: '',
             payload: '',
             message: '',
+            relayer: '',
             web3js: null, 
             transactionError: '',
             messagingError: '',
@@ -97,10 +98,56 @@ class TransferSNT extends Component {
         }
     }
 
-    sendMessage = async event => {
+    obtainRelayers = async event => {
         event.preventDefault();
 
         const {web3, kid, skid} = this.props;
+
+        this.setState({
+          messagingError: '',
+          submitting: true
+        });
+        this.props.clearMessages();
+
+        const accounts = await web3.eth.getAccounts();
+
+        try {
+            const sendOptions = {
+                ttl: 1000, 
+                sig: kid,
+                powTarget: 1, 
+                powTime: 20, 
+                topic: this.state.topic,
+                symKeyID: skid,
+                payload: web3.utils.toHex({
+                    'contract': SNTController.options.address,
+                    'address': accounts[2],
+                    'action': 'availability',
+                    'gasToken': this.state.gasToken,
+                    'gasPrice': this.state.gasPrice
+                })
+            };
+
+            web3.shh.post(sendOptions)
+            .then(() => {
+               this.setState({submitting: false});
+               console.log("Message sent");
+               return true;
+            });
+        } catch(error){
+            this.setState({messagingError: error.message, submitting: false});
+        }
+    }
+
+    sendTransaction = async event => {
+        event.preventDefault();
+
+        const {web3, kid} = this.props;
+
+        let relayer = this.state.relayer;
+        if(relayer == '' && this.props.relayers.length == 1){
+            relayer = this.props.relayers[0];
+        } 
 
         this.setState({
           messagingError: '',
@@ -126,10 +173,11 @@ class TransferSNT extends Component {
                 powTarget: 1, 
                 powTime: 20, 
                 topic: this.state.topic,
-                symKeyID: skid,
+                pubKey: relayer,
                 payload: web3.utils.toHex({
                     'contract': SNTController.options.address,
                     'address': accounts[2],
+                    'action': 'transaction',
                     'encodedFunctionCall': funCall
                 })
             };
@@ -214,19 +262,10 @@ class TransferSNT extends Component {
         </Card>
 
         { this.state.messagingError && <MySnackbarContentWrapper variant="error" message={this.state.messagingError} /> }
+        
         <Card className={classes.card}>
-            <CardHeader title="2. Message" />
+            <CardHeader title="2. Find Available Relayers" />
             <CardContent>   
-                <TextField
-                    id="signature"
-                    label="Signed Message"
-                    value={this.state.signature}
-                    margin="normal"
-                    fullWidth
-                    InputProps={{
-                        readOnly: true
-                    }}
-                    />
                 <TextField
                     id="symKey"
                     label="Symmetric Key"
@@ -248,8 +287,49 @@ class TransferSNT extends Component {
                     />
             </CardContent>  
             <CardActions>
-                <Button size="small" color="primary" onClick={this.sendMessage} disabled={this.state.submitting}>
-                    Send Message
+                <Button size="small" color="primary" onClick={this.obtainRelayers} disabled={this.state.submitting}>
+                    Send &quot;availability&quot; Message
+                </Button>
+            </CardActions>   
+        </Card>
+
+
+        <Card className={classes.card}>
+            <CardHeader title="3. Generate Transaction" />
+            <CardContent>  
+                <TextField
+                    id="relayer"
+                    label="Relayer"
+                    value={this.state.relayer}
+                    onChange={this.handleChange('relayer')}
+                    margin="normal"
+                    fullWidth
+                    select
+                    SelectProps={{
+                        native: true
+                    }}
+                    >
+                    {
+                        this.props.relayers.length > 0 ?
+                        this.props.relayers.map((r, i) => <option key={i} value={r}>Relayer #{i+1}: {r}</option>)
+                        :
+                        <option></option>
+                    }
+                </TextField>
+                <TextField
+                    id="signature"
+                    label="Signed Message"
+                    value={this.state.signature}
+                    margin="normal"
+                    fullWidth
+                    InputProps={{
+                        readOnly: true
+                    }}
+                    />
+            </CardContent>  
+            <CardActions>
+                <Button size="small" color="primary" onClick={this.sendTransaction} disabled={this.state.submitting}>
+                    Send &quot;transaction&quot; Message
                 </Button>
             </CardActions>   
         </Card>
@@ -264,7 +344,8 @@ TransferSNT.propTypes = {
     web3: PropTypes.object,
     kid: PropTypes.string,
     skid: PropTypes.string,
-    clearMessages: PropTypes.func
+    clearMessages: PropTypes.func,
+    relayers: PropTypes.array.isRequired
 };
 
 export default withStyles(styles)(TransferSNT);

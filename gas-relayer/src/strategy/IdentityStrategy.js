@@ -1,8 +1,17 @@
 const Strategy = require('./BaseStrategy');
 const erc20ABI = require('../../abi/ERC20Token.json');
 
+/**
+ * Class representing a strategy to validate a `transaction` request when the topic is related to Identities.
+ * @extends Strategy
+ */
 class IdentityStrategy extends Strategy {
 
+    /**
+     * Validates if the contract being invoked represents an Identity instance 
+     * @param {object} input - Object obtained from a `transaction` request.
+     * @returns {bool} Valid instance or not
+     */
     async _validateInstance(input){
         const instanceCodeHash = this.web3.utils.soliditySha3(await this.web3.eth.getCode(input.contract));
         const kernelVerifSignature = this.web3.utils.soliditySha3(this.contract.kernelVerification).slice(0, 10);
@@ -15,6 +24,11 @@ class IdentityStrategy extends Strategy {
         return this.web3.eth.abi.decodeParameter('bool', verificationResult);
     }
 
+    /**
+     * Process Identity strategy
+     * @param {object} input - Object obtained from an 'transaction' request. It expects an object with this structure `{contract, address, action, functionName, functionParameters, payload}`
+     * @returns {object} Status of validation and estimated gas
+     */
     async execute(input){
         if(this.contract.isIdentity){
             let validInstance = await this._validateInstance(input);

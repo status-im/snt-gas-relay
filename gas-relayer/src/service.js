@@ -4,9 +4,6 @@ const config = require('../config/config.js');
 const ContractSettings = require('./contract-settings');
 const MessageProcessor = require('./message-processor');
 
-// IDEA: A node should call an API (probably from a status node) to register itself as a 
-//      token gas relayer.
-
 console.info("Starting...");
 const events = new EventEmitter();
 
@@ -59,52 +56,39 @@ events.on('setup:complete', async (settings) => {
   // Verifying relayer balance
   await verifyBalance();
 
-  shhOptions.symKeyId = await web3.shh.addSymKey(config.node.whisper.symKey);
   shhOptions.kId = await web3.shh.newKeyPair();
 
+  const symKeyID = await web3.shh.addSymKey(config.node.whisper.symKey);
+  const pubKey = await web3.shh.getPublicKey(shhOptions.kId);
+
   // Listening to whisper
+  // Individual subscriptions due to https://github.com/ethereum/web3.js/issues/1361
+  // once this is fixed, we'll be able to use an array of topics and a single subs for symkey and a single subs for privKey
   console.info(`Sym Key: ${config.node.whisper.symKey}`);
+  console.info(`Relayer Public Key: ${pubKey}`);
   console.info("Topics Available:");
   for(let contract in settings.contracts) {
     console.info("- %s: %s [%s]", settings.getContractByTopic(contract).name, contract,  Object.keys(settings.getContractByTopic(contract).allowedFunctions).join(', '));
     shhOptions.topics = [contract];
-    events.emit('server:listen', shhOptions, settings);
+
+    // Listen to public channel - Used for reporting availability
+    events.emit('server:listen', Object.assign({symKeyID}, shhOptions), settings);
+
+    // Listen to private channel - Individual transactions
+    events.emit('server:listen', Object.assign({privateKeyID: shhOptions.kId}, shhOptions), settings);
   }
-
-  /*
-  if(config.heartbeat.enabled){
-
-    web3.shh.addSymKey(config.heartbeat.symKey)
-      .then(heartbeatSymKeyId => { 
-
-        for(let tokenAddress in settings.getTokens()){
-
-          let heartbeatPayload = settings.getToken(tokenAddress);
-          heartbeatPayload.address = tokenAddress;
-
-          setInterval(() => {
-              web3.shh.post({ 
-                symKeyID: heartbeatSymKeyId, 
-                sig: keyId,
-                ttl: config.node.whisper.ttl, 
-                powTarget:config.node.whisper.minPow, 
-                powTime: config.node.whisper.powTime,
-                topic: web3.utils.toHex("relay-heartbeat-" + heartbeatPayload.symbol).slice(0, 10),
-                payload: web3.utils.toHex(JSON.stringify(heartbeatPayload))
-            }).catch((err) => {
-              console.error(err);
-              process.exit(-1);
-            });
-          }, 60000);
-
-        }
-    });
-  }*/
 });
 
-const reply = (message) => (text, receipt) => {
+const replyFunction = (message) => (text, receipt) => {
   if(message.sig !== undefined){
-      console.log(text);
+
+      let payloadContent;
+      if(typeof text === 'object'){
+        payloadContent = {...text, receipt};
+      } else {
+        payloadContent = {text, receipt};
+      }
+
       web3.shh.post({ 
           pubKey: message.sig, 
           sig: shhOptions.kId,
@@ -112,7 +96,7 @@ const reply = (message) => (text, receipt) => {
           powTarget:config.node.whisper.minPow, 
           powTime: config.node.whisper.powTime, 
           topic: message.topic, 
-          payload: web3.utils.fromAscii(JSON.stringify({message:text, receipt}, null, " "))
+          payload: web3.utils.fromAscii(JSON.stringify(payloadContent, null, " "))
       }).catch(console.error);
   }
 };
@@ -121,9 +105,7 @@ const extractInput = (message) => {
     let obj = {
         contract: null,
         address: null,
-        functionName: null,
-        functionParameters: null,
-        payload: null
+        action: null
     };
 
     try {
@@ -131,9 +113,15 @@ const extractInput = (message) => {
         let parsedObj = JSON.parse(msg);
         obj.contract = parsedObj.contract;
         obj.address = parsedObj.address;
-        obj.functionName = parsedObj.encodedFunctionCall.slice(0, 10);
-        obj.functionParameters = "0x" + parsedObj.encodedFunctionCall.slice(10);
-        obj.payload = parsedObj.encodedFunctionCall;
+        obj.action = parsedObj.action;
+        if(obj.action == 'transaction'){
+          obj.functionName = parsedObj.encodedFunctionCall.slice(0, 10);
+          obj.functionParameters = "0x" + parsedObj.encodedFunctionCall.slice(10);
+          obj.payload = parsedObj.encodedFunctionCall;
+        } else if(obj.action == 'availability') {
+          obj.gasToken = parsedObj.gasToken;
+          obj.gasPrice = parsedObj.gasPrice;
+        }
     } catch(err){
         console.error("Couldn't parse " + message);
     }
@@ -144,7 +132,7 @@ const extractInput = (message) => {
 
 events.on('server:listen', (shhOptions, settings) => {
   let processor = new MessageProcessor(config, settings, web3, events);
-  web3.shh.subscribe('messages', shhOptions, (error, message) => {
+  web3.shh.subscribe('messages', shhOptions, async (error, message) => {
     if(error){
       console.error(error);
       return;
@@ -152,9 +140,30 @@ events.on('server:listen', (shhOptions, settings) => {
 
     verifyBalance(true);
 
-    processor.process(settings.getContractByTopic(message.topic), 
-                      extractInput(message), 
-                      reply(message));
+    const input = extractInput(message);
+    const reply = replyFunction(message);
+    let validationResult; 
+
+    switch(input.action){
+      case 'transaction':
+        processor.processTransaction(settings.getContractByTopic(message.topic), 
+                      input, 
+                      reply);
+        break;
+      case 'availability':
+        validationResult = await processor.processStrategy(settings.getContractByTopic(message.topic), 
+                              input, 
+                              reply,
+                              settings.buildStrategy("./strategy/AvailabilityStrategy", message.topic)
+                            );
+        if(validationResult.success) reply(validationResult.message);
+
+        break;
+      default: 
+        reply("unknown-action");        
+    }
+
+    
   });
 });
 

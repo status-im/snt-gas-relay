@@ -3,9 +3,17 @@ const Strategy = require('./BaseStrategy');
 const TransferSNT = "0x916b6511";
 const ExecuteGasRelayed = "0x754e6ab0";
 
-
+/**
+ * Class representing a strategy to validate a `transaction` request when the topic is related to SNTController.
+ * @extends Strategy
+ */
 class SNTStrategy extends Strategy {
 
+    /**
+     * Process SNTController strategy
+     * @param {object} input - Object obtained from an 'transaction' request. It expects an object with this structure `{contract, address, action, functionName, functionParameters, payload}`
+     * @returns {object} Status of validation and estimated gas
+     */
     async execute(input){
         const params = this._obtainParametersFunc(input);
 
