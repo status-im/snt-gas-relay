@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import StatusGasRelayer, {Contracts} from '../status-gas-relayer';
+import StatusGasRelayer, {Contracts, Functions} from '../status-gas-relayer';
 import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
@@ -78,6 +78,7 @@ class CallGasRelayed extends Component {
         try {
 
             const s = new StatusGasRelayer.Identity(this.props.identityAddress, web3.eth.defaultAccount)
+                                          .setContractFunction(Functions.Identity.call)
                                           .setTransaction(this.state.to, this.state.value, this.state.data)
                                           .setGas(this.state.gasToken, this.state.gasPrice, this.state.gasLimit);
                                           
@@ -133,6 +134,7 @@ class CallGasRelayed extends Component {
         
         try {
             const s = new StatusGasRelayer.Identity(this.props.identityAddress, web3.eth.defaultAccount)
+                                          .setContractFunction(Functions.Identity.call)
                                           .setTransaction(this.state.to, this.state.value, this.state.data)
                                           .setGas(this.state.gasToken, this.state.gasPrice, this.state.gasLimit)
                                           .setRelayer(relayer)
