@@ -19,21 +19,34 @@ const relayerSymmmetricKeyID = "0xd0d905c1c62b810b787141430417caf2b3f54cffadb395
 
 class StatusGasRelayer {
     constructor(build, web3) {
+        if (arguments.length !== 2 || !this.validateBuild(build)) throw new Error("Invalid build");
+
         this.web3 = web3;
-        if (arguments.length === 2 && this.validateBuild(build)) {
+
+        Object.defineProperties(this, {
+            message: {
+                value: build._getMessage(web3),
+                writable: false
+            },
+            topic: {
+                value: web3.utils.toHex(build.contractName).slice(0, 10),
+                writable: false
+            },
+            kid: {
+                value: build.kid,
+                writable: false
+            }
+        });
+
+        if(build.operation === Actions.Transaction){
             Object.defineProperties(this, {
-                message: {
-                    value: build._getMessage(web3),
+                pubKey: {
+                    value: build.relayer,
                     writable: false
-                },
-                topic: {
-                    value: web3.utils.toHex(build.contractName).slice(0, 10),
-                    writable: false
-                },
-                kid: {
-                    value: build.kid,
-                    writable: false
-                },
+                }
+            });
+        } else {
+            Object.defineProperties(this, {
                 skid: {
                     value: build.skid,
                     writable: false
@@ -45,10 +58,8 @@ class StatusGasRelayer {
     post = async (options) => {
         options = options || {};
 
+        let pubKey = options.pubKey || this.pubKey;
         let skid = options.skid || this.skid;
-        if(!skid){
-            skid = await this.web3.shh.addSymKey(relayerSymmmetricKeyID);
-        }
 
         let kid = options.kid || this.kid;
         if(!kid){
@@ -61,9 +72,17 @@ class StatusGasRelayer {
             powTarget: options.powTarget || 1, 
             powTime: options.powTime || 20, 
             topic: this.topic,
-            symKeyID: skid,
             payload: this.web3.utils.toHex(this.message)
         };
+
+        if(pubKey){
+            sendOptions.pubKey = pubKey;
+        } else {
+            if(!skid){
+                skid = await this.web3.shh.addSymKey(relayerSymmmetricKeyID);
+            }
+            sendOptions.symKeyID = skid;
+        }
 
         const msgId = await this.web3.shh.post(sendOptions);
         return msgId;
@@ -94,6 +113,11 @@ class Action {
 
     setOperation(operation){
         this.operation = operation;
+        return this;
+    }
+
+    setRelayer(relayer){
+        this.relayer = relayer;
         return this;
     }
 
@@ -138,7 +162,7 @@ class IdentityGasRelayedAction extends Action {
         return nonce;
     }
 
-    sign = async (web3) => {
+    sign = async web3 => {
         const contract = new web3.eth.Contract(identityGasRelayABI, this.contractAddress);
         const nonce = await this._nonce(contract);
 
@@ -153,14 +177,38 @@ class IdentityGasRelayedAction extends Action {
                 this.gasToken
             ).call();
             
-        const signature = await web3.eth.sign(hashedMessage, this.accountAddress);
+        const signedMessage = await web3.eth.sign(hashedMessage, this.accountAddress);
 
-        return signature;
+        return signedMessage;
     }
 
-    _getMessage = async web3 => {
-        return {
+    post = async (signature, web3, options) => {
+        this.nonce = await this.getNonce(web3);
+        this.signature = signature;
+        
+        const s = new StatusGasRelayer(this, web3);
+        return s.post(options);
+    }
 
+    _getMessage = web3 => {
+        // TODO: this depends on the operation to execute
+        let jsonAbi = identityGasRelayABI.find(x => x.name == "callGasRelayed");
+        let funCall = web3.eth.abi.encodeFunctionCall(jsonAbi, [
+                                                                this.to, 
+                                                                this.value, 
+                                                                this.data, 
+                                                                this.nonce, 
+                                                                this.gasPrice, 
+                                                                this.gasLimit,
+                                                                this.gasToken,
+                                                                this.signature
+                                                                ]);
+
+        return {
+            'contract': this.contractAddress,
+            'address': this.accountAddress,
+            'action': Actions.Transaction,
+            'encodedFunctionCall': funCall
         };
     }
 }
@@ -253,7 +301,55 @@ const identityGasRelayABI = [
         "stateMutability": "view",
         "type": "function",
         "signature": "0xaffed0e0"
-    }
+    },
+    {
+        "constant": false,
+        "inputs": [
+          {
+            "name": "_to",
+            "type": "address"
+          },
+          {
+            "name": "_value",
+            "type": "uint256"
+          },
+          {
+            "name": "_data",
+            "type": "bytes"
+          },
+          {
+            "name": "_nonce",
+            "type": "uint256"
+          },
+          {
+            "name": "_gasPrice",
+            "type": "uint256"
+          },
+          {
+            "name": "_gasLimit",
+            "type": "uint256"
+          },
+          {
+            "name": "_gasToken",
+            "type": "address"
+          },
+          {
+            "name": "_messageSignatures",
+            "type": "bytes"
+          }
+        ],
+        "name": "callGasRelayed",
+        "outputs": [
+          {
+            "name": "success",
+            "type": "bool"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function",
+        "signature": "0xfd0dded5"
+      }
 ];
 
 export default StatusGasRelayer;

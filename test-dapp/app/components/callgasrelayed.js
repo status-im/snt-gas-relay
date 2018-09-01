@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import StatusGasRelayer, {Contracts} from '../status-gas-relayer';
 import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
@@ -6,7 +7,6 @@ import CardContent from '@material-ui/core/CardContent';
 import CardHeader from '@material-ui/core/CardHeader';
 import EmbarkJS from 'Embark/EmbarkJS';
 import Grid from '@material-ui/core/Grid';
-import IdentityGasRelay from 'Embark/contracts/IdentityGasRelay';
 import MySnackbarContentWrapper from './snackbar';
 import PropTypes from 'prop-types';
 import STT from 'Embark/contracts/STT';
@@ -15,9 +15,6 @@ import TextField from '@material-ui/core/TextField';
 import config from '../config';
 import web3 from 'Embark/web3';
 import {withStyles} from '@material-ui/core/styles';
-
-import StatusGasRelayer, {Contracts} from '../status-gas-relayer';
-
 
 const styles = theme => ({
     root: {
@@ -83,7 +80,7 @@ class CallGasRelayed extends Component {
             const s = new StatusGasRelayer.Identity(this.props.identityAddress, web3.eth.defaultAccount)
                                           .setTransaction(this.state.to, this.state.value, this.state.data)
                                           .setGas(this.state.gasToken, this.state.gasPrice, this.state.gasLimit);
-            
+                                          
             const signature = await s.sign(web3);
 
             this.setState({signature});
@@ -118,7 +115,7 @@ class CallGasRelayed extends Component {
         }
     }
 
-    sendTransaction = event => {
+    sendTransaction = async event => {
         event.preventDefault();
 
         const {web3, kid} = this.props;
@@ -135,38 +132,16 @@ class CallGasRelayed extends Component {
         this.props.clearMessages();
         
         try {
-            let jsonAbi = IdentityGasRelay._jsonInterface.filter(x => x.name == "callGasRelayed")[0];
-            let funCall = web3.eth.abi.encodeFunctionCall(jsonAbi, [
-                                                                this.state.to, 
-                                                                this.state.value, 
-                                                                this.state.data, 
-                                                                this.props.nonce, 
-                                                                this.state.gasPrice, 
-                                                                this.state.gasLimit,
-                                                                this.state.gasToken,
-                                                                this.state.signature
-                                                                ]);
-            const sendOptions = {
-                ttl: 1000, 
-                sig: kid,
-                powTarget: 1, 
-                powTime: 20, 
-                topic: this.state.topic,
-                pubKey: relayer,
-                payload: web3.utils.toHex({
-                    'contract': this.props.identityAddress,
-                    'address': web3.eth.defaultAccount,
-                    'action': 'transaction',
-                    'encodedFunctionCall': funCall
-                })
-            };
- 
-            web3.shh.post(sendOptions)
-            .then(() => {
-               this.setState({submitting: false});
-               console.log("Message sent");
-               return true;
-            });
+            const s = new StatusGasRelayer.Identity(this.props.identityAddress, web3.eth.defaultAccount)
+                                          .setTransaction(this.state.to, this.state.value, this.state.data)
+                                          .setGas(this.state.gasToken, this.state.gasPrice, this.state.gasLimit)
+                                          .setRelayer(relayer)
+                                          .setAsymmetricKeyID(kid);
+
+            await s.post(this.state.signature, web3);
+
+            this.setState({submitting: false});
+            console.log("Message sent");
         } catch(error){
             this.setState({messagingError: error.message, submitting: false});
         }
