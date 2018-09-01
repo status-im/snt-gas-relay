@@ -72,8 +72,6 @@ class IdentityStrategy extends Strategy {
                 estimatedGas = await this._estimateGas(input);
             } else {
                 const tmp = Math.floor(parseInt((await this._estimateGas(input)).toString(10), 10) * 1.05);
-
-                console.log(tmp);
                 estimatedGas = this.web3.utils.toBN(tmp); // TODO: tune this
             }
 
