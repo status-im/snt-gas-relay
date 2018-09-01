@@ -108,10 +108,10 @@ class MessageProcessor {
             validationResult.estimatedGas = await this.web3.eth.estimateGas(p);
         }
 
-        p.gas = parseInt(validationResult.estimatedGas * 1.05, 10); // Tune this
+        p.gas = Math.floor(parseInt(validationResult.estimatedGas, 10)); // Tune this
 
         const nodeBalance =  await this.web3.eth.getBalance(this.config.node.blockchain.account);
-    
+
         if(nodeBalance < p.gas){
             reply("Relayer unavailable");
             console.error("Relayer doesn't have enough gas to process trx: %s, required %s", nodeBalance, p.gas);
