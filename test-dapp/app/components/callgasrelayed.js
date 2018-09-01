@@ -70,7 +70,7 @@ class CallGasRelayed extends Component {
         });
     };
 
-    sign = (event) => {
+    sign = async (event) => {
         if(event) event.preventDefault();
   
         this.setState({
@@ -78,25 +78,15 @@ class CallGasRelayed extends Component {
           transactionError: ''
         });
   
-        IdentityGasRelay.options.address = this.props.identityAddress;
-
         try {
-            IdentityGasRelay.methods.callGasRelayHash(
-                this.state.to,
-                this.state.value,
-                web3.utils.soliditySha3({t: 'bytes', v: this.state.data}),
-                this.props.nonce,
-                this.state.gasPrice,
-                this.state.gasLimit,
-                this.state.gasToken
-            )
-            .call()
-            .then(message => {
-                return web3.eth.sign(message, web3.eth.defaultAccount);
-            })
-            .then(signature => {
-                this.setState({signature});
-            });
+
+            const s = new StatusGasRelayer.Identity(this.props.identityAddress, web3.eth.defaultAccount)
+                                          .setTransaction(this.state.to, this.state.value, this.state.data)
+                                          .setGas(this.state.gasToken, this.state.gasPrice, this.state.gasLimit);
+            
+            const signature = await s.sign(web3);
+
+            this.setState({signature});
         } catch(error){
             this.setState({transactionError: error.message});
         }

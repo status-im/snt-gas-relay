@@ -8,12 +8,12 @@ export const Functions = {
         'call': 'callGasRelayed',
         'approveAndCall': 'approveAndCallGasRelayed'
     }
-}
+};
 
 export const Actions = {
     'Availability': 'availability',
     'Transaction': 'transaction'
-}
+};
 
 const relayerSymmmetricKeyID = "0xd0d905c1c62b810b787141430417caf2b3f54cffadb395b7bb39fdeb8f17266b";
 
@@ -65,15 +65,22 @@ class StatusGasRelayer {
             payload: this.web3.utils.toHex(this.message)
         };
 
-        return await web3.shh.post(sendOptions);
+        const msgId = await this.web3.shh.post(sendOptions);
+        return msgId;
     }
 
     validateBuild = (build) => {
-       return (String(build.constructor) === String(StatusGasRelayer.AvailableRelayers));
+       return (String(build.constructor) === String(StatusGasRelayer.AvailableRelayers) || 
+        String(build.constructor) === String(StatusGasRelayer.Identity)
+        );
     }
 
     static get AvailableRelayers() {
        return AvailableRelayersAction;
+    }
+
+    static get Identity() {
+        return IdentityGasRelayedAction;
     }
 }
 
@@ -120,14 +127,35 @@ class IdentityGasRelayedAction extends Action {
         return this;
     }
 
-    getNonce = async (web3) => {
-        const contract = web3.eth.contract(identityGasRelayABI, this.contractAddress);
+    _nonce = async(contract) => {
         const nonce = await contract.methods.nonce().call();
         return nonce;
     }
 
-    sign = (web3) => {
+    getNonce = async (web3) => {
+        const contract = new web3.eth.Contract(identityGasRelayABI, this.contractAddress);
+        const nonce = await this._nonce(contract);
+        return nonce;
+    }
 
+    sign = async (web3) => {
+        const contract = new web3.eth.Contract(identityGasRelayABI, this.contractAddress);
+        const nonce = await this._nonce(contract);
+
+        // TODO: this depends of the operation to execute
+        const hashedMessage = await contract.methods.callGasRelayHash(
+                this.to,
+                this.value,
+                web3.utils.soliditySha3({t: 'bytes', v: this.data}),
+                nonce,
+                this.gasPrice,
+                this.gasLimit,
+                this.gasToken
+            ).call();
+            
+        const signature = await web3.eth.sign(hashedMessage, this.accountAddress);
+
+        return signature;
     }
 
     _getMessage = async web3 => {
@@ -165,8 +193,6 @@ class AvailableRelayersAction extends Action {
         return s.post(options);
     }
 }
-
-
 
 const identityGasRelayABI = [
     {
