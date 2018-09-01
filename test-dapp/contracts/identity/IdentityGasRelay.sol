@@ -119,7 +119,7 @@ contract IdentityGasRelay is Identity {
         uint startGas = gasleft(); 
         
         //verify transaction parameters
-        require(startGas >= _gasLimit);
+        //require(startGas >= _gasLimit); // TODO: Tune this
         require(_nonce == nonce);
         
         //verify if signatures are valid and came from correct actors;
@@ -255,7 +255,7 @@ contract IdentityGasRelay is Identity {
         uint startGas = gasleft(); 
         
         //verify transaction parameters
-        require(startGas >= _gasLimit);
+        // require(startGas >= _gasLimit); // TODO: tune this
         require(_nonce == nonce);
         
         //verify if signatures are valid and came from correct actors;

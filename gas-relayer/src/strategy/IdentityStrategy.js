@@ -1,6 +1,9 @@
 const Strategy = require('./BaseStrategy');
 const erc20ABI = require('../../abi/ERC20Token.json');
 
+const CallGasRelayed = "0xfd0dded5";
+const ApproveAndCallGasRelayed = "0x59f4ac61";
+
 /**
  * Class representing a strategy to validate a `transaction` request when the topic is related to Identities.
  * @extends Strategy
@@ -64,13 +67,23 @@ class IdentityStrategy extends Strategy {
 
         let estimatedGas = 0;
         try {
-            // Geth tends to fail estimation with proxies, so we simulate it with ganache
-            estimatedGas = await this._simulateTransaction(input);
-            if(gasLimit.mul(this.web3.utils.toBN(1.05)).lt(estimatedGas)) {
+            // TODO: Investigate why sometimes geth fails estimations with proxies
+            if(input.functionName == CallGasRelayed){
+                estimatedGas = await this._estimateGas(input);
+            } else {
+                const tmp = Math.floor(parseInt((await this._estimateGas(input)).toString(10), 10) * 1.05);
+                estimatedGas = this.web3.utils.toBN(tmp); // TODO: tune this
+            }
+
+            if(gasLimit.lt(estimatedGas)) {
                 return {success: false, message: "Gas limit below estimated gas (" + estimatedGas + ")"};
             } 
         } catch(exc){
             if(exc.message.indexOf("revert") > -1) return {success: false, message: "Transaction will revert"};
+            else {
+                console.error(exc);
+                return {success: false, message: "Couldn't process transaction"};
+            }
         }
 
         return {
