@@ -7,6 +7,10 @@ export const Functions = {
     'Identity': {
         'call': 'callGasRelayed',
         'approveAndCall': 'approveAndCallGasRelayed'
+    },
+    'SNT': {
+        'transfer': 'transferSNT',
+        'execute': 'executeGasRelayed'
     }
 };
 
@@ -90,7 +94,8 @@ class StatusGasRelayer {
 
     validateBuild = (build) => {
        return (String(build.constructor) === String(StatusGasRelayer.AvailableRelayers) || 
-        String(build.constructor) === String(StatusGasRelayer.Identity)
+        String(build.constructor) === String(StatusGasRelayer.Identity) ||
+        String(build.constructor) === String(StatusGasRelayer.SNTController)
         );
     }
 
@@ -100,6 +105,10 @@ class StatusGasRelayer {
 
     static get Identity() {
         return IdentityGasRelayedAction;
+    }
+
+    static get SNTController() {
+        return SNTControllerAction;
     }
 }
 
@@ -259,6 +268,124 @@ class IdentityGasRelayedAction extends Action {
     }
 }
 
+class SNTControllerAction extends Action {
+    constructor(contractAddress, accountAddress) {
+        super();
+        this.contractName = Contracts.SNT;
+        this.contractAddress = contractAddress;
+        this.accountAddress = accountAddress;
+
+        this.operation = Actions.Transaction;
+        return this;
+    }
+
+    transferSNT = (to, value) => {
+        this.to = to;
+        this.value = value;
+        this.contractFunction = Functions.SNT.transfer;
+        return this;
+    }
+
+    execute = (contract, data) => {
+        this.allowedContract = contract;
+        this.data = data;
+        this.contractFunction = Functions.SNT.execute;
+        return this;
+    }
+
+    _nonce = async(contract) => {
+        const nonce = await contract.methods.signNonce(this.accountAddress).call();
+        return nonce;
+    }
+
+    getNonce = async (web3) => {
+        const contract = new web3.eth.Contract(sntControllerABI, this.contractAddress);
+        const nonce = await this._nonce(contract);
+        return nonce;
+    }
+
+    setGas(price, minimal){
+        this.gasPrice = price;
+        this.gasMinimal = minimal;
+        return this;
+    }
+
+    sign = async web3 => {
+        const contract = new web3.eth.Contract(sntControllerABI, this.contractAddress);
+        const nonce = await this._nonce(contract);
+        let hashedMessage;
+
+        switch(this.contractFunction){
+            case Functions.SNT.execute:
+                hashedMessage = await contract.methods.getExecuteGasRelayedHash(
+                    this.allowedContract,
+                    this.data,
+                    nonce,
+                    this.gasPrice,
+                    this.gasMinimal,
+                ).call();
+                break;
+            case Functions.SNT.transfer:
+                hashedMessage = await contract.methods.getTransferSNTHash(
+                    this.to,
+                    this.value,
+                    nonce,
+                    this.gasPrice
+                ).call(); 
+                break;
+            default:
+                throw new Error("Function not allowed");
+        }
+          
+        const signedMessage = await web3.eth.sign(hashedMessage, this.accountAddress);
+
+        return signedMessage;
+    }
+
+    post = async (signature, web3, options) => {
+        this.nonce = await this.getNonce(web3);
+        this.signature = signature;
+        const s = new StatusGasRelayer(this, web3);
+        return s.post(options);
+    }
+
+    _getMessage = web3 => {
+        let jsonAbi = sntControllerABI.find(x => x.name == this.contractFunction);
+        let funCall;
+
+        switch(this.contractFunction){
+            case Functions.SNT.execute:
+                funCall = web3.eth.abi.encodeFunctionCall(jsonAbi, [
+                            this.allowedContract, 
+                            this.data, 
+                            this.nonce, 
+                            this.gasPrice, 
+                            this.gasMinimal,
+                            this.signature
+                            ]);
+                break;
+            case Functions.SNT.transfer:
+                funCall = web3.eth.abi.encodeFunctionCall(jsonAbi, [
+                            this.to, 
+                            this.value, 
+                            this.nonce, 
+                            this.gasPrice, 
+                            this.signature
+                            ]);
+                break;
+            default:
+                throw new Error("Function not allowed");
+        }
+
+        return {
+            'contract': this.contractAddress,
+            'address': this.accountAddress,
+            'action': Actions.Transaction,
+            'encodedFunctionCall': funCall
+        };
+    }
+}
+
 
 class AvailableRelayersAction extends Action {
     constructor(contractName, contractAddress, accountAddress) {
@@ -287,6 +414,163 @@ class AvailableRelayersAction extends Action {
         return s.post(options);
     }
 }
+
+const sntControllerABI = [
+    {
+        "constant": true,
+        "inputs": [
+          {
+            "name": "_to",
+            "type": "address"
+          },
+          {
+            "name": "_amount",
+            "type": "uint256"
+          },
+          {
+            "name": "_nonce",
+            "type": "uint256"
+          },
+          {
+            "name": "_gasPrice",
+            "type": "uint256"
+          }
+        ],
+        "name": "getTransferSNTHash",
+        "outputs": [
+          {
+            "name": "txHash",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function",
+        "signature": "0x0c1f1f25"
+      },
+      {
+        "constant": true,
+        "inputs": [
+          {
+            "name": "_allowedContract",
+            "type": "address"
+          },
+          {
+            "name": "_data",
+            "type": "bytes"
+          },
+          {
+            "name": "_nonce",
+            "type": "uint256"
+          },
+          {
+            "name": "_gasPrice",
+            "type": "uint256"
+          },
+          {
+            "name": "_gasMinimal",
+            "type": "uint256"
+          }
+        ],
+        "name": "getExecuteGasRelayedHash",
+        "outputs": [
+          {
+            "name": "execHash",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function",
+        "signature": "0x31c128b1"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "name": "_to",
+            "type": "address"
+          },
+          {
+            "name": "_amount",
+            "type": "uint256"
+          },
+          {
+            "name": "_nonce",
+            "type": "uint256"
+          },
+          {
+            "name": "_gasPrice",
+            "type": "uint256"
+          },
+          {
+            "name": "_signature",
+            "type": "bytes"
+          }
+        ],
+        "name": "transferSNT",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function",
+        "signature": "0x916b6511"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "name": "_allowedContract",
+            "type": "address"
+          },
+          {
+            "name": "_data",
+            "type": "bytes"
+          },
+          {
+            "name": "_nonce",
+            "type": "uint256"
+          },
+          {
+            "name": "_gasPrice",
+            "type": "uint256"
+          },
+          {
+            "name": "_gasMinimal",
+            "type": "uint256"
+          },
+          {
+            "name": "_signature",
+            "type": "bytes"
+          }
+        ],
+        "name": "executeGasRelayed",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function",
+        "signature": "0x754e6ab0"
+      },
+      {
+        "constant": true,
+        "inputs": [
+          {
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "name": "signNonce",
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function",
+        "signature": "0x907920c7"
+      }
+];
 
 const identityGasRelayABI = [
     {

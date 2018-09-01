@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import StatusGasRelayer, {Contracts} from '../status-gas-relayer';
 import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
@@ -9,12 +10,12 @@ import MySnackbarContentWrapper from './snackbar';
 import PropTypes from 'prop-types';
 import SNTController from 'Embark/contracts/SNTController';
 import STT from 'Embark/contracts/STT';
-
 import TestContract from 'Embark/contracts/TestContract';
 import TextField from '@material-ui/core/TextField';
 import config from '../config';
 import web3 from 'Embark/web3';
 import {withStyles} from '@material-ui/core/styles';
+
 const styles = theme => ({
     root: {
         width: '100%',
@@ -64,7 +65,7 @@ class TransferSNT extends Component {
         });
     }
 
-    sign = (event) => {
+    sign = async (event) => {
         if(event) event.preventDefault();
   
         this.setState({
@@ -72,27 +73,18 @@ class TransferSNT extends Component {
           transactionError: ''
         });
   
-        SNTController.options.address = this.props.identityAddress;
         
         try {
-            let message = "";
-            SNTController.methods.getTransferSNTHash(
-                this.state.to,
-                this.state.amount,
-                this.props.nonce,
-                this.state.gasPrice
-            )
-            .call()
-            .then(result => {
-                message = result;
-                return web3.eth.getAccounts();
-            })
-            .then(accounts => {
-                return web3.eth.sign(message, accounts[2]);
-            })
-            .then(signature => {
-                this.setState({signature});
-            });
+            const accounts = await web3.eth.getAccounts();
+            
+            const s = new StatusGasRelayer.SNTController(SNTController.options.address, accounts[2])
+                                          .transferSNT(this.state.to, this.state.amount)
+                                          .setGas(this.state.gasPrice);
+                                          
+            const signature = await s.sign(web3);
+
+            this.setState({signature});
+
         } catch(error){
             this.setState({transactionError: error.message});
         }
@@ -109,31 +101,19 @@ class TransferSNT extends Component {
         });
         this.props.clearMessages();
 
-        const accounts = await web3.eth.getAccounts();
 
         try {
-            const sendOptions = {
-                ttl: 1000, 
-                sig: kid,
-                powTarget: 1, 
-                powTime: 20, 
-                topic: this.state.topic,
-                symKeyID: skid,
-                payload: web3.utils.toHex({
-                    'contract': SNTController.options.address,
-                    'address': accounts[2],
-                    'action': 'availability',
-                    'gasToken': STT.options.address,
-                    'gasPrice': this.state.gasPrice
-                })
-            };
+            const accounts = await web3.eth.getAccounts();
 
-            web3.shh.post(sendOptions)
-            .then(() => {
-               this.setState({submitting: false});
-               console.log("Message sent");
-               return true;
-            });
+            const s = new StatusGasRelayer.AvailableRelayers(Contracts.SNT, SNTController.options.address, accounts[2])
+                                          .setRelayersSymKeyID(skid)
+                                          .setAsymmetricKeyID(kid)
+                                          .setGas(STT.options.address, this.state.gasPrice);
+            await s.post(web3);
+            
+            console.log("Message sent");
+            this.setState({submitting: false});
+
         } catch(error){
             this.setState({messagingError: error.message, submitting: false});
         }
@@ -156,38 +136,19 @@ class TransferSNT extends Component {
         this.props.clearMessages();
         
         try {
-            let jsonAbi = SNTController._jsonInterface.filter(x => x.name == "transferSNT")[0];
-            let funCall = web3.eth.abi.encodeFunctionCall(jsonAbi, [
-                                                                this.state.to, 
-                                                                this.state.amount, 
-                                                                this.props.nonce, 
-                                                                this.state.gasPrice, 
-                                                                this.state.signature
-                                                                ]);
-
             const accounts = await web3.eth.getAccounts();
 
-            const sendOptions = {
-                ttl: 1000, 
-                sig: kid,
-                powTarget: 1, 
-                powTime: 20, 
-                topic: this.state.topic,
-                pubKey: relayer,
-                payload: web3.utils.toHex({
-                    'contract': SNTController.options.address,
-                    'address': accounts[2],
-                    'action': 'transaction',
-                    'encodedFunctionCall': funCall
-                })
-            };
+            const s = new StatusGasRelayer.SNTController(SNTController.options.address, accounts[2])
+                                          .transferSNT(this.state.to, this.state.amount)
+                                          .setGas(this.state.gasPrice)
+                                          .setRelayer(relayer)
+                                          .setAsymmetricKeyID(kid);
 
-            web3.shh.post(sendOptions)
-            .then(() => {
-               this.setState({submitting: false});
-               console.log("Message sent");
-               return true;
-            });
+            await s.post(this.state.signature, web3);
+
+            this.setState({submitting: false});
+            console.log("Message sent");
+
         } catch(error){
             this.setState({messagingError: error.message, submitting: false});
         }
