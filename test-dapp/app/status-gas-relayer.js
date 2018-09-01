@@ -89,7 +89,54 @@ class Action {
         this.operation = operation;
         return this;
     }
+
+    setRelayersSymKeyID = (skid) => {
+        this.skid = skid;
+        return this;
+    }
+
+    setAsymmetricKeyID = (kid) => {
+        this.kid = kid;
+        return this;
+    }
 }
+
+class IdentityGasRelayedAction extends Action {
+    constructor(contractAddress, accountAddress) {
+        super();
+        this.contractName = Contracts.Identity;
+        this.contractAddress = contractAddress;
+        this.accountAddress = accountAddress;
+
+        this.operation = Actions.Transaction;
+        return this;
+    }
+
+    setTransaction = (to, value, data) => {
+        this.to = to;
+        this.value = value;
+        this.data = data;
+
+        return this;
+    }
+
+    getNonce = async (web3) => {
+        const contract = web3.eth.contract(identityGasRelayABI, this.contractAddress);
+        const nonce = await contract.methods.nonce().call();
+        return nonce;
+    }
+
+    sign = (web3) => {
+
+    }
+
+    _getMessage = async web3 => {
+        return {
+
+        };
+    }
+}
+
 
 class AvailableRelayersAction extends Action {
     constructor(contractName, contractAddress, accountAddress) {
@@ -103,17 +150,7 @@ class AvailableRelayersAction extends Action {
         return this;
     }
 
-    setRelayersSymKeyID = (skid) => {
-        this.skid = skid;
-        return this;
-    }
-
-    setAsymmetricKeyID = (kid) => {
-        this.kid = kid;
-        return this;
-    }
-
-    _getMessage = (web3) => {
+    _getMessage = web3 => {
         return {
             contract: this.contractAddress,
             address: this.accountAddress || web3.eth.defaultAccount,
@@ -128,5 +165,69 @@ class AvailableRelayersAction extends Action {
         return s.post(options);
     }
 }
+
+
+
+const identityGasRelayABI = [
+    {
+        "constant": true,
+        "inputs": [
+        {
+            "name": "_to",
+            "type": "address"
+        },
+        {
+            "name": "_value",
+            "type": "uint256"
+        },
+        {
+            "name": "_dataHash",
+            "type": "bytes32"
+        },
+        {
+            "name": "_nonce",
+            "type": "uint256"
+        },
+        {
+            "name": "_gasPrice",
+            "type": "uint256"
+        },
+        {
+            "name": "_gasLimit",
+            "type": "uint256"
+        },
+        {
+            "name": "_gasToken",
+            "type": "address"
+        }
+        ],
+        "name": "callGasRelayHash",
+        "outputs": [
+        {
+            "name": "_callGasRelayHash",
+            "type": "bytes32"
+        }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function",
+        "signature": "0xe27e2e5c"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "nonce",
+        "outputs": [
+        {
+            "name": "",
+            "type": "uint256"
+        }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function",
+        "signature": "0xaffed0e0"
+    }
+];
 
 export default StatusGasRelayer;
