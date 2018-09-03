@@ -1,4 +1,5 @@
 import React, {Component, Fragment} from 'react';
+import StatusGasRelayer, {Messages} from '../status-gas-relayer';
 import ApproveAndCallGasRelayed from './approveandcallgasrelayed';
 import CallGasRelayed from './callgasrelayed';
 import Divider from '@material-ui/core/Divider';
@@ -46,32 +47,25 @@ class Body extends Component {
                 web3js.shh.addSymKey(config.relaySymKey)
                 .then((skid) => {
                     this.setState({kid, skid});
-                    web3js.shh.subscribe('messages', {
-                        "privateKeyID": kid,
-                        "ttl": 1000,
-                        "minPow": 0.1,
-                        "powTime": 1000
-                      }, (error, message) => {
-                        console.log(message);
 
-                        const msg = web3js.utils.toAscii(message.payload);
-                        const msgObj = JSON.parse(msg);
+                    StatusGasRelayer.subscribe(web3js, (error, msgObj) => {
+                        if(error) {
+                            console.error(error);
+                            return;
+                        }
 
-                        if(msgObj.message == 'Available'){
+                        if(msgObj.message == Messages.available){
                             // found a relayer
-                            console.log("Relayer available: " + message.sig);
-
+                            console.log("Relayer available: " + msgObj.sig);
                             let relayers = this.state.relayers;
-                            relayers.push(message.sig);
+                            relayers.push(msgObj.sig);
                             relayers = relayers.filter((value, index, self) => self.indexOf(value) === index);
                             this.setState({relayers});
                         }
 
-                        if(error){
-                            console.error(error);
-                        } else {
-                            this.setState({message: msg});
-                        }
+                        this.setState({message: JSON.stringify(msgObj, null, 2)});
+                    }, {
+                        privateKeyID: kid
                     });
 
                     return true;

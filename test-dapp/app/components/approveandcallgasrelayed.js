@@ -7,7 +7,6 @@ import CardContent from '@material-ui/core/CardContent';
 import CardHeader from '@material-ui/core/CardHeader';
 import EmbarkJS from 'Embark/EmbarkJS';
 import Grid from '@material-ui/core/Grid';
-import IdentityGasRelay from 'Embark/contracts/IdentityGasRelay';
 import MySnackbarContentWrapper from './snackbar';
 import PropTypes from 'prop-types';
 import STT from 'Embark/contracts/STT';
@@ -71,8 +70,6 @@ class ApproveAndCallGasRelayed extends Component {
           msgSent: false,
           transactionError: ''
         });
-  
-        IdentityGasRelay.options.address = this.props.identityAddress;
         
         try {
             const s = new StatusGasRelayer.Identity(this.props.identityAddress, web3.eth.defaultAccount)
