@@ -77,16 +77,15 @@ class BaseStrategy {
         }));
         
         let simAccounts = await web3Sim.eth.getAccounts();
-        
+
         let simulatedReceipt = await web3Sim.eth.sendTransaction({
             from: simAccounts[0],
-            to: input.address,
+            to: input.contract,
             value: 0,
             data: input.payload, 
             gasLimit: 9500000 // 95% of current chain latest gas block limit
 
         });
-
         return simulatedReceipt;
     }
 

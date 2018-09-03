@@ -41,7 +41,8 @@ class SNTStrategy extends Strategy {
             const latestBlock = await this.web3.eth.getBlock("latest");
             let estimatedGas = 0;
             try {
-                estimatedGas = await this._estimateGas(input, latestBlock.gasLimit);
+                const simulatedReceipt = await this._simulateTransaction(input, latestBlock.gasLimit);
+                estimatedGas = this.web3.utils.toBN(simulatedReceipt.gasUsed);
             } catch(exc){
                 if(exc.message.indexOf("revert") > -1) return {success: false, message: "Transaction will revert"};
             }
