@@ -27,17 +27,17 @@ pragma solidity ^0.4.23;
  */
 
 import "../common/Controlled.sol";
-import "./TokenController.sol";
-import "./ApproveAndCallFallBack.sol";
-import "./MiniMeTokenInterface.sol";
-import "./MiniMeTokenFactory.sol";
+import "../token/TokenController.sol";
+import "../token/ApproveAndCallFallBack.sol";
+import "../token/MiniMeTokenInterface.sol";
+import "../token/MiniMeTokenFactory.sol";
 
 /**
  * @dev The actual token contract, the default controller is the msg.sender
  *  that deploys the contract, so usually this token will be deployed by a
  *  token controller contract, which Giveth will call a "Campaign"
  */
-contract MiniMeToken is MiniMeTokenInterface, Controlled {
+contract TestMiniMeToken is MiniMeTokenInterface, Controlled {
 
     string public name;                //The Token's name: e.g. DigixDAO Tokens
     uint8 public decimals;             //Number of decimals of the smallest unit
@@ -456,7 +456,7 @@ contract MiniMeToken is MiniMeTokenInterface, Controlled {
         uint _amount
     )
         public
-        onlyController
+        // onlyController TODO: UNCOMMENT THIS. THIS WAS DISABLED FOR DEMO PURPOSES
         returns (bool)
     {
         uint curTotalSupply = totalSupplyAt(block.number);
