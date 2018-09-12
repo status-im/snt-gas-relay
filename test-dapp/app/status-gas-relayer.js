@@ -19,6 +19,10 @@ export const Actions = {
     'Transaction': 'transaction'
 };
 
+export const Messages = {
+    'available': 'Available'
+};
+
 const relayerSymmmetricKeyID = "0xd0d905c1c62b810b787141430417caf2b3f54cffadb395b7bb39fdeb8f17266b";
 
 class StatusGasRelayer {
@@ -57,6 +61,36 @@ class StatusGasRelayer {
                 }
             });
         }
+    }
+
+    static async subscribe(web3, cb, options) {
+        options = options || {};
+
+        if(!options.privateKeyID){
+            options.privateKeyID = await web3.shh.newKeyPair();
+            // TODO: keypair should be shared between actions and this class.
+        }
+
+        web3.shh.subscribe('messages', {
+            "privateKeyID": options.privateKeyID,
+            "ttl": options.ttl || 1000,
+            "minPow": options.minPow || 0.1,
+            "powTime": options.powTime || 1000
+          }, (error, message) => {
+            if(error){
+                cb(error);
+                return;
+            }
+
+            try {
+                const msg = web3.utils.toAscii(message.payload);
+                const msgObj = JSON.parse(msg);
+                msgObj.sig =  message.sig;
+                cb(false, msgObj);
+            } catch (err) {
+                cb(err);
+            }
+        });     
     }
 
     post = async (options) => {

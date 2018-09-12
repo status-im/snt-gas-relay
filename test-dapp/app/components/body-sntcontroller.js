@@ -1,13 +1,14 @@
 import React, {Component, Fragment} from 'react';
+import StatusGasRelayer, {Messages} from '../status-gas-relayer';
 import Divider from '@material-ui/core/Divider';
 import EmbarkJS from 'Embark/EmbarkJS';
-import STT from 'Embark/contracts/STT';
+import Execute from './execute';
 import PropTypes from 'prop-types';
+import STT from 'Embark/contracts/STT';
 import Status from './status-sntcontroller';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import TransferSNT from './transfersnt';
-import Execute from './execute';
 import Typography from '@material-ui/core/Typography';
 import Web3 from 'web3';
 import config from '../config';
@@ -48,32 +49,24 @@ class Body extends Component {
                 .then((skid) => {
                     this.setState({kid, skid});
 
-                    web3js.shh.subscribe('messages', {
-                        "privateKeyID": kid,
-                        "ttl": 1000,
-                        "minPow": 0.1,
-                        "powTime": 1000
-                      }, (error, message) => {
-                        console.log(message);
+                    StatusGasRelayer.subscribe(web3js, (error, msgObj) => {
+                        if(error) {
+                            console.error(error);
+                            return;
+                        }
 
-                        const msg = web3js.utils.toAscii(message.payload);
-                        const msgObj = JSON.parse(msg);
-
-                        if(msgObj.message == 'Available'){
+                        if(msgObj.message == Messages.available){
                             // found a relayer
-                            console.log("Relayer available: " + message.sig);
-
+                            console.log("Relayer available: " + msgObj.sig);
                             let relayers = this.state.relayers;
-                            relayers.push(message.sig);
+                            relayers.push(msgObj.sig);
                             relayers = relayers.filter((value, index, self) => self.indexOf(value) === index);
                             this.setState({relayers});
                         }
-                        
-                        if(error){
-                            console.error(error);
-                        } else {
-                            this.setState({message: web3js.utils.toAscii(message.payload)});
-                        }
+
+                        this.setState({message: JSON.stringify(msgObj, null, 2)});
+                    }, {
+                        privateKeyID: kid
                     });
 
                     return true;
