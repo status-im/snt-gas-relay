@@ -125,7 +125,10 @@ The test dapp may be used for testnet from your computer. It requires a provider
 4. You're now able to use the dapp normally. The status for the relayer that can be seen in the footer of the dapp won't reflect accurate information, since the relayers account are not deterministic anymore since you're not in a development environment
 
 #### NOTE
-If you wish to use the functionality to generate tokens, and sending ether, you need to configure `config/contracts.js` to add a private key you control
+For using Identity operations, or of you wish to use the functionality to generate tokens, and sending ether, you need to configure `config/contracts.js` to add a private key you control, and from which the SNTController and the Identity Contract was deployed.
+
+Work is in progress for using the test-dapp inside status.
+
 ```
   testnet: {
     accounts: [
