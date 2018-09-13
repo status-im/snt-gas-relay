@@ -119,7 +119,19 @@ nodemon src/service.js
 
 ### Using the testdapp with testnet
 The test dapp may be used for testnet from your computer. It requires a provider that allows websockets:
-1. Start by executing `launch-geth-testnet.sh` in the test dapp folder to start the geth node with the required config to communicate with the status cluster via whisper. 
+1. Start by executing `launch-geth-testnet.sh` in the `test-dapp` folder to start the geth node with the required config to communicate with the status cluster via whisper. 
 2. Execute `embark run testnet` to launch the dapp connected to testnet
-3. Navigate in your browser to http://localhost:8000. In metamask connect to your local node thru the port 8546 to use websockets.
+3. Navigate in your browser to http://localhost:8000. Remember to disable Metamask (The provider injected by Metamask does not support Whisper)
 4. You're now able to use the dapp normally. The status for the relayer that can be seen in the footer of the dapp won't reflect accurate information, since the relayers account are not deterministic anymore since you're not in a development environment
+
+#### NOTE
+If you wish to use the functionality to generate tokens, and sending ether, you need to configure `config/contracts.js` to add a private key you control
+```
+  testnet: {
+    accounts: [
+      { 
+        privateKey: "your_private_key_here" 
+      }
+    ],
+     ....
+ ```
