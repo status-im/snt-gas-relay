@@ -73,9 +73,9 @@ class StatusGasRelayer {
 
         web3.shh.subscribe('messages', {
             "privateKeyID": options.privateKeyID,
-            "ttl": options.ttl || 1000,
-            "minPow": options.minPow || 0.1,
-            "powTime": options.powTime || 1000
+            "ttl": options.ttl || 10,
+            "minPow": options.minPow || 0.002,
+            "powTime": options.powTime || 1
           }, (error, message) => {
             if(error){
                 cb(error);
@@ -105,10 +105,10 @@ class StatusGasRelayer {
         }
 
         const sendOptions = {
-            ttl: options.ttl || 1000, 
+            ttl: options.ttl || 10, 
             sig: kid,
-            powTarget: options.powTarget || 1, 
-            powTime: options.powTime || 20, 
+            powTarget: options.powTarget || 0.002, 
+            powTime: options.powTime || 1, 
             topic: this.topic,
             payload: this.web3.utils.toHex(this.message)
         };
@@ -121,7 +121,7 @@ class StatusGasRelayer {
             }
             sendOptions.symKeyID = skid;
         }
-
+console.log(sendOptions);
         const msgId = await this.web3.shh.post(sendOptions);
         return msgId;
     }

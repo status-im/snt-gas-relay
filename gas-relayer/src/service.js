@@ -8,8 +8,9 @@ console.info("Starting...");
 const events = new EventEmitter();
 
 // Web3 Connection
-let connectionURL = `${config.node.local.protocol}://${config.node.local.host}:${config.node.local.port}`;
-const web3 = new Web3(connectionURL);
+const connectionURL = `${config.node.local.protocol}://${config.node.local.host}:${config.node.local.port}`;
+const wsProvider = new Web3.providers.WebsocketProvider(connectionURL, {headers: {Origin: "gas-relayer"}});
+const web3 = new Web3(wsProvider);
 
 web3.eth.net.isListening()
 .then(() => events.emit('web3:connected', connectionURL))
