@@ -28,6 +28,7 @@ sudo apt install python build-essential
 ### Clone the repo
 ```
 git clone https://github.com/status-im/snt-gas-relay.git
+cd snt-gas-relay/gas-relayer
 npm install
 ```
 
@@ -36,21 +37,23 @@ npm install
 1. Verify `geth` light mode starts successfully. Exit geth when you see everything is ok
 ```
 geth --testnet --syncmode=light console
-Ctrl + C
+> exit
 ```
 
 2. Create an account (at the moment, this install procedure has only been tested with Ropsten testnet). It will ask you for a password
 ```
-geth account new
+geth --testnet account new
 ```
 
 3. Create a file `geth_pass` that will contain the password. Ensure the permissions are read/write for the owner. This file can be put in any secure folder you determine. YOu need access to this file from the folder where the gas-relayer will execute
 ```
-echo "MyPassword" > snt-gas-relay\gas-relayer\testnet_password
-chmod 600 snt-gas-relay\gas-relayer\testnet_password
+echo "MyPassword" > testnet_password
+chmod 600 testnet_password
 ```
 
 4. There aren't enough geth peers with Whisper enabled to guarantee that messages will arrive from one node to other. We need to create a `static-nodes.json` file in `~/.ethereum/testnet/geth/`.
+`vi ~/.ethereum/testnet/geth/`
+
 This file needs to contain the following array:
 ```
 [
@@ -82,7 +85,7 @@ Before executing this program, `config/config.json` must be setup and `npm insta
 
 1. For testnet, a config file is provided with the required configuration.
 ```
-cd snt-gas-relay/config
+cd config
 rm config.js 
 mv config.testnet.js config.js
 ```
@@ -96,9 +99,16 @@ mv config.testnet.js config.js
 
 
 ### Launching the relayer
-A `launch-geth-testnet.sh` script is provided. You need to edit this file and set the `--unlock` option with the address used for procesing the transactions, and also the `--password` with the path to the password file. This script assumes the password file is called `testnet_password` and it's located in the same folder of the gas-relayer service.
+A `launch-geth-testnet.sh` script is provided in the `snt-gas-relayer/gas-relayer` folder. You need to edit this file and set the `--unlock` option with the address used for procesing the transactions, and also the `--password` with the path to the password file. This script assumes the password file is called `testnet_password` and it's located in the same folder of the gas-relayer service.
 
-After editing the file, assuming your account has eth, you may use any of the following three commands to launch the relayer. 
+After editing the file, assuming your account has eth, launch geth:
+
+```
+chmod +x ./launch-geth-testnet.sh
+./launch-geth-testnet.sh
+```
+
+you may use any of the following three commands to launch the relayer. 
 
 ```
 npm start
