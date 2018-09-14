@@ -80,7 +80,7 @@ class Status extends Component {
 
         // Default for devenv
         web3.eth.net.getId().then(netId => {
-            this.setState({isDev: netId != 1 && netId != 3});
+            this.setState({isDev: netId != 1});
         });
 
         this.web3BlockRead();
