@@ -60,6 +60,7 @@ class Status extends Component {
             'block': 0,
             'submitState': {
                 'etherSend': false,
+                'changeSNTController': false,
                 'generateSTT': false
             }
         };
@@ -158,6 +159,12 @@ class Status extends Component {
 
     changeSNTController = event => {
         event.preventDefault();
+
+        let submitState = this.state.submitState;
+        submitState.changeSNTController = true;
+        this.setState({submitState});
+
+
         const toSend = STT.methods.changeController(SNTController.options.address);
 
         toSend.estimateGas()
@@ -166,6 +173,9 @@ class Status extends Component {
         })
         .then(receipt => {
             console.log(receipt);
+            submitState = this.state.submitState;
+            submitState.changeSNTController = false;
+            this.setState({submitState});
         });
     }
 
@@ -173,7 +183,7 @@ class Status extends Component {
         event.preventDefault();
 
         let submitState = this.state.submitState;
-        submitState.etherSend = false;
+        submitState.etherSend = true;
         this.setState({submitState});
 
         web3.eth.sendTransaction({from: web3.eth.defaultAccount, to: this.props.relayerAddress, value: web3.utils.toWei('1', "ether")})

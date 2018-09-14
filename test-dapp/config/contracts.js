@@ -51,12 +51,12 @@ module.exports = {
       "IdentityKernel": {"deploy": false},
       "STT": {
         "instanceOf": "TestMiniMeToken",
-        "args":["$MiniMeTokenFactory", "0x0", "0x0", "Status Test Token", 18, "STT", true],
+        "args":["$MiniMeTokenFactory", "0x0", "0x0", "Status Gas Relayer Test Token", 18, "STT", true],
         "gasLimit": 4000000
       },
       "SNTController": {
         "args": ["0x5f803F54679577fC974813E48abF012A243dD439", "$STT"]
-      },
+       },
       "IdentityGasRelay": {
         "deploy": true,
         "args": [[], [], [], 1, 1, "0x0000000000000000000000000000000000000000"] 
@@ -73,31 +73,32 @@ module.exports = {
   },
   testnet: {
     contracts: {
+      //
       "MiniMeTokenFactory": {
-        "address": "0xBda00586BF6D79F22203EeDe046DEcaaf2B771B4"
+        "address": "0xD1A2f3726331d6100E8BcD1484EdF796B0b20cc9"
       },
       "STT": {
         "instanceOf": "TestMiniMeToken",
-        "address": "0xd7879e4401c548544196dc0215df449B2a1E23B3"
+        "address": "0x121a430A73Fc13e2D6d4a9dc3E943de647c30f8f"
       },
       "SNTController": {
-        "address": "0xA77A1014F55157c3119FB3f53E653E42f8fa634c"
+        "address": "0xf558aC91312821B0E1802567BC785355AA811783"
       },
       "IdentityGasRelay": {
-        "address": "0xEA60E967BA16Bf4313B5d23b78e44763C8928C67" 
+        "address": "0x4b571c5e75E93F53E985b12A3D107318178b9B5F" 
       },
       "IdentityFactory": {
-        "address": "0x7F106A1Bc637AC4AAed3DC72582749c4562D4323"
+        "address": "0x89976FeEC7CFDF2DF5194e363FD2a3388e2DC91A"
       },
       "TestContract": {
-        "address": "0x1F0C9ebD14Ba43BDD5b43C52EbEfc31066704988"
+        "address": "0xa7aeF1cd3e4a8425D9A1E13B5557908895dCbdBE"
       }
       // If needed to deploy contracts again, uncomment the following lines
       /*
       "MiniMeTokenFactory": {"args":[]},
       "STT": {
         "instanceOf": "MiniMeToken",
-        "args":["$MiniMeTokenFactory", "0x0", "0x0", "Status Test Token", 18, "STT", true],
+        "args":["$MiniMeTokenFactory", "0x0", "0x0", "Status Gas Relayer Test Token", 18, "STT", true],
         "gasLimit": 4000000
       },
       "SNTController": {
@@ -114,9 +115,7 @@ module.exports = {
       },
       "TestContract": {
         "args": ["$STT"]
-      }
-      */
-    },
-    accounts: [{privateKey: "71DB9B832BF457B4D812D6D6D673A02A1A2F5F687DBF59A2E41302A43459153C"}]
-  }
+      }*/
+    }
+   }
 };
