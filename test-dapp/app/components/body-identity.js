@@ -69,6 +69,10 @@ class Body extends Component {
 
                             let relayers = this.state.relayers;
                             relayers[msgObj.sig] = msgObj.address;
+
+                            if(this.state.relayerAddress == '0x0000000000000000000000000000000000000000'){
+                                this.setState({relayerAddress: msgObj.address});
+                            }
                             
                             this.setState({relayers});
                         }

@@ -83,13 +83,17 @@ class Status extends Component {
 
         // Default for devenv
         web3.eth.net.getId().then(netId => {
-            this.setState({isDev: netId != 1 && netId != 3});
+            this.setState({isDev: netId != 1});
         });
 
-        web3.eth.subscribe('newBlockHeaders')
-        .on('data', (block) => {
+        this.web3BlockRead();
+    }
+
+    web3BlockRead = () => {
+        web3.eth.getBlock('latest').then(block => {
             this.setState({block: block.number});
             this.readChain();
+            setTimeout(this.web3BlockRead, 10000);
             return true;
         });
     }

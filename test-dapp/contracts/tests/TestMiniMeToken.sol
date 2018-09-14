@@ -1,5 +1,47 @@
 pragma solidity ^0.4.23;
 
+
+/*
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+INTENTIONALLY INSECURE DO NOT USE IN MAINNET
+*/
 /*
     Copyright 2016, Jordi Baylina
 
@@ -26,7 +68,6 @@ pragma solidity ^0.4.23;
  * @dev It is ERC20 compliant, but still needs to under go further testing.
  */
 
-import "../common/Controlled.sol";
 import "../token/TokenController.sol";
 import "../token/ApproveAndCallFallBack.sol";
 import "../token/MiniMeTokenInterface.sol";
@@ -37,7 +78,7 @@ import "../token/MiniMeTokenFactory.sol";
  *  that deploys the contract, so usually this token will be deployed by a
  *  token controller contract, which Giveth will call a "Campaign"
  */
-contract TestMiniMeToken is MiniMeTokenInterface, Controlled {
+contract TestMiniMeToken is MiniMeTokenInterface {
 
     string public name;                //The Token's name: e.g. DigixDAO Tokens
     uint8 public decimals;             //Number of decimals of the smallest unit
@@ -86,6 +127,20 @@ contract TestMiniMeToken is MiniMeTokenInterface, Controlled {
     // The factory used to create new clone tokens
     MiniMeTokenFactory public tokenFactory;
 
+    modifier onlyController { 
+        require(msg.sender == controller); 
+        _; 
+    }
+
+    address public controller;
+
+    /// @notice Changes the controller of the contract
+    /// @param _newController The new controller of the contract
+    function changeController(address _newController) public {
+        controller = _newController;
+    }
+
+
 ////////////////
 // Constructor
 ////////////////
@@ -116,6 +171,8 @@ contract TestMiniMeToken is MiniMeTokenInterface, Controlled {
     ) 
         public
     {
+        controller = msg.sender; 
+
         tokenFactory = MiniMeTokenFactory(_tokenFactory);
         name = _tokenName;                                 // Set the name
         decimals = _decimalUnits;                          // Set the decimals

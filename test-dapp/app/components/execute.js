@@ -51,6 +51,9 @@ class Execute extends Component {
     }
 
     handleChange = name => event => {
+        if(name == 'relayer'){
+            this.props.updateRelayer(event.target.value);
+        }
         this.setState({
             [name]: event.target.value
         });
@@ -67,7 +70,7 @@ class Execute extends Component {
         try {
             const accounts = await web3.eth.getAccounts();
             
-            const s = new StatusGasRelayer.SNTController(SNTController.options.address, accounts[2])
+            const s = new StatusGasRelayer.SNTController(SNTController.options.address, accounts[0])
                                           .execute(this.state.allowedContract, this.state.data)
                                           .setGas(this.state.gasPrice, this.state.gasMinimal);
                                           
@@ -104,7 +107,7 @@ class Execute extends Component {
         try {
             const accounts = await web3.eth.getAccounts();
 
-            const s = new StatusGasRelayer.AvailableRelayers(Contracts.SNT, SNTController.options.address, accounts[2])
+            const s = new StatusGasRelayer.AvailableRelayers(Contracts.SNT, SNTController.options.address, accounts[0])
                                           .setRelayersSymKeyID(skid)
                                           .setAsymmetricKeyID(kid)
                                           .setGas(STT.options.address, this.state.gasPrice);
@@ -124,10 +127,16 @@ class Execute extends Component {
         const {web3, kid} = this.props;
 
         let relayer = this.state.relayer;
-        if(relayer == '' && this.props.relayers.length == 1){
-            relayer = this.props.relayers[0];
-        } 
+        
 
+        let relayers = [];
+        for (var key in this.props.relayers) {      
+            if (this.props.relayers.hasOwnProperty(key)) relayers.push(key);
+        }
+
+        if(relayer == '' && relayers.length == 1){
+            relayer = relayers[0];
+        } 
 
         this.setState({
           messagingError: '',
@@ -138,7 +147,7 @@ class Execute extends Component {
         try {
             const accounts = await web3.eth.getAccounts();
 
-            const s = new StatusGasRelayer.SNTController(SNTController.options.address, accounts[2])
+            const s = new StatusGasRelayer.SNTController(SNTController.options.address, accounts[0])
                                           .execute(this.state.allowedContract, this.state.data)
                                           .setGas(this.state.gasPrice, this.state.gasMinimal)
                                           .setRelayer(relayer)
@@ -156,6 +165,12 @@ class Execute extends Component {
 
     render(){
         const {classes} = this.props;
+
+        let relayers = [];
+        for (var key in this.props.relayers) {      
+            if (this.props.relayers.hasOwnProperty(key)) relayers.push(key);
+        }
+
         return <div>
         <Card className={classes.card}>
             <CardContent>
@@ -279,12 +294,7 @@ class Execute extends Component {
                         native: true
                     }}
                     >
-                    {
-                        this.props.relayers.length > 0 ?
-                        this.props.relayers.map((r, i) => <option key={i} value={r}>Relayer #{i+1}: {r}</option>)
-                        :
-                        <option></option>
-                    }
+                    { relayers.length > 0 ? relayers.map((r, i) => <option key={i} value={r}>Relayer #{i+1}: {r}</option>) : <option></option> }
                 </TextField>
                 <TextField
                     id="signature"
@@ -315,7 +325,8 @@ Execute.propTypes = {
     kid: PropTypes.string,
     skid: PropTypes.string,
     clearMessages: PropTypes.func,
-    relayers: PropTypes.array.isRequired
+    updateRelayer: PropTypes.func,
+    relayers: PropTypes.object.isRequired
 };
 
 export default withStyles(styles)(Execute);

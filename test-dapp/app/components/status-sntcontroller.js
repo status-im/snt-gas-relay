@@ -52,14 +52,15 @@ class Status extends Component {
     constructor(props){
         super(props);
         this.state = {
+            'isDev': true,
             'addressETHBalance': 0,
             'addressSTTBalance': 0,
-            'relayerAddress': null,
             'relayerEthBalance': 0,
             'relayerSTTBalance': 0,
             'block': 0,
             'submitState': {
                 'etherSend': false,
+                'changeSNTController': false,
                 'generateSTT': false
             }
         };
@@ -72,19 +73,25 @@ class Status extends Component {
                 return;
             }
 
-            this.setState({
-                relayerAddress: config.relayAccount
-            });
-
             this.getBlock();
         });
     }
 
     getBlock = () => {
-        web3.eth.subscribe('newBlockHeaders')
-        .on('data', (block) => {
+
+        // Default for devenv
+        web3.eth.net.getId().then(netId => {
+            this.setState({isDev: netId != 1});
+        });
+
+        this.web3BlockRead();
+    }
+
+    web3BlockRead = () => {
+        web3.eth.getBlock('latest').then(block => {
             this.setState({block: block.number});
             this.readChain();
+            setTimeout(this.web3BlockRead, 10000);
             return true;
         });
     }
@@ -117,12 +124,12 @@ class Status extends Component {
             });
         }
 
-        web3.eth.getBalance(this.state.relayerAddress)
+        web3.eth.getBalance(this.props.relayerAddress)
         .then(relayerEthBalance => { 
             this.setState({relayerEthBalance});
         });
 
-        STT.methods.balanceOf(this.state.relayerAddress)
+        STT.methods.balanceOf(this.props.relayerAddress)
         .call()
         .then(relayerSTTBalance => {
             this.setState({relayerSTTBalance: web3.utils.fromWei(relayerSTTBalance, 'ether')});
@@ -152,6 +159,12 @@ class Status extends Component {
 
     changeSNTController = event => {
         event.preventDefault();
+
+        let submitState = this.state.submitState;
+        submitState.changeSNTController = true;
+        this.setState({submitState});
+
+
         const toSend = STT.methods.changeController(SNTController.options.address);
 
         toSend.estimateGas()
@@ -160,6 +173,9 @@ class Status extends Component {
         })
         .then(receipt => {
             console.log(receipt);
+            submitState = this.state.submitState;
+            submitState.changeSNTController = false;
+            this.setState({submitState});
         });
     }
 
@@ -167,10 +183,10 @@ class Status extends Component {
         event.preventDefault();
 
         let submitState = this.state.submitState;
-        submitState.etherSend = false;
+        submitState.etherSend = true;
         this.setState({submitState});
 
-        web3.eth.sendTransaction({from: web3.eth.defaultAccount, to: this.state.relayerAddress, value: web3.utils.toWei('1', "ether")})
+        web3.eth.sendTransaction({from: web3.eth.defaultAccount, to: this.props.relayerAddress, value: web3.utils.toWei('1', "ether")})
             .then((receipt) => {
                 console.log(receipt);
                 submitState = this.state.submitState;
@@ -180,8 +196,8 @@ class Status extends Component {
     }
 
     render(){
-        const {classes, walletAddress, nonce} = this.props;
-        const {addressETHBalance, relayerAddress, relayerEthBalance, addressSTTBalance, relayerSTTBalance, submitState, block} = this.state;
+        const {classes, walletAddress, nonce, relayerAddress} = this.props;
+        const {addressETHBalance, relayerEthBalance, addressSTTBalance, relayerSTTBalance, submitState, block, isDev} = this.state;
 
         return <Fragment>
             <Card className={classes.card}>
@@ -200,14 +216,14 @@ class Status extends Component {
                     <Typography variant="display1">
                         Address
                     </Typography>
-                    <Button className={classes.button} color="primary" aria-label="Generate STT" onClick={this.generateSTT} disabled={submitState.generateSTT}>
+                    { isDev && <Button className={classes.button} color="primary" aria-label="Generate STT" onClick={this.generateSTT} disabled={submitState.generateSTT}>
                         <AddIcon className={classes.icon} />
                         1. Generate 5K STT (only on dev)
-                    </Button> 
-                    <Button className={classes.button} color="primary" aria-label="Generate STT" onClick={this.changeSNTController}>
+                    </Button> }
+                    { isDev && <Button className={classes.button} color="primary" aria-label="Generate STT" onClick={this.changeSNTController}>
                         <AddIcon className={classes.icon} />
                         2. Change SNT Controller
-                    </Button> 
+                    </Button> }
                 </ListItem>
                 <ListItem className={classes.root}>
                     <ListItemIcon>
@@ -247,10 +263,10 @@ class Status extends Component {
                     <Typography variant="display1">
                         Relayer
                     </Typography>
-                    <Button className={classes.button} color="primary" aria-label="Add ether" onClick={this.sendEther} disabled={submitState.etherSend}>
+                    { isDev && <Button className={classes.button} color="primary" aria-label="Add ether" onClick={this.sendEther} disabled={submitState.etherSend}>
                         <AddIcon className={classes.icon} />
                         Send ether
-                    </Button> 
+                    </Button> }
                 </ListItem>
                 <ListItem className={classes.root}>
                     <ListItemIcon>
@@ -292,7 +308,8 @@ Status.propTypes = {
     walletAddress: PropTypes.string,
     nonce: PropTypes.string.isRequired,
     nonceUpdateFunction: PropTypes.func.isRequired,
-    message: PropTypes.string
+    message: PropTypes.string,
+    relayerAddress: PropTypes.string
 };
   
 export default withStyles(styles)(Status);
