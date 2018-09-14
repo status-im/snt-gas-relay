@@ -157,6 +157,7 @@ events.on('server:listen', (shhOptions, settings) => {
       let validationResult; 
       switch(input.action){
         case 'transaction':
+          messagesCheckSum[inputCheckSum] = (new Date().getTime());
           processor.processTransaction(settings.getContractByTopic(message.topic), 
                         input, 
                         reply);
