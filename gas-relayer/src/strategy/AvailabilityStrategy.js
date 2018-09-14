@@ -23,6 +23,7 @@ class AvailabilityStrategy extends Strategy {
             success: true,
             message: {
                 message: "Available",
+                address: this.config.node.blockchain.account,
                 minPrice: minPrice
             }
         };

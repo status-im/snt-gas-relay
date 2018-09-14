@@ -58,6 +58,10 @@ class ApproveAndCallGasRelayed extends Component {
     }
 
     handleChange = name => event => {
+        if(name == 'relayer'){
+            this.props.updateRelayer(event.target.value);
+        }
+        
         this.setState({
             [name]: event.target.value
         });
@@ -117,8 +121,14 @@ class ApproveAndCallGasRelayed extends Component {
         const {web3, kid} = this.props;
 
         let relayer = this.state.relayer;
-        if(relayer == '' && this.props.relayers.length == 1){
-            relayer = this.props.relayers[0];
+        
+        let relayers = [];
+        for (var key in this.props.relayers) {      
+            if (this.props.relayers.hasOwnProperty(key)) relayers.push(key);
+        }
+
+        if(relayer == '' && relayers.length == 1){
+            relayer = relayers[0];
         } 
 
         this.setState({
@@ -159,6 +169,12 @@ class ApproveAndCallGasRelayed extends Component {
 
     render(){
         const {classes} = this.props;
+
+        let relayers = [];
+        for (var key in this.props.relayers) {      
+            if (this.props.relayers.hasOwnProperty(key)) relayers.push(key);
+        }
+
         return <div>
         <Card className={classes.card}>
             <CardContent>
@@ -332,12 +348,7 @@ class ApproveAndCallGasRelayed extends Component {
                         native: true
                     }}
                     >
-                    {
-                        this.props.relayers.length > 0 ?
-                        this.props.relayers.map((r, i) => <option key={i} value={r}>Relayer #{i+1}: {r}</option>)
-                        :
-                        <option></option>
-                    }
+                    { relayers.length > 0 ? relayers.map((r, i) => <option key={i} value={r}>Relayer #{i+1}: {r}</option>) : <option></option> }
                 </TextField>
                 <TextField
                     id="signature"
@@ -369,7 +380,8 @@ ApproveAndCallGasRelayed.propTypes = {
     kid: PropTypes.string,
     skid: PropTypes.string,
     clearMessages: PropTypes.func,
-    relayers: PropTypes.array.isRequired
+    updateRelayer: PropTypes.func,
+    relayers: PropTypes.object.isRequired
 };
 
 export default withStyles(styles)(ApproveAndCallGasRelayed);

@@ -29,7 +29,8 @@ class Body extends Component {
             kid: null,
             skid: null,
             message: '',
-            relayers: []
+            relayerAddress: '0x0000000000000000000000000000000000000000',
+            relayers: {}
         };
     }
 
@@ -41,7 +42,15 @@ class Body extends Component {
             }
 
             const web3js = new Web3('ws://localhost:8546');
-            
+
+
+            // Default for devenv
+            web3js.eth.net.getId().then(netId => {
+                if(netId != 1 && netId != 3){
+                    this.setState({relayerAddress: config.relayAccount});
+                }
+            });
+
             web3js.shh.newKeyPair()
             .then((kid) => {
                 web3js.shh.addSymKey(config.relaySymKey)
@@ -57,9 +66,10 @@ class Body extends Component {
                         if(msgObj.message == Messages.available){
                             // found a relayer
                             console.log("Relayer available: " + msgObj.sig);
+
                             let relayers = this.state.relayers;
-                            relayers.push(msgObj.sig);
-                            relayers = relayers.filter((value, index, self) => self.indexOf(value) === index);
+                            relayers[msgObj.sig] = msgObj.address;
+                            
                             this.setState({relayers});
                         }
 
@@ -82,6 +92,10 @@ class Body extends Component {
     handleChange = (event, tab) => {
         this.setState({tab});
     };
+
+    updateRelayer = (relayer) => {
+        this.setState({relayerAddress: this.state.relayers[relayer]});
+    }
 
     updateNonce = (newNonce) => {
         this.setState({nonce: newNonce});
@@ -106,13 +120,8 @@ class Body extends Component {
         });
     }
 
-    randomizeAddress = () => {
-        // TODO:
-        this.setState({identityAddress: "0xC0F1349e154Be9c2eBcc18088AC65d48Fc9ED0FF"});
-    }
-
     render(){
-        const {tab, identityAddress, nonce, web3js, message, kid, skid, relayers} = this.state;
+        const {tab, identityAddress, nonce, web3js, message, kid, skid, relayers, relayerAddress} = this.state;
 
         return <Fragment>
             <Tabs value={tab} onChange={this.handleChange}>
@@ -120,12 +129,12 @@ class Body extends Component {
                 <Tab label="Approve and Call" />
                 <Tab label="Deploy" />
             </Tabs>
-            {tab === 0 && <Container><CallGasRelayed clearMessages={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} identityAddress={identityAddress} relayers={relayers} /></Container>}
-            {tab === 1 && <Container><ApproveAndCallGasRelayed clearMessages={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} identityAddress={identityAddress} relayers={relayers} /></Container>}
+            {tab === 0 && <Container><CallGasRelayed clearMessages={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} identityAddress={identityAddress} relayers={relayers} updateRelayer={this.updateRelayer} /></Container>}
+            {tab === 1 && <Container><ApproveAndCallGasRelayed clearMessages={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} identityAddress={identityAddress} relayers={relayers} updateRelayer={this.updateRelayer} /></Container>}
             {tab === 2 && <Container>Item Three</Container>}
             <Divider />
             <Container>
-                <Status message={message} identityCreationFunction={this.newIdentity} randomizeAddress={this.randomizeAddress} nonceUpdateFunction={this.updateNonce} nonce={nonce} identityAddress={identityAddress} />
+                <Status relayerAddress={relayerAddress} message={message} identityCreationFunction={this.newIdentity} nonceUpdateFunction={this.updateNonce} nonce={nonce} identityAddress={identityAddress} />
             </Container>
         </Fragment>;
     }

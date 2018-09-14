@@ -52,10 +52,11 @@ class Status extends Component {
 
     constructor(props){
         super(props);
+
         this.state = {
+            'isDev': true,
             'identityEthBalance': 0,
             'identitySTTBalance': 0,
-            'relayerAddress': null,
             'relayerEthBalance': 0,
             'relayerSTTBalance': 0,
             'block': 0,
@@ -74,15 +75,17 @@ class Status extends Component {
                 return;
             }
 
-            this.setState({
-                relayerAddress: config.relayAccount
-            });
-
             this.getBlock();
         });
     }
 
     getBlock = () => {
+
+        // Default for devenv
+        web3.eth.net.getId().then(netId => {
+            this.setState({isDev: netId != 1 && netId != 3});
+        });
+
         web3.eth.subscribe('newBlockHeaders')
         .on('data', (block) => {
             this.setState({block: block.number});
@@ -115,12 +118,12 @@ class Status extends Component {
             });
         }
 
-        web3.eth.getBalance(this.state.relayerAddress)
+        web3.eth.getBalance(this.props.relayerAddress)
         .then(relayerEthBalance => { 
             this.setState({relayerEthBalance});
         });
 
-        STT.methods.balanceOf(this.state.relayerAddress)
+        STT.methods.balanceOf(this.props.relayerAddress)
         .call()
         .then(relayerSTTBalance => {
             this.setState({relayerSTTBalance: web3.utils.fromWei(relayerSTTBalance, 'ether')});
@@ -162,11 +165,6 @@ class Status extends Component {
         });
     }
 
-    randomizeAddress = (event) => {
-        event.preventDefault();
-        this.props.randomizeAddress();
-    }
-
     sendEther = (event) => {
         event.preventDefault();
 
@@ -174,7 +172,7 @@ class Status extends Component {
         submitState.etherSend = false;
         this.setState({submitState});
 
-        web3.eth.sendTransaction({from: web3.eth.defaultAccount, to: this.state.relayerAddress, value: web3.utils.toWei('1', "ether")})
+        web3.eth.sendTransaction({from: web3.eth.defaultAccount, to: this.props.relayerAddress, value: web3.utils.toWei('1', "ether")})
             .then((receipt) => {
                 console.log(receipt);
                 submitState = this.state.submitState;
@@ -184,8 +182,8 @@ class Status extends Component {
     }
 
     render(){
-        const {classes, identityAddress, nonce} = this.props;
-        const {identityEthBalance, relayerAddress, relayerEthBalance, identitySTTBalance, relayerSTTBalance, submitState, block} = this.state;
+        const {classes, identityAddress, nonce, relayerAddress} = this.props;
+        const {identityEthBalance, relayerEthBalance, identitySTTBalance, relayerSTTBalance, submitState, block, isDev} = this.state;
 
         return <Fragment>
             <Card className={classes.card}>
@@ -199,23 +197,20 @@ class Status extends Component {
             <div className={classes.container}>
             { (submitState.createIdentity || submitState.etherSend || submitState.generateSTT) && <LinearProgress /> }
 
-            
-
             <List dense={true}>
                 <ListItem>
                     <Typography variant="display1">
                         Identity
                     </Typography>
-                    <Button className={classes.button} color="primary" aria-label="New Identity" onClick={this.createIdentity} disabled={submitState.createIdentity}>
+
+                    { isDev && <Button className={classes.button} color="primary" aria-label="New Identity" onClick={this.createIdentity} disabled={submitState.createIdentity}>
                         <RefreshIcon className={classes.icon} />
                         Create new identity
-                    </Button>
-                    {
-                    <Button className={classes.button} color="primary" aria-label="Generate STT" onClick={this.generateSTT} disabled={submitState.generateSTT}>
+                    </Button> }
+                    { isDev && <Button className={classes.button} color="primary" aria-label="Generate STT" onClick={this.generateSTT} disabled={submitState.generateSTT}>
                         <AddIcon className={classes.icon} />
                         Generate 5K STT (only on dev)
-                    </Button> 
-                    }
+                    </Button>  }
                 </ListItem>
                 <ListItem className={classes.root}>
                     <ListItemIcon>
@@ -255,10 +250,10 @@ class Status extends Component {
                     <Typography variant="display1">
                         Relayer
                     </Typography>
-                    <Button className={classes.button} color="primary" aria-label="Add ether" onClick={this.sendEther} disabled={submitState.etherSend}>
+                    { isDev && <Button className={classes.button} color="primary" aria-label="Add ether" onClick={this.sendEther} disabled={submitState.etherSend}>
                         <AddIcon className={classes.icon} />
                         Send ether
-                    </Button> 
+                    </Button> }
                 </ListItem>
                 <ListItem className={classes.root}>
                     <ListItemIcon>
@@ -301,8 +296,8 @@ Status.propTypes = {
     nonce: PropTypes.string.isRequired,
     identityCreationFunction: PropTypes.func.isRequired,
     nonceUpdateFunction: PropTypes.func.isRequired,
-    randomizeAddress: PropTypes.func.isRequired,
-    message: PropTypes.string
+    message: PropTypes.string,
+    relayerAddress: PropTypes.string
 };
   
 export default withStyles(styles)(Status);
