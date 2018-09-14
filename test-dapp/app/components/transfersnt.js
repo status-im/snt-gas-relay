@@ -137,7 +137,7 @@ class TransferSNT extends Component {
             if (this.props.relayers.hasOwnProperty(key)) relayers.push(key);
         }
 
-        if(relayer == '' && relayers.length == 1){
+        if(relayer == '' && relayers.length >= 1){
             relayer = relayers[0];
         }
 
