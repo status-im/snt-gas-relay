@@ -86,10 +86,14 @@ class Status extends Component {
             this.setState({isDev: netId != 1 && netId != 3});
         });
 
-        web3.eth.subscribe('newBlockHeaders')
-        .on('data', (block) => {
+        this.web3BlockRead();
+    }
+
+    web3BlockRead = () => {
+        web3.eth.getBlock('latest').then(block => {
             this.setState({block: block.number});
             this.readChain();
+            setTimeout(this.web3BlockRead, 10000);
             return true;
         });
     }

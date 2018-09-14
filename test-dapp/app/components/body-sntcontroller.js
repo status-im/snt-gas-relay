@@ -30,7 +30,8 @@ class Body extends Component {
             kid: null,
             skid: null,
             message: '',
-            relayers: []
+            relayerAddress: '0x0000000000000000000000000000000000000000',
+            relayers: {}
         };
     }
 
@@ -43,6 +44,14 @@ class Body extends Component {
 
             const web3js = new Web3('ws://localhost:8546');
             
+
+            // Default for devenv
+            web3js.eth.net.getId().then(netId => {
+                if(netId != 1 && netId != 3){
+                    this.setState({relayerAddress: config.relayAccount});
+                }
+            });
+
             web3js.shh.newKeyPair()
             .then((kid) => {
                 web3js.shh.addSymKey(config.relaySymKey)
@@ -58,9 +67,14 @@ class Body extends Component {
                         if(msgObj.message == Messages.available){
                             // found a relayer
                             console.log("Relayer available: " + msgObj.sig);
+
                             let relayers = this.state.relayers;
-                            relayers.push(msgObj.sig);
-                            relayers = relayers.filter((value, index, self) => self.indexOf(value) === index);
+                            relayers[msgObj.sig] = msgObj.address;
+
+                            if(this.state.relayerAddress == '0x0000000000000000000000000000000000000000'){
+                                this.setState({relayerAddress: msgObj.address});
+                            }
+
                             this.setState({relayers});
                         }
 
@@ -79,7 +93,7 @@ class Body extends Component {
 
             web3.eth.getAccounts()
             .then(accounts => {
-                this.setState({walletAddress: accounts[2]});
+                this.setState({walletAddress: accounts[0]});
             });
 
         });
@@ -89,6 +103,10 @@ class Body extends Component {
         this.setState({tab});
     };
 
+    updateRelayer = (relayer) => {
+        this.setState({relayerAddress: this.state.relayers[relayer]});
+    }
+    
     updateNonce = (newNonce) => {
         this.setState({nonce: newNonce});
     }
@@ -98,18 +116,18 @@ class Body extends Component {
     }
 
     render(){
-        const {tab, walletAddress, nonce, web3js, message, kid, skid, relayers} = this.state;
+        const {tab, walletAddress, nonce, web3js, message, kid, skid, relayers, relayerAddress} = this.state;
 
         return <Fragment>
             <Tabs value={tab} onChange={this.handleChange}>
                 <Tab label="Transfer SNT" />
                 <Tab label="Execute" />
             </Tabs>
-            {tab === 0 && <Container><TransferSNT clearMessages={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} relayers={relayers} /></Container>}
-            {tab === 1 && <Container><Execute clearMessages={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} relayers={relayers} /></Container>}
+            {tab === 0 && <Container><TransferSNT clearMessages={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} relayers={relayers} updateRelayer={this.updateRelayer} /></Container>}
+            {tab === 1 && <Container><Execute clearMessages={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} relayers={relayers} updateRelayer={this.updateRelayer} /></Container>}
             <Divider />
             <Container>
-                <Status message={message} nonceUpdateFunction={this.updateNonce} nonce={nonce} walletAddress={walletAddress} />
+                <Status relayerAddress={relayerAddress} message={message} nonceUpdateFunction={this.updateNonce} nonce={nonce} walletAddress={walletAddress} />
             </Container>
         </Fragment>;
     }
