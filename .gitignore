@@ -36,7 +36,6 @@ coverage.json
 # node
 node_modules/
 npm-debug.log
-package-lock.json
 
 # other
 .vs/

@@ -3,6 +3,8 @@ const Web3 = require('web3');
 const config = require('../config/config.js');
 const ContractSettings = require('./contract-settings');
 const MessageProcessor = require('./message-processor');
+const JSum = require('jsum');
+
 
 console.info("Starting...");
 const events = new EventEmitter();
@@ -131,6 +133,8 @@ const extractInput = (message) => {
 };
 
 
+let messagesCheckSum = {};
+
 events.on('server:listen', (shhOptions, settings) => {
   let processor = new MessageProcessor(config, settings, web3, events);
   web3.shh.subscribe('messages', shhOptions, async (error, message) => {
@@ -140,33 +144,50 @@ events.on('server:listen', (shhOptions, settings) => {
     }
 
     verifyBalance(true);
-
-    const input = extractInput(message);
-    const reply = replyFunction(message);
-    let validationResult; 
-
-    switch(input.action){
-      case 'transaction':
-        processor.processTransaction(settings.getContractByTopic(message.topic), 
-                      input, 
-                      reply);
-        break;
-      case 'availability':
-        validationResult = await processor.processStrategy(settings.getContractByTopic(message.topic), 
-                              input, 
-                              reply,
-                              settings.buildStrategy("./strategy/AvailabilityStrategy", message.topic)
-                            );
-        if(validationResult.success) reply(validationResult.message);
-
-        break;
-      default: 
-        reply("unknown-action");        
-    }
-
     
+    const input = extractInput(message);
+    const inputCheckSum = JSum.digest(input, 'SHA256', 'hex');
+
+    const reply = replyFunction(message, inputCheckSum);
+
+    // TODO: Probably it makes sense to have some small db to store checksums
+    if(messagesCheckSum[inputCheckSum] && messagesCheckSum[inputCheckSum] + 3600000 >  (new Date().getTime())){
+      reply("Duplicated message received");
+    } else {
+      let validationResult; 
+      switch(input.action){
+        case 'transaction':
+          processor.processTransaction(settings.getContractByTopic(message.topic), 
+                        input, 
+                        reply);
+          break;
+        case 'availability':
+          validationResult = await processor.processStrategy(settings.getContractByTopic(message.topic), 
+                                input, 
+                                reply,
+                                settings.buildStrategy("./strategy/AvailabilityStrategy", message.topic)
+                              );
+          if(validationResult.success) reply(validationResult.message);
+  
+          break;
+        default: 
+          reply("unknown-action");        
+      }
+    }
   });
 });
+
+// Cleaning old message checksums
+const deleteOldChecksums = () => {
+  for (var key in messagesCheckSum) {
+    if (messagesCheckSum.hasOwnProperty(key)) {
+      if(messagesCheckSum[key] + 86400000 <  (new Date().getTime())){
+        delete messagesCheckSum[key];
+      }
+    }
+  }
+};
+setInterval(deleteOldChecksums, 3600000);
 
 // Daemon helper functions
 
