@@ -1,5 +1,5 @@
 module.exports = {
-    "gasPrice": 20,
+    "gasPrice": 4000000000,
     "node": {
         "local":{
             "protocol": "ws",

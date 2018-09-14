@@ -111,7 +111,7 @@ class Status extends Component {
 
             web3.eth.getAccounts()
             .then(accounts => {
-                SNTController.methods.signNonce(accounts[2])
+                SNTController.methods.signNonce(this.props.walletAddress)
                 .call()
                 .then((nonce) => {
                     this.props.nonceUpdateFunction(nonce);

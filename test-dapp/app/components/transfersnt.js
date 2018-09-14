@@ -27,6 +27,8 @@ const styles = theme => ({
   });
 
 window.TestContract = TestContract;
+window.SNTController = SNTController;
+
 class TransferSNT extends Component {
 
     constructor(props){

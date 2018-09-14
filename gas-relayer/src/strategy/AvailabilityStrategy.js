@@ -24,7 +24,8 @@ class AvailabilityStrategy extends Strategy {
             message: {
                 message: "Available",
                 address: this.config.node.blockchain.account,
-                minPrice: minPrice
+                minAcceptedGasPrice: minPrice,
+                gasPriceUsed: this.config.gasPrice
             }
         };
     }

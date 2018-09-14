@@ -118,9 +118,14 @@ class MessageProcessor {
             this.events.emit('exit');
         } else {
             try {
-                const receipt = await this.web3.eth.sendTransaction(p);
-                // TODO: parse events
-                reply("Transaction mined", receipt);
+                this.web3.eth.sendTransaction(p)
+                .on('transactionHash', function(hash){
+                    reply("Transaction broadcasted: " + hash);
+                })
+                .on('receipt', function(receipt){
+                    reply("Transaction mined", receipt);
+                });
+                
             } catch(err){
                 reply("Couldn't mine transaction: " + err.message);
                 // TODO log this?
