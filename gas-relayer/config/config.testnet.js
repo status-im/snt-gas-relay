@@ -1,5 +1,5 @@
 module.exports = {
-    "gasPrice": 4000000000,
+    "gasPrice": 5000000000,
     "node": {
         "local":{
             "protocol": "ws",
@@ -26,18 +26,13 @@ module.exports = {
         "0x0000000000000000000000000000000000000000": {
             "name": "Ethereum",
             "symbol": "ETH",
-            "minAccepted":{
-                "value": 1,
-                "currency": "USD"
-            }
+            "minAcceptedRate": 1
+
         },
         "0x121a430A73Fc13e2D6d4a9dc3E943de647c30f8f": {
             "name": "Status Gas Relayer Test Token",
             "symbol": "SNT",
-            "minAccepted":{
-                "value": 1,
-                "currency": "USD"
-            },
+            "minAcceptedRate": 0.0001500,
             "pricePlugin": "../plugins/token-utils.js"
         }
     },
