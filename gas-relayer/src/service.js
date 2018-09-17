@@ -168,7 +168,10 @@ events.on('server:listen', (shhOptions, settings) => {
                                 reply,
                                 settings.buildStrategy("./strategy/AvailabilityStrategy", message.topic)
                               );
-          if(validationResult.success) reply(validationResult.message);
+          if(validationResult.success && validationResult.message) {
+            messagesCheckSum[inputCheckSum] = (new Date().getTime());
+            reply(validationResult.message);
+          }
   
           break;
         default: 
@@ -188,6 +191,7 @@ const deleteOldChecksums = () => {
     }
   }
 };
+
 setInterval(deleteOldChecksums, 3600000);
 
 // Daemon helper functions

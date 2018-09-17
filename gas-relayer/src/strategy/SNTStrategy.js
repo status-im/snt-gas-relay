@@ -29,6 +29,20 @@ class SNTStrategy extends Strategy {
             to: input.contract
         });
 
+        // Get Price
+        const tokenRate = await token.pricePlugin.getRate();
+        const minRate = token.minAcceptedRate;
+
+        if(tokenRate < minRate){ // TODO: verify this. Maybe we want to accept a minRate instead of just simply not processing the trx
+            return {success: false, message: "Not accepting " + token.symbol + " at current rate. (Min rate: " + token.minAcceptedRate+ ")"};
+        }
+
+        const gasPrice = this.web3.utils.toBN(params('_gasPrice'));
+        const minGasPrice = this.web3.utils.toBN(token.pricePlugin.calculateMinGasPrice(estimatedGas.toString(10), tokenRate));
+        if(gasPrice.lt(minGasPrice)){
+            return {success: false, message: "Gas price is less than the required amount (" + minGasPrice.toString(10) + ")"};
+        }
+
         if(input.functionName == TransferSNT){
             const gas = this.web3.utils.toBN(estimatedGas);
             const value = this.web3.utils.toBN(params('_amount'));
