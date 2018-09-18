@@ -6,6 +6,7 @@ module.exports = {
       host: "localhost", // Host of the blockchain node
       port: 8545, // Port of the blockchain node
       type: "rpc" // Type of connection (ws or rpc),
+
       // Accounts to use instead of the default account to populate your wallet
        /*,accounts: [
         {
@@ -74,47 +75,57 @@ module.exports = {
   testnet: {
     contracts: {
       //
+      
       "MiniMeTokenFactory": {
-        "address": "0xD1A2f3726331d6100E8BcD1484EdF796B0b20cc9"
+        "address": "0xc20405f3CfF14854Db820FcF0CD376BdC20e1d79"
       },
       "STT": {
         "instanceOf": "TestMiniMeToken",
-        "address": "0x121a430A73Fc13e2D6d4a9dc3E943de647c30f8f"
+        "address": "0x6DBf417FB1b23E14Bb888BF22fb5f40CbBED4D0C"
       },
       "SNTController": {
-        "address": "0xf558aC91312821B0E1802567BC785355AA811783"
+        "address": "0xB4A2d878C2426A3eba46B5C89ddc29aCB98dBA52"
       },
       "IdentityGasRelay": {
-        "address": "0x4b571c5e75E93F53E985b12A3D107318178b9B5F" 
+        "address": "0x186427a558E7038B5500D44Bd4da9CCe37f66209" 
       },
       "IdentityFactory": {
-        "address": "0x89976FeEC7CFDF2DF5194e363FD2a3388e2DC91A"
+        "address": "0x3CBe029665B0688612CE19CFcB74a41BC1aEe179"
       },
       "TestContract": {
-        "address": "0xa7aeF1cd3e4a8425D9A1E13B5557908895dCbdBE"
+        "address": "0x9f770Ec6955b1Ba4f3E10F3e93acF2530cBCF1Fc"
       }
+      
       // If needed to deploy contracts again, uncomment the following lines
       /*
-      "MiniMeTokenFactory": {"args":[]},
+      "MiniMeTokenFactory": {
+        "args":[],
+        "gasPrice": 20000000000
+      },
       "STT": {
-        "instanceOf": "MiniMeToken",
+        "instanceOf": "TestMiniMeToken",
         "args":["$MiniMeTokenFactory", "0x0", "0x0", "Status Gas Relayer Test Token", 18, "STT", true],
-        "gasLimit": 4000000
+        "gasLimit": 4000000,
+        "gasPrice": 20000000000
       },
       "SNTController": {
-        "args": ["0x26C3f244D0CfD5Bde38fC9A4eb212fA1556eDfA2", "$STT"]
+        "args": ["0x26C3f244D0CfD5Bde38fC9A4eb212fA1556eDfA2", "$STT"],
+        "gasPrice": 20000000000
       },
       "IdentityGasRelay": {
         "deploy": true,
-        "args": [[], [], [], 1, 1, "0x0000000000000000000000000000000000000000"] 
+        "args": [[], [], [], 1, 1, "0x0000000000000000000000000000000000000000"] ,
+        "gasPrice": 20000000000
       },
       "IdentityFactory": {
         "args":[], 
         "gasLimit": 5000000,
-        "onDeploy": ["IdentityFactory.methods.setKernel('$IdentityGasRelay').send({gasLimit: 6000000})"]
+        "onDeploy": ["IdentityFactory.methods.setKernel('$IdentityGasRelay').send({gasLimit: 6000000})"],
+        "gasPrice": 20000000000
       },
       "TestContract": {
-        "args": ["$STT"]
+        "args": ["$STT"],
+        "gasPrice": 20000000000
       }*/
     }
    }
