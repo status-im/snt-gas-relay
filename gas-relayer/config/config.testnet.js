@@ -26,14 +26,15 @@ module.exports = {
         "0x0000000000000000000000000000000000000000": {
             "name": "Ethereum",
             "symbol": "ETH",
-            "minAcceptedRate": 1
-
+            "minAcceptedRate": 1,
+            "refreshPricePeriod": 60000
         },
         "0x121a430A73Fc13e2D6d4a9dc3E943de647c30f8f": {
             "name": "Status Gas Relayer Test Token",
             "symbol": "SNT",
             "minAcceptedRate": 0.0001500,
-            "pricePlugin": "../plugins/token-utils.js"
+            "pricePlugin": "../plugins/token-utils.js",
+            "refreshPricePeriod": 60000
         }
     },
 

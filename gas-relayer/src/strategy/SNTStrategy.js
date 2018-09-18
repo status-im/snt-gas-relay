@@ -14,7 +14,7 @@ class SNTStrategy extends Strategy {
      * @param {object} input - Object obtained from an 'transaction' request. It expects an object with this structure `{contract, address, action, functionName, functionParameters, payload}`
      * @returns {object} Status of validation and estimated gas
      */
-    async execute(input){
+    async execute(input, cache){
         const params = this._obtainParametersFunc(input);
 
         // Verifying if token is allowed
@@ -30,7 +30,20 @@ class SNTStrategy extends Strategy {
         });
 
         // Get Price
-        const tokenRate = await token.pricePlugin.getRate();
+        let tokenRate = cache.get(input.gasToken);
+        if(tokenRate === null){
+            try {
+                tokenRate = await token.pricePlugin.getRate();
+                cache.put(input.gasToken, tokenRate, token.refreshPricePeriod);
+            } catch (err) {
+                console.error(err);
+                return {
+                    success: false,
+                    message: "Token price unavailable"
+                };
+            }
+        }
+
         const minRate = token.minAcceptedRate;
 
         if(tokenRate < minRate){ // TODO: verify this. Maybe we want to accept a minRate instead of just simply not processing the trx

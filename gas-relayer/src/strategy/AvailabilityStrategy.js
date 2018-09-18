@@ -11,14 +11,27 @@ class AvailabilityStrategy extends Strategy {
      * @param {object} input - Object obtained from an 'availability' request. It expects an object with this structure `{contract, address, action, gasToken, gasPrice}`
      * @returns {object} Status of validation, and minimum price
      */
-    async execute(input){
+    async execute(input, cache){
         // Verifying if token is allowed
         const token = this.settings.getToken(input.gasToken);
         if(token == undefined) return {success: false, message: "Token not allowed"};
 
 
         // Get Price
-        const tokenRate = await token.pricePlugin.getRate();
+        let tokenRate = cache.get(input.gasToken);
+        if(tokenRate === null){
+            try {
+                tokenRate = await token.pricePlugin.getRate();
+                cache.put(input.gasToken, tokenRate, token.refreshPricePeriod);
+            } catch (err) {
+                console.error(err);
+                return {
+                    success: false,
+                    message: "Token price unavailable"
+                };
+            }
+        }
+
         const minRate = token.minAcceptedRate;
 
         if(tokenRate >= minRate){ // TODO: verify this

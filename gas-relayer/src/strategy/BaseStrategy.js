@@ -90,7 +90,7 @@ class BaseStrategy {
     }
 
     /*
-    async execute(message, reply){
+    async execute(input){
         return {
             success: true,
             message: "Valid transaction"

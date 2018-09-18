@@ -9,11 +9,13 @@ class MessageProcessor {
      * @param {object} web3 - Web3 object already configured
      * @param {object} events - Event emitter
      */
-    constructor(config, settings, web3, events){
+    constructor(config, settings, web3, events, logger, cache){
         this.config = config;
         this.settings = settings;
         this.web3 = web3;
         this.events = events;
+        this.logger = logger;
+        this.cache = cache;
     }
 
     /**
@@ -23,7 +25,7 @@ class MessageProcessor {
      * @returns {object} State of validation
      */
     async _validateInput(contract, input){
-        console.info("Processing '%s' request to contract: %s", input.action, input.contract);
+        this.logger.info("Processing '" + input.action + "' request to contract: " + input.contract);
 
         if(contract == undefined){
             return {success: false, message: 'Unknown contract'};
@@ -71,9 +73,9 @@ class MessageProcessor {
         if(strategy || contract.strategy){
             let validationResult;
             if(strategy){
-                validationResult = await strategy.execute(input, reply);
+                validationResult = await strategy.execute(input, this.cache);
             } else {
-                validationResult = await contract.strategy.execute(input, reply);
+                validationResult = await contract.strategy.execute(input, this.cache);
             }
 
             if(!validationResult.success){
@@ -114,7 +116,7 @@ class MessageProcessor {
 
         if(nodeBalance < p.gas){
             reply("Relayer unavailable");
-            console.error("Relayer doesn't have enough gas to process trx: %s, required %s", nodeBalance, p.gas);
+            this.logger.error("Relayer doesn't have enough gas to process trx: " + nodeBalance + ", required " + p.gas);
             this.events.emit('exit');
         } else {
             try {
@@ -129,7 +131,7 @@ class MessageProcessor {
             } catch(err){
                 reply("Couldn't mine transaction: " + err.message);
                 // TODO log this?
-                console.error(err);
+                this.logger.error(err);
             }
         }
     }  

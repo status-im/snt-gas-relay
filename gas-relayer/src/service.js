@@ -4,9 +4,24 @@ const config = require('../config/config.js');
 const ContractSettings = require('./contract-settings');
 const MessageProcessor = require('./message-processor');
 const JSum = require('jsum');
+const logger = require('consola');
+const winston = require('winston');
+var cache = require('memory-cache');
+
+// Setting up logging
+const wLogger = winston.createLogger({
+  level: 'info',
+  format: winston.format.simple(),
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({filename: 'gas-relayer.log'})
+  ]
+});
+logger.clear().add(new logger.WinstonReporter(wLogger));
 
 
-console.info("Starting...");
+// Service Init
+logger.info("Starting...");
 const events = new EventEmitter();
 
 // Web3 Connection
@@ -17,14 +32,14 @@ const web3 = new Web3(wsProvider);
 web3.eth.net.isListening()
 .then(() => events.emit('web3:connected', connectionURL))
 .catch(error => {
-  console.error(error);
+  logger.error(error);
   process.exit();
 });
 
 
 events.on('web3:connected', connURL => {
-  console.info("Connected to '%s'", connURL);
-  let settings = new ContractSettings(config, web3, events);
+  logger.info("Connected to '" + connURL + "'");
+  let settings = new ContractSettings(config, web3, events, logger);
   settings.process();
 });
 
@@ -37,9 +52,9 @@ const shhOptions = {
 const verifyBalance = async (exitSubs) => {
   const nodeBalance = await web3.eth.getBalance(config.node.blockchain.account);
   if(web3.utils.toBN(nodeBalance).lte(web3.utils.toBN(100000))){ // TODO: tune minimum amount required for transactions
-    console.log("Not enough balance available for processing transactions");
-    console.log("> Account: %s", config.node.blockchain.account);
-    console.log("> Balance: %s", nodeBalance);
+    logger.info("Not enough balance available for processing transactions");
+    logger.info("> Account: " + config.node.blockchain.account);
+    logger.info("> Balance: " + nodeBalance);
 
     if(exitSubs){
       web3.shh.clearSubscriptions();
@@ -51,7 +66,7 @@ const verifyBalance = async (exitSubs) => {
 
 events.on('exit', () => {
   web3.shh.clearSubscriptions();
-  console.log("Closing service...");
+  logger.info("Closing service...");
   process.exit(0);
 });
 
@@ -67,11 +82,11 @@ events.on('setup:complete', async (settings) => {
   // Listening to whisper
   // Individual subscriptions due to https://github.com/ethereum/web3.js/issues/1361
   // once this is fixed, we'll be able to use an array of topics and a single subs for symkey and a single subs for privKey
-  console.info(`Sym Key: ${config.node.whisper.symKey}`);
-  console.info(`Relayer Public Key: ${pubKey}`);
-  console.info("Topics Available:");
+  logger.info(`Sym Key: ${config.node.whisper.symKey}`);
+  logger.info(`Relayer Public Key: ${pubKey}`);
+  logger.info("Topics Available:");
   for(let contract in settings.contracts) {
-    console.info("- %s: %s [%s]", settings.getContractByTopic(contract).name, contract,  Object.keys(settings.getContractByTopic(contract).allowedFunctions).join(', '));
+    logger.info("- " + settings.getContractByTopic(contract).name + ": " + contract + " [" + (Object.keys(settings.getContractByTopic(contract).allowedFunctions).join(', ')) + "]");
     shhOptions.topics = [contract];
 
     // Listen to public channel - Used for reporting availability
@@ -126,7 +141,7 @@ const extractInput = (message) => {
           obj.gasPrice = parsedObj.gasPrice;
         }
     } catch(err){
-        console.error("Couldn't parse " + message);
+      logger.error("Couldn't parse " + message);
     }
     
     return obj;
@@ -136,28 +151,29 @@ const extractInput = (message) => {
 let messagesCheckSum = {};
 
 events.on('server:listen', (shhOptions, settings) => {
-  let processor = new MessageProcessor(config, settings, web3, events);
+  let processor = new MessageProcessor(config, settings, web3, events, logger, cache);
   web3.shh.subscribe('messages', shhOptions, async (error, message) => {
     if(error){
-      console.error(error);
+      logger.error(error);
       return;
     }
 
     verifyBalance(true);
     
     const input = extractInput(message);
-    const inputCheckSum = JSum.digest(input, 'SHA256', 'hex');
+    const inputCheckSum = JSum.digest({input}, 'SHA256', 'hex');
 
     const reply = replyFunction(message, inputCheckSum);
 
-    // TODO: Probably it makes sense to have some small db to store checksums
-    if(messagesCheckSum[inputCheckSum] && messagesCheckSum[inputCheckSum] + 3600000 >  (new Date().getTime())){
+    if(cache.get(inputCheckSum)){
       reply("Duplicated message received");
     } else {
       let validationResult; 
       switch(input.action){
         case 'transaction':
-          messagesCheckSum[inputCheckSum] = (new Date().getTime());
+
+          cache.put(inputCheckSum, (new Date().getTime()), 86400000);
+
           processor.processTransaction(settings.getContractByTopic(message.topic), 
                         input, 
                         reply);
@@ -181,26 +197,14 @@ events.on('server:listen', (shhOptions, settings) => {
   });
 });
 
-// Cleaning old message checksums
-const deleteOldChecksums = () => {
-  for (var key in messagesCheckSum) {
-    if (messagesCheckSum.hasOwnProperty(key)) {
-      if(messagesCheckSum[key] + 86400000 <  (new Date().getTime())){
-        delete messagesCheckSum[key];
-      }
-    }
-  }
-};
-
-setInterval(deleteOldChecksums, 3600000);
 
 // Daemon helper functions
 
 process.on("uncaughtException", function(err) {
   // TODO
-  console.error(err);  
+  logger.error(err);  
 });
 
 process.once("SIGTERM", function() {
-  console.log("Stopping...");
+  logger.info("Stopping...");
 });

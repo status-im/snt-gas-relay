@@ -26,12 +26,14 @@ module.exports = {
         "0x0000000000000000000000000000000000000000": {
             "name": "Ethereum",
             "symbol": "ETH",
-            "minAcceptedRate": 1
+            "minAcceptedRate": 1,
+            "refreshPricePeriod": 60000
         },
         "%STTAddress%": {
             "name": "Status Test Token",
             "symbol": "SNT",
             "minAcceptedRate": 0.0001500,
+            "refreshPricePeriod": 60000,
             "pricePlugin": "../plugins/token-utils.js"
         }
     },

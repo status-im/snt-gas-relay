@@ -8,11 +8,12 @@ class ContractSettings {
      * @param {object} web3 - Web3 object already configured
      * @param {object} eventEmitter - Event Emitter
      */
-    constructor(config, web3, eventEmitter){
+    constructor(config, web3, eventEmitter, logger){
         this.tokens = config.tokens;
         this.topics = [];
         this.contracts = config.contracts;
         this.config = config;
+        this.logger = logger;
         
         this.web3 = web3;
         this.events = eventEmitter;
@@ -107,8 +108,8 @@ class ContractSettings {
             this.pendingToLoad--;
             if(this.pendingToLoad == 0) this.events.emit("setup:complete", this);
         } catch(err) {
-            console.error("Invalid contract for " + topicName);
-            console.error(err);
+            this.logger.error("Invalid contract for " + topicName);
+            this.logger.error(err);
             process.exit();
         }
     }
