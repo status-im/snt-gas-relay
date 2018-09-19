@@ -29,7 +29,7 @@ module.exports = {
             "minAcceptedRate": 1,
             "refreshPricePeriod": 60000
         },
-        "0x6DBf417FB1b23E14Bb888BF22fb5f40CbBED4D0C": {
+        "0x91a3473a3e1e3D61C29fa2fAcDf17fa0Db922a08": {
             "name": "Status Gas Relayer Test Token",
             "symbol": "SNT",
             "minAcceptedRate": 0.0001500,
@@ -42,7 +42,7 @@ module.exports = {
         "IdentityGasRelay": {
             "abiFile": "../abi/IdentityGasRelay.json",
             "isIdentity": true,
-            "factoryAddress": "0x3CBe029665B0688612CE19CFcB74a41BC1aEe179",
+            "factoryAddress": "0xC83a746c3B73457FF51eCE216bfBFb524aa4fDD0",
             "kernelVerification": "isKernel(bytes32)",
             "allowedFunctions": [
                 { 
@@ -59,7 +59,7 @@ module.exports = {
         "SNTController": {
             "abiFile": "../abi/SNTController.json",
             "isIdentity": false,
-            "address": "0x2dFC150a152b02256C91708C7B71D3068E08DAd7",
+            "address": "0x39bFD424c2A83ca56FD557b373C01A27475bB314",
             "allowedFunctions": [
                 {
                     "function":"transferSNT(address,uint256,uint256,uint256,bytes)"

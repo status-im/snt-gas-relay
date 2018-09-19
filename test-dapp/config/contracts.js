@@ -74,26 +74,24 @@ module.exports = {
   },
   testnet: {
     contracts: {
-      //
-      
       "MiniMeTokenFactory": {
-        "address": "0xc20405f3CfF14854Db820FcF0CD376BdC20e1d79"
+        "address": "0xb59E2Dc49a5F03CC25606F24934eA2CEE04f70dE"
       },
       "STT": {
         "instanceOf": "TestMiniMeToken",
-        "address": "0x6DBf417FB1b23E14Bb888BF22fb5f40CbBED4D0C"
+        "address": "0x91a3473a3e1e3D61C29fa2fAcDf17fa0Db922a08"
       },
       "SNTController": {
-        "address": "0x2dFC150a152b02256C91708C7B71D3068E08DAd7"
+        "address": "0x39bFD424c2A83ca56FD557b373C01A27475bB314"
       },
       "IdentityGasRelay": {
-        "address": "0x186427a558E7038B5500D44Bd4da9CCe37f66209" 
+        "address": "0x8FB13e0f38038C446d6d253C57BEb518512dB56E" 
       },
       "IdentityFactory": {
-        "address": "0x3CBe029665B0688612CE19CFcB74a41BC1aEe179"
+        "address": "0xC83a746c3B73457FF51eCE216bfBFb524aa4fDD0"
       },
       "TestContract": {
-        "address": "0x9f770Ec6955b1Ba4f3E10F3e93acF2530cBCF1Fc"
+        "address": "0xf5F9B20b48C13FDb77ceB6bDa52D9664c27c84dd"
       }
       
       // If needed to deploy contracts again, uncomment the following lines
@@ -126,7 +124,8 @@ module.exports = {
       "TestContract": {
         "args": ["$STT"],
         "gasPrice": 20000000000
-      }*/
+      }
+      */
     }
    }
 };
