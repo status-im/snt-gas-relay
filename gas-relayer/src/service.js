@@ -147,9 +147,6 @@ const extractInput = (message) => {
     return obj;
 };
 
-
-let messagesCheckSum = {};
-
 events.on('server:listen', (shhOptions, settings) => {
   let processor = new MessageProcessor(config, settings, web3, events, logger, cache);
   web3.shh.subscribe('messages', shhOptions, async (error, message) => {
@@ -171,9 +168,6 @@ events.on('server:listen', (shhOptions, settings) => {
       let validationResult; 
       switch(input.action){
         case 'transaction':
-
-          cache.put(inputCheckSum, (new Date().getTime()), 86400000);
-
           processor.processTransaction(settings.getContractByTopic(message.topic), 
                         input, 
                         reply);
@@ -185,7 +179,7 @@ events.on('server:listen', (shhOptions, settings) => {
                                 settings.buildStrategy("./strategy/AvailabilityStrategy", message.topic)
                               );
           if(validationResult.success && validationResult.message) {
-            messagesCheckSum[inputCheckSum] = (new Date().getTime());
+            cache.put(inputCheckSum, (new Date().getTime()), 86400000);
             reply(validationResult.message);
           }
   
