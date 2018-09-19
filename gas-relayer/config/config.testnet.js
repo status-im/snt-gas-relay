@@ -59,7 +59,7 @@ module.exports = {
         "SNTController": {
             "abiFile": "../abi/SNTController.json",
             "isIdentity": false,
-            "address": "0xB4A2d878C2426A3eba46B5C89ddc29aCB98dBA52",
+            "address": "0x2dFC150a152b02256C91708C7B71D3068E08DAd7",
             "allowedFunctions": [
                 {
                     "function":"transferSNT(address,uint256,uint256,uint256,bytes)"

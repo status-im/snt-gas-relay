@@ -84,7 +84,7 @@ module.exports = {
         "address": "0x6DBf417FB1b23E14Bb888BF22fb5f40CbBED4D0C"
       },
       "SNTController": {
-        "address": "0xB4A2d878C2426A3eba46B5C89ddc29aCB98dBA52"
+        "address": "0x2dFC150a152b02256C91708C7B71D3068E08DAd7"
       },
       "IdentityGasRelay": {
         "address": "0x186427a558E7038B5500D44Bd4da9CCe37f66209" 
