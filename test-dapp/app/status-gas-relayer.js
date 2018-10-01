@@ -24,7 +24,7 @@ export const Messages = {
 };
 
 const relayerSymmmetricKeyID = "0xd0d905c1c62b810b787141430417caf2b3f54cffadb395b7bb39fdeb8f17266b";
-
+const emptyBytesSha = "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470";
 class StatusGasRelayer {
     constructor(build, web3) {
         if (arguments.length !== 2 || !this.validateBuild(build)) throw new Error("Invalid build");
@@ -225,7 +225,7 @@ class IdentityGasRelayedAction extends Action {
                 hashedMessage = await contract.methods.callGasRelayHash(
                     this.to,
                     this.value,
-                    web3.utils.soliditySha3({t: 'bytes', v: this.data}),
+                    this.data == "0x" ? emptyBytesSha : web3.utils.soliditySha3({t: 'bytes', v: this.data}),
                     nonce,
                     this.gasPrice,
                     this.gasLimit,
@@ -235,7 +235,7 @@ class IdentityGasRelayedAction extends Action {
             case Functions.Identity.approveAndCall:
                 hashedMessage = await contract.methods.deployGasRelayHash(
                     this.value,
-                    web3.utils.soliditySha3({t: 'bytes', v: this.data}),
+                    this.data == "0x" ? emptyBytesSha : web3.utils.soliditySha3({t: 'bytes', v: this.data}),
                     nonce,
                     this.gasPrice,
                     this.gasLimit,
