@@ -35,6 +35,7 @@ class TransferSNT extends Component {
         super(props);
         this.state = {
             topic: '0x534e5443',
+            account: '',
             to: '0x0000000000000000000000000000000000000000',
             amount: 0,
             gasPrice: 0,
@@ -80,9 +81,9 @@ class TransferSNT extends Component {
   
         
         try {
-            const accounts = await web3.eth.getAccounts();
-            
-            const s = new StatusGasRelayer.SNTController(SNTController.options.address, accounts[0])
+            this.setState({account: web3.eth.defaultAccount});
+
+            const s = new StatusGasRelayer.SNTController(SNTController.options.address, web3.eth.defaultAccount)
                                           .transferSNT(this.state.to, this.state.amount)
                                           .setGas(this.state.gasPrice);
                                           
@@ -95,7 +96,7 @@ class TransferSNT extends Component {
         }
     }
 
-    obtainRelayers = async event => {
+    obtainRelayers = async (event) => {
         event.preventDefault();
 
         const {web3, kid, skid} = this.props;
@@ -108,9 +109,7 @@ class TransferSNT extends Component {
 
 
         try {
-            const accounts = await web3.eth.getAccounts();
-
-            const s = new StatusGasRelayer.AvailableRelayers(Contracts.SNT, SNTController.options.address, accounts[0])
+            const s = new StatusGasRelayer.AvailableRelayers(Contracts.SNT, SNTController.options.address, this.state.account)
                                           .setRelayersSymKeyID(skid)
                                           .setAsymmetricKeyID(kid)
                                           .setGas(STT.options.address, this.state.gasPrice);
@@ -148,9 +147,7 @@ class TransferSNT extends Component {
         this.props.clearMessages();
         
         try {
-            const accounts = await web3.eth.getAccounts();
-
-            const s = new StatusGasRelayer.SNTController(SNTController.options.address, accounts[0])
+            const s = new StatusGasRelayer.SNTController(SNTController.options.address, this.state.account)
                                           .transferSNT(this.state.to, this.state.amount)
                                           .setGas(this.state.gasPrice)
                                           .setRelayer(relayer)

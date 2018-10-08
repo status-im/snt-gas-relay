@@ -66,8 +66,7 @@ class MessageProcessor {
         const inputValidation = await this._validateInput(contract, input);
         if(!inputValidation.success){
             // TODO Log?
-            reply(inputValidation);
-            return;
+            return inputValidation;
         }
 
         if(strategy || contract.strategy){

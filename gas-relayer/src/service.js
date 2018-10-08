@@ -159,10 +159,10 @@ events.on('server:listen', (shhOptions, settings) => {
     
     const input = extractInput(message);
     const inputCheckSum = JSum.digest({input}, 'SHA256', 'hex');
-
+    
     const reply = replyFunction(message, inputCheckSum);
 
-    if(cache.get(inputCheckSum)){
+    if(cache.get(inputCheckSum) && input.action != 'availability'){
       reply("Duplicated message received");
     } else {
       let validationResult; 
@@ -180,8 +180,9 @@ events.on('server:listen', (shhOptions, settings) => {
                               );
           if(validationResult.success && validationResult.message) {
             cache.put(inputCheckSum, (new Date().getTime()), 86400000);
-            reply(validationResult.message);
           }
+          reply(validationResult.message);
+
   
           break;
         default: 

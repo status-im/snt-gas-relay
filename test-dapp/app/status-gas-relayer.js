@@ -25,6 +25,7 @@ export const Messages = {
 
 const relayerSymmmetricKeyID = "0xd0d905c1c62b810b787141430417caf2b3f54cffadb395b7bb39fdeb8f17266b";
 const emptyBytesSha = "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470";
+
 class StatusGasRelayer {
     constructor(build, web3) {
         if (arguments.length !== 2 || !this.validateBuild(build)) throw new Error("Invalid build");
@@ -246,7 +247,7 @@ class IdentityGasRelayedAction extends Action {
                 throw new Error("Function not allowed");
         }
           
-        const signedMessage = await web3.eth.sign(hashedMessage, this.accountAddress);
+        const signedMessage = await web3.eth.personal.sign(hashedMessage, this.accountAddress);
 
         return signedMessage;
     }
@@ -371,7 +372,7 @@ class SNTControllerAction extends Action {
                 throw new Error("Function not allowed");
         }
           
-        const signedMessage = await web3.eth.sign(hashedMessage, this.accountAddress);
+        const signedMessage = await web3.eth.personal.sign(hashedMessage, this.accountAddress);
 
         return signedMessage;
     }
@@ -410,7 +411,7 @@ class SNTControllerAction extends Action {
             default:
                 throw new Error("Function not allowed");
         }
-
+        
         return {
             'contract': this.contractAddress,
             'address': this.accountAddress,
