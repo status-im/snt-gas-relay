@@ -16,37 +16,30 @@ class AvailabilityStrategy extends Strategy {
         const token = this.settings.getToken(input.gasToken);
         if(token == undefined) return {success: false, message: "Token not allowed"};
 
-
-        // Get Price
-        let tokenRate = cache.get(input.gasToken);
-        if(tokenRate === null){
-            try {
-                tokenRate = await token.pricePlugin.getRate();
-                cache.put(input.gasToken, tokenRate, token.refreshPricePeriod);
-            } catch (err) {
-                console.error(err);
-                return {
-                    success: false,
-                    message: "Token price unavailable"
-                };
-            }
+        let tokenRate = await this.getTokenRate(token, cache);
+        if(!tokenRate){
+            return {
+                success: false,
+                message: "Token price unavailable"
+            };
         }
 
-        const minRate = token.minAcceptedRate;
+        const {toBN} = this.web3.utils;
 
-        if(tokenRate >= minRate){ // TODO: verify this
+        const gasPrices = await this.getGasPrices(token, tokenRate);
+        if(tokenRate.gte(token.minAcceptedRate) && gasPrices.inEther.lte(toBN(this.config.gasPrice.maxPrice))){
             return {
                 success: true,
                 message: {
                     message: "Available",
                     address: this.config.node.blockchain.account,
-                    acceptedRate: tokenRate,
-                    gasPriceUsed: this.config.gasPrice
+                    minGasPrice: gasPrices.inTokens.toString(),
+                    gasPriceETH: gasPrices.inEther.add(toBN(this.config.gasPrice.modifier)).toString()
                 }
             };
-        } else {
-            return {success: true};
         }
+
+        return {success: true};
     }
 
 }

@@ -92,17 +92,20 @@ class MessageProcessor {
      * @param {function} reply - function to reply a message
      * @returns {undefined}
      */
-    async processTransaction(contract, input, reply){
+    async processTransaction(contract, input, reply, cb){
         const validationResult = await this.processStrategy(contract, input, reply);
         
         if(!validationResult.success) return;
+
+        const {toBN} = this.web3.utils;
+        const gasPrice = toBN(await this.web3.eth.getGasPrice()).add(toBN(this.config.gasPrice.modifier)).toString();
 
         let p = {
             from: this.config.node.blockchain.account,
             to: input.contract,
             value: 0,
             data: input.payload,
-            gasPrice: this.config.gasPrice
+            gasPrice
         };
 
         if(!validationResult.estimatedGas){
@@ -122,6 +125,7 @@ class MessageProcessor {
                 this.web3.eth.sendTransaction(p)
                 .on('transactionHash', function(hash){
                     reply("Transaction broadcasted: " + hash);
+                    cb();
                 })
                 .on('receipt', function(receipt){
                     reply("Transaction mined", receipt);

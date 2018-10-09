@@ -87,29 +87,21 @@ class IdentityStrategy extends Strategy {
         }
 
         // Get Price
-        let tokenRate = cache.get(input.gasToken);
-        if(tokenRate === null){
-            try {
-                tokenRate = await token.pricePlugin.getRate();
-                cache.put(input.gasToken, tokenRate, token.refreshPricePeriod);
-            } catch (err) {
-                console.error(err);
-                return {
-                    success: false,
-                    message: "Token price unavailable"
-                };
-            }
+        let tokenRate = await this.getTokenRate(token, cache);
+        if(!tokenRate){
+            return {
+                success: false,
+                message: "Token price unavailable"
+            };
         }
 
-        const minRate = token.minAcceptedRate;
-
-        if(tokenRate < minRate){ // TODO: verify this. Maybe we want to accept a minRate instead of just simply not processing the trx
+        const gasPrices = await this.getGasPrices(token, tokenRate);
+        if(tokenRate.lt(token.minAcceptedRate)){
             return {success: false, message: "Not accepting " + token.symbol + " at current rate. (Min rate: " + token.minAcceptedRate+ ")"};
         }
 
-        const minGasPrice = this.web3.utils.toBN(token.pricePlugin.calculateMinGasPrice(estimatedGas.toString(10), tokenRate));
-        if(gasPrice.lt(minGasPrice)){
-            return {success: false, message: "Gas price is less than the required amount (" + minGasPrice.toString(10) + ")"};
+        if(gasPrice.lt(gasPrices.inTokens)){
+            return {success: false, message: "Gas price is less than the required amount (" + gasPrices.inTokens.toString(10) + ")"};
         }
 
         return {

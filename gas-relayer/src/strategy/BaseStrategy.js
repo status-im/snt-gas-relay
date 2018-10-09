@@ -37,6 +37,34 @@ class BaseStrategy {
         }
     }
 
+    async getTokenRate(token, cache){
+        // Get Price
+        let tokenRate = cache.get(token.address);
+        if(tokenRate === null){
+            try {
+                tokenRate = await token.pricePlugin.getRate();
+                cache.put(token.address, tokenRate, token.refreshPricePeriod);
+                return tokenRate;
+            } catch (err) {
+                console.error(err);
+            }
+        } else {
+            return tokenRate;
+        }
+    }
+
+    async getGasPrices(token, tokenRate){
+        const {toBN} = this.web3.utils;
+        const Token = new this.web3.eth.Contract(erc20ABI.abi);
+        Token.options.address = token.address;
+        const tokenDecimals = await Token.methods.decimals().call();
+        const multiplier = toBN(Math.pow(10, tokenDecimals));
+        const currentGasPrice = toBN(await this.web3.eth.getGasPrice());
+        const currentGasConvertedToTokens = currentGasPrice.mul(multiplier).div(tokenRate);
+        
+        return {inEther: currentGasPrice, inTokens: currentGasConvertedToTokens};
+    }
+
     /**
      * Build Parameters Function
      * @param {object} input - Object obtained from an `transaction` request. 

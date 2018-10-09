@@ -1,5 +1,4 @@
 module.exports = {
-    "gasPrice": 5000000000,
     "node": {
         "local":{
             "protocol": "ws",
@@ -32,7 +31,7 @@ module.exports = {
         "%STTAddress%": {
             "name": "Status Test Token",
             "symbol": "SNT",
-            "minAcceptedRate": 0.0001500,
+            "minAcceptedRate": 150000000000000,
             "refreshPricePeriod": 60000,
             "pricePlugin": "../plugins/token-utils.js"
         }
@@ -70,5 +69,9 @@ module.exports = {
             ],
             "strategy": "../src/strategy/SNTStrategy.js"
         }
+    },
+    "gasPrice": {
+        "modifier": 50000, // Added/removed to current network gas price
+        "maxPrice": 20000000000 // 20 gwei
     }
 };

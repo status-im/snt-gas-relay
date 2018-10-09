@@ -159,7 +159,7 @@ events.on('server:listen', (shhOptions, settings) => {
     
     const input = extractInput(message);
     const inputCheckSum = JSum.digest({input}, 'SHA256', 'hex');
-    
+
     const reply = replyFunction(message, inputCheckSum);
 
     if(cache.get(inputCheckSum) && input.action != 'availability'){
@@ -170,7 +170,11 @@ events.on('server:listen', (shhOptions, settings) => {
         case 'transaction':
           processor.processTransaction(settings.getContractByTopic(message.topic), 
                         input, 
-                        reply);
+                        reply,
+                        () => {
+                          cache.put(inputCheckSum, (new Date().getTime()), 3600000);
+                        }
+                    );
           break;
         case 'availability':
           validationResult = await processor.processStrategy(settings.getContractByTopic(message.topic), 
@@ -179,11 +183,8 @@ events.on('server:listen', (shhOptions, settings) => {
                                 settings.buildStrategy("./strategy/AvailabilityStrategy", message.topic)
                               );
           if(validationResult.success && validationResult.message) {
-            cache.put(inputCheckSum, (new Date().getTime()), 86400000);
+            reply(validationResult.message);
           }
-          reply(validationResult.message);
-
-  
           break;
         default: 
           reply("unknown-action");        

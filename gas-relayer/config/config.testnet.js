@@ -1,5 +1,4 @@
 module.exports = {
-    "gasPrice": 5000000000,
     "node": {
         "local":{
             "protocol": "ws",
@@ -70,5 +69,9 @@ module.exports = {
             ],
             "strategy": "../src/strategy/SNTStrategy.js"
         }
+    },
+    "gasPrice": {
+        "modifier": 50000, // Added/removed to current network gas price
+        "maxPrice": 20000000000 // 20 gwei
     }
 };
