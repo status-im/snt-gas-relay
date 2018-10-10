@@ -254,7 +254,7 @@ class Status extends Component {
                     <Typography variant="display1">
                         Relayer
                     </Typography>
-                    { isDev && <Button className={classes.button} color="primary" aria-label="Add ether" onClick={this.sendEther} disabled={submitState.etherSend}>
+                    { false && isDev && <Button className={classes.button} color="primary" aria-label="Add ether" onClick={this.sendEther} disabled={submitState.etherSend}>
                         <AddIcon className={classes.icon} />
                         Send ether
                     </Button> }
