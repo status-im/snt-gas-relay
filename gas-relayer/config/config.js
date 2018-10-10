@@ -11,7 +11,13 @@ module.exports = {
             "port": 8545
         },
         "blockchain": {
+            // DO NOT USE THIS ACCOUNT ON MAINNET - IT IS ONLY FOR DEV PURPOSES
+            // For dev chain, address: 0x5b9b5db9cde96fda2e2c88e83f1b833f189e01f4 has this privKey
+            privateKey: "b2ab40d549e67ba67f278781fec03b3a90515ad4d0c898a6326dd958de1e46fa" //
+
+
             // privateKey: "your_private_key",
+            
             
             // privateKeyFile: "path/to/file"
 

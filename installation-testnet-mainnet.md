@@ -93,7 +93,18 @@ mv config.testnet.js config.js
 2. A node that wants to act as a relayer only needs to have a geth node with whisper enabled, and an account with ether to process the transactions. This account needs to be configured in `./config/config.js`. Edit this file and set the account:
 ```
 "blockchain": {
-   "account": "your account here"
+    // Use one of these options:
+
+    // Option1 ===========================
+    // privateKey: "your_private_key",
+
+    // Option2 ===========================
+    // privateKeyFile: "path/to/file"
+
+    // Option3 ===========================
+    // mnemonic: "12 word mnemonic",
+    // addressIndex: "0", // Optionnal. The index to start getting the address
+    // hdpath: "m/44'/60'/0'/0/" // Optionnal. HD derivation path
 },
 ```
 
