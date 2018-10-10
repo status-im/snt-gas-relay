@@ -32,7 +32,7 @@ class AvailabilityStrategy extends Strategy {
                 success: true,
                 message: {
                     message: "Available",
-                    address: this.config.node.blockchain.account,
+                    address: this.config.node.blockchain.account.address,
                     minGasPrice: gasPrices.inTokens.toString(),
                     gasPriceETH: gasPrices.inEther.add(toBN(this.config.gasPrice.modifier)).toString()
                 }

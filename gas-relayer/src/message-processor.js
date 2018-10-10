@@ -92,29 +92,37 @@ class MessageProcessor {
      * @param {function} reply - function to reply a message
      * @returns {undefined}
      */
-    async processTransaction(contract, input, reply, cb){
+    async processTransaction(contract, input, reply, account, cb){
         const validationResult = await this.processStrategy(contract, input, reply);
         
+        const {toHex} =  this.web3.utils;
+
         if(!validationResult.success) return;
 
         const {toBN} = this.web3.utils;
+        
         const gasPrice = toBN(await this.web3.eth.getGasPrice()).add(toBN(this.config.gasPrice.modifier)).toString();
 
-        let p = {
-            from: this.config.node.blockchain.account,
-            to: input.contract,
-            value: 0,
-            data: input.payload,
-            gasPrice
-        };
+        const nonce = await this.web3.eth.getTransactionCount(this.config.node.blockchain.account.address);
 
         if(!validationResult.estimatedGas){
             validationResult.estimatedGas = await this.web3.eth.estimateGas(p);
         }
 
-        p.gas = Math.floor(parseInt(validationResult.estimatedGas, 10)); // Tune this
+        const estimatedGas = parseInt(validationResult.estimatedGas, 10);
 
-        const nodeBalance =  await this.web3.eth.getBalance(this.config.node.blockchain.account);
+        let p = {
+            from: this.config.node.blockchain.account.address,
+            to: input.contract,
+            value: "0x00",
+            data: input.payload,
+            nonce: toHex(nonce),
+            gasPrice: toHex(parseInt(gasPrice, 10)),
+            gasLimit: toHex(estimatedGas) // Tune this,
+        };
+
+
+        const nodeBalance =  await this.web3.eth.getBalance(this.config.node.blockchain.account.address);
 
         if(nodeBalance < p.gas){
             reply("Relayer unavailable");
@@ -122,14 +130,16 @@ class MessageProcessor {
             this.events.emit('exit');
         } else {
             try {
-                this.web3.eth.sendTransaction(p)
-                .on('transactionHash', function(hash){
-                    reply("Transaction broadcasted: " + hash);
-                    cb();
-                })
-                .on('receipt', function(receipt){
-                    reply("Transaction mined", receipt);
-                });
+                const signedTrx = await account.signTransaction(p);
+
+                this.web3.eth.sendSignedTransaction(signedTrx.rawTransaction)
+                    .on('transactionHash', function(hash){
+                        reply("Transaction broadcasted: " + hash);
+                        cb();
+                    })
+                    .on('receipt', function(receipt){
+                        reply("Transaction mined", receipt);
+                    });
                 
             } catch(err){
                 reply("Couldn't mine transaction: " + err.message);

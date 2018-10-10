@@ -23,11 +23,20 @@ class SNTStrategy extends Strategy {
         
         const balance = await this.getBalance(input.address, token);
 
-        const estimatedGas = await this.web3.eth.estimateGas({
-            data: input.payload,
-            from: this.config.node.blockchain.account,
-            to: input.contract
-        });
+        let estimatedGas;
+        try {
+            estimatedGas = await this.web3.eth.estimateGas({
+                data: input.payload,
+                from: this.config.node.blockchain.account.address,
+                to: input.contract
+            });
+        } catch(exc){
+            if(exc.message.indexOf("revert") > -1) return {success: false, message: "Transaction will revert"};
+            else {
+                console.error(exc);
+                return {success: false, message: "Transaction will fail"};
+            }
+        }
 
         let tokenRate = await this.getTokenRate(token, cache);
         if(!tokenRate){

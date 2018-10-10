@@ -82,7 +82,7 @@ class IdentityStrategy extends Strategy {
             if(exc.message.indexOf("revert") > -1) return {success: false, message: "Transaction will revert"};
             else {
                 console.error(exc);
-                return {success: false, message: "Couldn't process transaction"};
+                return {success: false, message: "Transaction will fail"};
             }
         }
 

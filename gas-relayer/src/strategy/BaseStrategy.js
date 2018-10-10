@@ -84,7 +84,7 @@ class BaseStrategy {
      */
     async _estimateGas(input){
         let p = {
-            from: this.config.node.blockchain.account,
+            from: this.config.node.blockchain.account.address,
             to: input.contract,
             data: input.payload
         };

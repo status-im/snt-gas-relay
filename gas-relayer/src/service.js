@@ -6,7 +6,8 @@ const MessageProcessor = require('./message-processor');
 const JSum = require('jsum');
 const logger = require('consola');
 const winston = require('winston');
-var cache = require('memory-cache');
+const cache = require('memory-cache');
+const accountParser = require('./account-parser');
 
 // Setting up logging
 const wLogger = winston.createLogger({
@@ -28,6 +29,8 @@ const events = new EventEmitter();
 const connectionURL = `${config.node.local.protocol}://${config.node.local.host}:${config.node.local.port}`;
 const wsProvider = new Web3.providers.WebsocketProvider(connectionURL, {headers: {Origin: "gas-relayer"}});
 const web3 = new Web3(wsProvider);
+let account;
+
 
 web3.eth.net.isListening()
 .then(() => events.emit('web3:connected', connectionURL))
@@ -39,6 +42,15 @@ web3.eth.net.isListening()
 
 events.on('web3:connected', connURL => {
   logger.info("Connected to '" + connURL + "'");
+
+
+  account = accountParser.get(config.node.blockchain, web3);
+  if(!account) {
+    process.exit(1);
+  } else {
+    config.node.blockchain.account = account;
+  }
+
   let settings = new ContractSettings(config, web3, events, logger);
   settings.process();
 });
@@ -50,10 +62,10 @@ const shhOptions = {
 };
 
 const verifyBalance = async (exitSubs) => {
-  const nodeBalance = await web3.eth.getBalance(config.node.blockchain.account);
+  const nodeBalance = await web3.eth.getBalance(config.node.blockchain.account.address);
   if(web3.utils.toBN(nodeBalance).lte(web3.utils.toBN(100000))){ // TODO: tune minimum amount required for transactions
     logger.info("Not enough balance available for processing transactions");
-    logger.info("> Account: " + config.node.blockchain.account);
+    logger.info("> Account: " + config.node.blockchain.account.address);
     logger.info("> Balance: " + nodeBalance);
 
     if(exitSubs){
@@ -171,6 +183,7 @@ events.on('server:listen', (shhOptions, settings) => {
           processor.processTransaction(settings.getContractByTopic(message.topic), 
                         input, 
                         reply,
+                        account,
                         () => {
                           cache.put(inputCheckSum, (new Date().getTime()), 3600000);
                         }
