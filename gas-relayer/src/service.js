@@ -45,6 +45,9 @@ events.on('web3:connected', connURL => {
 
 
   account = accountParser.get(config.node.blockchain, web3);
+  web3.eth.accounts.wallet.add(account);
+
+  
   if(!account) {
     process.exit(1);
   } else {

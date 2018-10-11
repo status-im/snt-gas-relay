@@ -103,8 +103,6 @@ class MessageProcessor {
         
         const gasPrice = toBN(await this.web3.eth.getGasPrice()).add(toBN(this.config.gasPrice.modifier)).toString();
 
-        const nonce = await this.web3.eth.getTransactionCount(this.config.node.blockchain.account.address);
-
         if(!validationResult.estimatedGas){
             validationResult.estimatedGas = await this.web3.eth.estimateGas(p);
         }
@@ -116,11 +114,9 @@ class MessageProcessor {
             to: input.contract,
             value: "0x00",
             data: input.payload,
-            nonce: toHex(nonce),
-            gasPrice: toHex(parseInt(gasPrice, 10)),
-            gasLimit: toHex(estimatedGas) // Tune this,
+            gasPrice: parseInt(gasPrice, 10),
+            gas: estimatedGas + 1000 // Tune this,
         };
-
 
         const nodeBalance =  await this.web3.eth.getBalance(this.config.node.blockchain.account.address);
 
@@ -130,9 +126,7 @@ class MessageProcessor {
             this.events.emit('exit');
         } else {
             try {
-                const signedTrx = await account.signTransaction(p);
-
-                this.web3.eth.sendSignedTransaction(signedTrx.rawTransaction)
+                this.web3.eth.sendTransaction(p)
                     .on('transactionHash', function(hash){
                         reply("Transaction broadcasted: " + hash);
                         cb();
