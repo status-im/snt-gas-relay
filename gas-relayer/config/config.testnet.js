@@ -31,9 +31,9 @@ module.exports = {
         "0x91a3473a3e1e3D61C29fa2fAcDf17fa0Db922a08": {
             "name": "Status Gas Relayer Test Token",
             "symbol": "SNT",
-            "minAcceptedRate": 0.0001500,
-            "pricePlugin": "../plugins/token-utils.js",
-            "refreshPricePeriod": 60000
+            "minAcceptedRate": 150000000000000,
+            "refreshPricePeriod": 60000,
+            "pricePlugin": "../plugins/token-utils.js"
         }
     },
 
