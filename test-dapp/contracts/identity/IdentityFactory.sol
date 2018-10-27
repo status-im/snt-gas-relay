@@ -25,8 +25,8 @@ contract IdentityFactory is Factory {
         uint256[] memory initTypes = new uint256[](2);
         initKeys[0] = keccak256(msg.sender);
         initKeys[1] = initKeys[0];
-        initPurposes[0] = 0;
-        initPurposes[1] = 1;
+        initPurposes[0] = 1;
+        initPurposes[1] = 2;
         initTypes[0] = 0;
         initTypes[1] = 0;
         return createIdentity(
