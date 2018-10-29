@@ -64,8 +64,7 @@ module.exports = {
       },
       "IdentityFactory": {
         "args":[], 
-        "gasLimit": 5000000,
-        "onDeploy": ["IdentityFactory.methods.setKernel('$IdentityGasRelay').send({gasLimit: 6000000})"]
+        "gasLimit": 5000000
       },
       "TestContract": {
         "args": ["$STT"]

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.24;
 
 import "../deploy/Factory.sol";
 import "../deploy/DelayedUpdatableInstance.sol";
