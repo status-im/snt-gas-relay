@@ -103,7 +103,7 @@ class ContractSettings {
         this.pendingToLoad++;
 
         try {
-            const code = await this.web3.eth.getCode(this.contracts[topicName].address)
+            const code = await this.web3.eth.getCode(this.contracts[topicName].address);
             this.contracts[topicName].code = this.web3.utils.soliditySha3(code);
             this.pendingToLoad--;
             if(this.pendingToLoad == 0) this.events.emit("setup:complete", this);

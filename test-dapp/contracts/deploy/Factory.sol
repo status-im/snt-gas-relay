@@ -10,15 +10,14 @@ contract Factory is Controlled {
         uint256 blockNumber;
         uint256 timestamp;
         address kernel;
-        bytes32 codeHash;
     }
 
-    mapping(bytes32 => uint256) hashToVersion;
-    mapping(address => uint256) versionMap;
+    mapping(bytes32 => uint256) public hashToVersion;
+    mapping(address => uint256) public versionMap;
 
-    Version[] versionLog;
-    uint256 latestUpdate;
-    address latestKernel;
+    Version[] public versionLog;
+    uint256 public latestUpdate;
+    address public latestKernel;
 
     constructor(address _kernel)
         public 
@@ -39,15 +38,13 @@ contract Factory is Controlled {
         returns(
             uint256 blockNumber,
             uint256 timestamp,
-            address kernel,
-            bytes32 codeHash
+            address kernel
         )
     {
         return (
             versionLog[index].blockNumber, 
             versionLog[index].timestamp, 
-            versionLog[index].kernel, 
-            versionLog[index].codeHash
+            versionLog[index].kernel
         );
     }
 
@@ -91,8 +88,7 @@ contract Factory is Controlled {
         require(_kernel != latestKernel);
         bytes32 _codeHash = getCodeHash(_kernel);
         versionMap[_kernel] = versionLog.length;
-        hashToVersion[_codeHash] = versionLog.length;
-        versionLog.push(Version({blockNumber: block.number, timestamp: block.timestamp, kernel: _kernel, codeHash: _codeHash}));
+        versionLog.push(Version({blockNumber: block.number, timestamp: block.timestamp, kernel: _kernel}));
         latestUpdate = block.timestamp;
         latestKernel = _kernel;
         emit NewKernel(_kernel, _codeHash);

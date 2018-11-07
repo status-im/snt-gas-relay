@@ -123,6 +123,8 @@ class StatusGasRelayer {
             sendOptions.symKeyID = skid;
         }
         
+        console.log(sendOptions);
+
         const msgId = await this.web3.shh.post(sendOptions);
         return msgId;
     }

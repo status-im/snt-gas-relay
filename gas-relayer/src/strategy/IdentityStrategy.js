@@ -18,6 +18,7 @@ class IdentityStrategy extends Strategy {
     async _validateInstance(input){
         const instanceCodeHash = this.web3.utils.soliditySha3(await this.web3.eth.getCode(input.contract));
         const kernelVerifSignature = this.web3.utils.soliditySha3(this.contract.kernelVerification).slice(0, 10);
+
         if(instanceCodeHash === null) return false;
     
         let verificationResult = await this.web3.eth.call({
@@ -39,7 +40,7 @@ class IdentityStrategy extends Strategy {
                 return {success: false, message: "Invalid identity instance"};
             }
         }
-
+        
         const params = this._obtainParametersFunc(input);
 
         // Verifying if token is allowed

@@ -15,6 +15,7 @@ import Web3 from 'web3';
 import config from '../config';
 import {withStyles} from '@material-ui/core/styles';
 
+window.IdentityFactory = IdentityFactory;
 
 const styles = {};
 
@@ -24,7 +25,7 @@ class Body extends Component {
         super(props);
         this.state = {
             tab: 0,
-            identityAddress: null,
+            identityAddress: "0x0000000000000000000000000000000000000000",
             nonce: '0',
             kid: null,
             skid: null,
@@ -87,8 +88,7 @@ class Body extends Component {
             });
 
             this.setState({
-                web3js,
-                identityAddress: IdentityGasRelay.options.address
+                web3js
             });
         });
     }

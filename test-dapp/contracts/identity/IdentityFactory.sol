@@ -51,6 +51,12 @@ contract IdentityFactory is Factory {
         returns (address)
     {
         IdentityKernel instance = IdentityKernel(new DelayedUpdatableInstance(address(latestKernel)));
+
+        bytes32 codeHash = getCodeHash(address(instance));
+        if(hashToVersion[codeHash] == 0){
+            hashToVersion[codeHash] = versionLog.length;
+        }
+
         instance.initIdentity(_keys,_purposes,_types,_managerThreshold,_actorThreshold,_recoveryContract);
         emit IdentityCreated(address(instance));
         return instance;

@@ -91,7 +91,7 @@ class Status extends Component {
         web3.eth.getBlock('latest').then(block => {
             this.setState({block: block.number});
             this.readChain();
-            setTimeout(this.web3BlockRead, 10000);
+            setTimeout(this.web3BlockRead, 5000);
             return true;
         });
     }
