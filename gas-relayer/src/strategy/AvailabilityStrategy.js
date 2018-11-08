@@ -12,6 +12,14 @@ class AvailabilityStrategy extends Strategy {
      * @returns {object} Status of validation, and minimum price
      */
     async execute(input, cache){
+        
+        if(this.contract.isIdentity){
+            let validInstance = await this._validateInstance(input);
+            if(!validInstance){
+                return {success: false, message: "Invalid identity instance"};
+            }
+        }
+
         // Verifying if token is allowed
         const token = this.settings.getToken(input.gasToken);
         if(token == undefined) return {success: false, message: "Token not allowed"};

@@ -9,6 +9,8 @@ const winston = require('winston');
 const cache = require('memory-cache');
 const accountParser = require('./account-parser');
 
+var pubKey;
+
 // Setting up logging
 const wLogger = winston.createLogger({
   level: 'info',
@@ -92,7 +94,7 @@ events.on('setup:complete', async (settings) => {
   shhOptions.kId = await web3.shh.newKeyPair();
 
   const symKeyID = await web3.shh.addSymKey(config.node.whisper.symKey);
-  const pubKey = await web3.shh.getPublicKey(shhOptions.kId);
+  pubKey = await web3.shh.getPublicKey(shhOptions.kId);
 
   // Listening to whisper
   // Individual subscriptions due to https://github.com/ethereum/web3.js/issues/1361
@@ -183,14 +185,16 @@ events.on('server:listen', (shhOptions, settings) => {
       let validationResult; 
       switch(input.action){
         case 'transaction':
-          processor.processTransaction(settings.getContractByTopic(message.topic), 
-                        input, 
-                        reply,
-                        account,
-                        () => {
-                          cache.put(inputCheckSum, (new Date().getTime()), 3600000);
-                        }
-                    );
+          if(message.recipientPublicKey === pubKey){
+            processor.processTransaction(settings.getContractByTopic(message.topic), 
+                          input, 
+                          reply,
+                          account,
+                          () => {
+                            cache.put(inputCheckSum, (new Date().getTime()), 3600000);
+                          }
+                      );
+          }
           break;
         case 'availability':
           validationResult = await processor.processStrategy(settings.getContractByTopic(message.topic), 

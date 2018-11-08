@@ -52,6 +52,7 @@ contract IdentityFactory is Factory {
     {
         IdentityKernel instance = IdentityKernel(new DelayedUpdatableInstance(address(latestKernel)));
 
+        // Saving hash for version in case it does not exist
         bytes32 codeHash = getCodeHash(address(instance));
         if(hashToVersion[codeHash] == 0){
             hashToVersion[codeHash] = versionLog.length;
