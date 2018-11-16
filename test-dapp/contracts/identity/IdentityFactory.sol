@@ -23,7 +23,7 @@ contract IdentityFactory is Factory {
         bytes32[] memory initKeys = new bytes32[](2);
         uint256[] memory initPurposes = new uint256[](2);
         uint256[] memory initTypes = new uint256[](2);
-        initKeys[0] = keccak256(msg.sender);
+        initKeys[0] = keccak256(abi.encodePacked(msg.sender));
         initKeys[1] = initKeys[0];
         initPurposes[0] = 1;
         initPurposes[1] = 2;
