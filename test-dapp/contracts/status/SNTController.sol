@@ -14,8 +14,12 @@ import "../token/MiniMeToken.sol";
 contract SNTController is TokenController, Owned, MessageSigned {
 
     
-    bytes4 public constant TRANSFER_PREFIX = bytes4(keccak256("transferSNT(address,uint256,uint256,uint256)"));
-    bytes4 public constant EXECUTE_PREFIX = bytes4(keccak256("executeGasRelayed(address,bytes,uint256,uint256,uint256)"));
+    bytes4 public constant TRANSFER_PREFIX = bytes4(
+        keccak256("transferSNT(address,uint256,uint256,uint256)")
+    );
+    bytes4 public constant EXECUTE_PREFIX = bytes4(
+        keccak256("executeGasRelayed(address,bytes,uint256,uint256,uint256)")
+    );
 
     MiniMeToken public snt;
     mapping (address => uint256) public signNonce;
@@ -31,7 +35,7 @@ contract SNTController is TokenController, Owned, MessageSigned {
      * @param _owner Authority address
      * @param _snt SNT token
      */
-    function SNTController(address _owner, address _snt) public {
+    constructor(address _owner, address _snt) public {
         owner = _owner;
         snt = MiniMeToken(_snt);
     }
@@ -64,10 +68,17 @@ contract SNTController is TokenController, Owned, MessageSigned {
         );
 
         address msgSigner = recoverAddress(msgSigned, _signature);
-        require(signNonce[msgSigner] == _nonce);
+        require(signNonce[msgSigner] == _nonce, "Bad nonce");
         signNonce[msgSigner]++;
         if (snt.transferFrom(msgSigner, _to, _amount)) {
-            require(snt.transferFrom(msgSigner, msg.sender, (21000 + startGas-gasleft()) * _gasPrice));
+            require(
+                snt.transferFrom(
+                    msgSigner,
+                    msg.sender,
+                    (21000 + startGas - gasleft()) * _gasPrice
+                ),
+                "Gas transfer fail"
+            );
         }
     }
 
@@ -91,7 +102,7 @@ contract SNTController is TokenController, Owned, MessageSigned {
         external
     {
         uint256 startGas = gasleft();
-        require(startGas >= _gasMinimal);
+        require(startGas >= _gasMinimal, "Bad gas left");
         bytes32 msgSigned = getSignHash(
             getExecuteGasRelayedHash(
                 _allowedContract,
@@ -103,7 +114,7 @@ contract SNTController is TokenController, Owned, MessageSigned {
         );
 
         address msgSigner = recoverAddress(msgSigned, _signature);
-        require(signNonce[msgSigner] == _nonce);
+        require(signNonce[msgSigner] == _nonce, "Bad nonce");
         signNonce[msgSigner]++;
         bool success = _allowedContract.call(_data);
         emit GasRelayedExecution(msgSigner, msgSigned, success);
@@ -146,7 +157,7 @@ contract SNTController is TokenController, Owned, MessageSigned {
             snt.claimTokens(_token);
         }
         if (_token == 0x0) {
-            address(owner).transfer(this.balance);
+            address(owner).transfer(address(this).balance);
             return;
         }
 
@@ -194,13 +205,15 @@ contract SNTController is TokenController, Owned, MessageSigned {
         returns (bytes32 execHash) 
     {
         execHash = keccak256(
-            address(this),
-            EXECUTE_PREFIX,
-            _allowedContract,
-            keccak256(_data),
-            _nonce,
-            _gasPrice,
-            _gasMinimal
+            abi.encodePacked(
+                address(this),
+                EXECUTE_PREFIX,
+                _allowedContract,
+                keccak256(_data),
+                _nonce,
+                _gasPrice,
+                _gasMinimal
+            )
         );
     }
 
@@ -222,12 +235,14 @@ contract SNTController is TokenController, Owned, MessageSigned {
         returns (bytes32 txHash) 
     {
         txHash = keccak256(
-            address(this),
-            TRANSFER_PREFIX,
-            _to,
-            _amount,
-            _nonce,
-            _gasPrice
+            abi.encodePacked(
+                address(this),
+                TRANSFER_PREFIX,
+                _to,
+                _amount,
+                _nonce,
+                _gasPrice
+            )
         );
     }
     
