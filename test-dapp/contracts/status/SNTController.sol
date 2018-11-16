@@ -123,7 +123,8 @@ contract SNTController is TokenController, Owned, MessageSigned {
                 msgSigner,
                 msg.sender,
                 (21000 + startGas-gasleft()) * _gasPrice
-            )
+            ),
+            "Gas transfer fail"
         );   
     }
 
