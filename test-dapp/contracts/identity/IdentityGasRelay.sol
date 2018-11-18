@@ -215,7 +215,7 @@ contract IdentityGasRelay is Identity {
         //verify if signatures are valid and came from correct actors;
         verifySignatures(
             ACTION_KEY,
-            approveAndCallHash(
+            approveAndCallGasRelayHash(
                 _baseToken,
                 _to,
                 _value,
@@ -364,7 +364,7 @@ contract IdentityGasRelay is Identity {
      * @param _gasToken token being used for paying `msg.sender` 
      * @return callGasRelayHash the hash to be signed by wallet
      */
-    function approveAndCallHash(
+    function approveAndCallGasRelayHash(
         address _baseToken,
         address _to,
         uint256 _value,
