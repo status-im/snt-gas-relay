@@ -394,47 +394,6 @@ contract IdentityGasRelay is Identity {
 
     
     /**
-     * @notice get callHash
-     * @param _to destination of call
-     * @param _value call value (ether)
-     * @param _dataHash call data hash
-     * @param _nonce current identity nonce
-     * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
-     * @param _gasMinimal minimal startGas required to execute this call
-     * @param _gasToken token being used for paying `msg.sender` 
-     * @return callGasRelayHash the hash to be signed by wallet
-     */
-    function approveAndCallGasRelayHash(
-        address _baseToken,
-        address _to,
-        uint256 _value,
-        bytes32 _dataHash,
-        uint _nonce,
-        uint256 _gasPrice,
-        uint256 _gasMinimal,
-        address _gasToken
-    )
-        public 
-        view 
-        returns (bytes32 _callGasRelayHash) 
-    {
-        _callGasRelayHash = keccak256(
-            abi.encodePacked(
-                address(this), 
-                MSG_APPROVEANDCALL_PREFIX, 
-                _baseToken,
-                _to,
-                _value,
-                _dataHash,
-                _nonce,
-                _gasPrice,
-                _gasMinimal,
-                _gasToken
-            )
-        );
-    }
-
-    /**
      * @notice recovers key who signed the message 
      * @param _signHash operation ethereum signed message hash
      * @param _messageSignature message `_signHash` signature
@@ -505,10 +464,8 @@ contract IdentityGasRelay is Identity {
         internal 
         returns (address createdContract) 
     {
-        bool failed;
         assembly {
             createdContract := create(_value, add(_code, 0x20), mload(_code))
-            failed := iszero(extcodesize(createdContract))
         }
         //require(!failed); removed as startGas needs to be lower then inner _gasMinimal
     }
