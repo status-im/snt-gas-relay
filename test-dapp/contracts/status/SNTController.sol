@@ -103,6 +103,7 @@ contract SNTController is TokenController, Owned, MessageSigned {
     {
         uint256 startGas = gasleft();
         require(startGas >= _gasMinimal, "Bad gas left");
+        require(allowPublicExecution[_allowedContract], "Unallowed call");
         bytes32 msgSigned = getSignHash(
             getExecuteGasRelayedHash(
                 _allowedContract,
