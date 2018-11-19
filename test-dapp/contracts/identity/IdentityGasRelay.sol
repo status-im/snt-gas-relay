@@ -11,62 +11,17 @@ import "../token/ERC20Token.sol";
  */
 contract IdentityGasRelay is Identity {
     
-    bytes4 public constant MSG_CALL_PREFIX = bytes4(keccak256("callGasRelay(address,uint256,bytes32,uint256,uint256,address)"));
-    bytes4 public constant MSG_DEPLOY_PREFIX = bytes4(keccak256("deployGasRelay(uint256,bytes32,uint256,uint256,address)"));
-    bytes4 public constant MSG_APPROVEANDCALL_PREFIX = bytes4(keccak256("approveAndCallGasRelay(address,address,uint256,bytes32,uint256,uint256)"));
+    bytes4 public constant MSG_CALL_PREFIX = bytes4(
+        keccak256("callGasRelay(address,uint256,bytes32,uint256,uint256,address)")
+    );
+    bytes4 public constant MSG_DEPLOY_PREFIX = bytes4(
+        keccak256("deployGasRelay(uint256,bytes32,uint256,uint256,address)")
+    );
+    bytes4 public constant MSG_APPROVEANDCALL_PREFIX = bytes4(
+        keccak256("approveAndCallGasRelay(address,address,uint256,bytes32,uint256,uint256)")
+    );
 
-    event ExecutedGasRelayed(bytes32 messageHash);
     event ContractDeployed(address deployedAddress);
-
-    /**
-     * @param _messageHash that is signed
-     * @param _requiredPurpose key purpose for this type of call
-     * @param _nonce current identity nonce
-     * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
-     * @param _gasLimit minimal gasLimit required to execute this call
-     * @param _gasToken token being used for paying `msg.sender`
-     * @param _messageSignatures rsv concatenated ethereum signed message signatures required   
-     */
-    modifier executeGasRelayed (
-        bytes32 _messageHash, 
-        uint256 _requiredPurpose, 
-        uint _nonce,
-        uint _gasPrice,
-        uint _gasLimit,
-        address _gasToken, 
-        bytes _messageSignatures
-    ) {
-        //query current gas available
-        uint startGas = gasleft(); 
-        
-        //verify transaction parameters
-        require(startGas >= _gasLimit);
-        require(_nonce == nonce);
-        
-        //verify if signatures are valid and came from correct actors;
-        verifySignatures(
-            _requiredPurpose,
-            _messageHash, 
-            _messageSignatures
-        );
-        
-        //increase nonce
-        nonce++;
-
-        //executes transaction
-        _; 
-
-        //refund gas used using contract held ERC20 tokens or ETH
-        if (_gasPrice > 0) {
-            uint256 _amount = 21000 + (startGas - gasleft());
-            _amount = _amount * _gasPrice;
-            if (_gasToken == address(0)) {
-                address(msg.sender).transfer(_amount);
-            } else {
-                ERC20Token(_gasToken).transfer(msg.sender, _amount);
-            }
-        }
-    }
 
     constructor(   
         bytes32[] _keys,
@@ -97,7 +52,7 @@ contract IdentityGasRelay is Identity {
      * @param _data call data
      * @param _nonce current identity nonce
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
-     * @param _gasLimit minimal gasLimit required to execute this call
+     * @param _gasMinimal minimal startGas required to execute this call
      * @param _gasToken token being used for paying `msg.sender`
      * @param _messageSignatures rsv concatenated ethereum signed message signatures required
      */
@@ -107,7 +62,7 @@ contract IdentityGasRelay is Identity {
         bytes _data,
         uint _nonce,
         uint _gasPrice,
-        uint _gasLimit,
+        uint _gasMinimal,
         address _gasToken, 
         bytes _messageSignatures
     ) 
@@ -119,8 +74,8 @@ contract IdentityGasRelay is Identity {
         uint startGas = gasleft(); 
         
         //verify transaction parameters
-        //require(startGas >= _gasLimit); // TODO: Tune this
-        require(_nonce == nonce);
+        require(startGas >= _gasMinimal, "Bad gas left");
+        require(_nonce == nonce, "Wrong nonce");
         
         //verify if signatures are valid and came from correct actors;
         verifySignatures(
@@ -131,7 +86,7 @@ contract IdentityGasRelay is Identity {
                 keccak256(_data),
                 _nonce,
                 _gasPrice,
-                _gasLimit,
+                _gasMinimal,
                 _gasToken                
             ), 
             _messageSignatures
@@ -164,7 +119,7 @@ contract IdentityGasRelay is Identity {
      * @param _data contract code data
      * @param _nonce current identity nonce
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
-     * @param _gasLimit minimal gasLimit required to execute this call
+     * @param _gasMinimal minimal startGas required to execute this call
      * @param _gasToken token being used for paying `msg.sender`
      * @param _messageSignatures rsv concatenated ethereum signed message signatures required
      */
@@ -173,7 +128,7 @@ contract IdentityGasRelay is Identity {
         bytes _data,
         uint _nonce,
         uint _gasPrice,
-        uint _gasLimit,
+        uint _gasMinimal,
         address _gasToken, 
         bytes _messageSignatures
     ) 
@@ -185,8 +140,8 @@ contract IdentityGasRelay is Identity {
         uint startGas = gasleft(); 
         
         //verify transaction parameters
-        require(startGas >= _gasLimit);
-        require(_nonce == nonce);
+        require(startGas >= _gasMinimal, "Bad gas left");
+        require(_nonce == nonce, "Bad nonce");
         
         //verify if signatures are valid and came from correct actors;
         verifySignatures(
@@ -196,7 +151,7 @@ contract IdentityGasRelay is Identity {
                 keccak256(_data),
                 _nonce,
                 _gasPrice,
-                _gasLimit,
+                _gasMinimal,
                 _gasToken                
             ), 
             _messageSignatures
@@ -226,14 +181,13 @@ contract IdentityGasRelay is Identity {
      *         (`ERC20Token(baseToken).approve(_to, _value)` + `_to.call(_data)`).
      *         in return of gas proportional amount multiplied by `_gasPrice` of `_gasToken`
      *         fixes race condition in double transaction for ERC20.
-     * @param _baseToken token approved for `_to`
+     * @param _baseToken token approved for `_to` and token being used for paying `msg.sender`
      * @param _to destination of call
      * @param _value call value (in `_baseToken`)
      * @param _data call data
      * @param _nonce current identity nonce
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
-     * @param _gasLimit minimal gasLimit required to execute this call
-     * @param _gasToken token being used for paying `msg.sender`
+     * @param _gasMinimal minimal startGas required to execute this call
      * @param _messageSignatures rsv concatenated ethereum signed message signatures required
      */
     function approveAndCallGasRelayed(
@@ -243,8 +197,7 @@ contract IdentityGasRelay is Identity {
         bytes _data,
         uint _nonce,
         uint _gasPrice,
-        uint _gasLimit,
-        address _gasToken,
+        uint _gasMinimal,
         bytes _messageSignatures
     ) 
         external 
@@ -255,19 +208,20 @@ contract IdentityGasRelay is Identity {
         uint startGas = gasleft(); 
         
         //verify transaction parameters
-        // require(startGas >= _gasLimit); // TODO: tune this
-        require(_nonce == nonce);
+        require(startGas >= _gasMinimal, "Bad gas left"); 
+        require(_nonce == nonce, "Bad nonce");
         
         //verify if signatures are valid and came from correct actors;
         verifySignatures(
             ACTION_KEY,
-            deployGasRelayHash(
+            approveAndCallGasRelayHash(
+                _baseToken,
+                _to,
                 _value,
                 keccak256(_data),
                 _nonce,
                 _gasPrice,
-                _gasLimit,
-                _gasToken                
+                _gasMinimal
             ), 
             _messageSignatures
         );
@@ -275,9 +229,9 @@ contract IdentityGasRelay is Identity {
         //increase nonce
         nonce++;
         
-        require(_baseToken != address(0)); //_baseToken should be something!
-        require(_to != address(this)); //no management with approveAndCall
-        require(_to != address(0)); //need valid destination
+        require(_baseToken != address(0), "Bad token address"); //_baseToken should be something!
+        require(_to != address(this), "Unauthorized call"); //no management with approveAndCall
+        require(_to != address(0), "Bad destination"); //need valid destination
         ERC20Token(_baseToken).approve(_to, _value);
         success = _commitCall(_nonce, _to, 0, _data); 
 
@@ -285,11 +239,7 @@ contract IdentityGasRelay is Identity {
         if (_gasPrice > 0) {
             uint256 _amount = 21000 + (startGas - gasleft());
             _amount = _amount * _gasPrice;
-            if (_gasToken == address(0)) {
-                address(msg.sender).transfer(_amount);
-            } else {
-                ERC20Token(_gasToken).transfer(msg.sender, _amount);
-            }
+            ERC20Token(_baseToken).transfer(msg.sender, _amount);
         }
     }
 
@@ -312,7 +262,7 @@ contract IdentityGasRelay is Identity {
         // calculates signHash
         bytes32 signHash = getSignHash(_messageHash);
         uint _amountSignatures = _messageSignatures.length / 65;
-        require(_amountSignatures == purposeThreshold[_requiredKey]);
+        require(_amountSignatures == purposeThreshold[_requiredKey], "Too few signatures");
         bytes32 _lastKey = 0;
         for (uint256 i = 0; i < _amountSignatures; i++) {
             bytes32 _currentKey = recoverKey(
@@ -320,8 +270,8 @@ contract IdentityGasRelay is Identity {
                 _messageSignatures,
                 i
                 );
-            require(_currentKey > _lastKey); //assert keys are different
-            require(keyHasPurpose(_currentKey, _requiredKey));
+            require(_currentKey > _lastKey, "Bad signatures order"); //assert keys are different
+            require(keyHasPurpose(_currentKey, _requiredKey), "Bad key");
             _lastKey = _currentKey;
         }
         return true;
@@ -335,7 +285,7 @@ contract IdentityGasRelay is Identity {
      * @param _dataHash call data hash
      * @param _nonce current identity nonce
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
-     * @param _gasLimit minimal gasLimit required to execute this call
+     * @param _gasMinimal minimal startGas required to execute this call
      * @param _gasToken token being used for paying `msg.sender` 
      * @return callGasRelayHash the hash to be signed by wallet
      */
@@ -345,7 +295,7 @@ contract IdentityGasRelay is Identity {
         bytes32 _dataHash,
         uint _nonce,
         uint256 _gasPrice,
-        uint256 _gasLimit,
+        uint256 _gasMinimal,
         address _gasToken
     )
         public 
@@ -353,25 +303,27 @@ contract IdentityGasRelay is Identity {
         returns (bytes32 _callGasRelayHash) 
     {
         _callGasRelayHash = keccak256(
-            address(this), 
-            MSG_CALL_PREFIX, 
-            _to,
-            _value,
-            _dataHash,
-            _nonce,
-            _gasPrice,
-            _gasLimit,
-            _gasToken
+            abi.encodePacked(
+                address(this), 
+                MSG_CALL_PREFIX, 
+                _to,
+                _value,
+                _dataHash,
+                _nonce,
+                _gasPrice,
+                _gasMinimal,
+                _gasToken
+            )
         );
     }
 
-/**
+    /**
      * @notice get callHash
      * @param _value call value (ether)
      * @param _dataHash call data hash
      * @param _nonce current identity nonce
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
-     * @param _gasLimit minimal gasLimit required to execute this call
+     * @param _gasMinimal minimal startGas required to execute this call
      * @param _gasToken token being used for paying `msg.sender` 
      * @return callGasRelayHash the hash to be signed by wallet
      */
@@ -380,7 +332,7 @@ contract IdentityGasRelay is Identity {
         bytes32 _dataHash,
         uint256 _nonce,
         uint256 _gasPrice,
-        uint256 _gasLimit,
+        uint256 _gasMinimal,
         address _gasToken
     )
         public 
@@ -388,26 +340,26 @@ contract IdentityGasRelay is Identity {
         returns (bytes32 _callGasRelayHash) 
     {
         _callGasRelayHash = keccak256(
-            address(this), 
-            MSG_DEPLOY_PREFIX,
-            _value,
-            _dataHash,
-            _nonce,
-            _gasPrice,
-            _gasLimit,
-            _gasToken
+            abi.encodePacked(
+                address(this), 
+                MSG_DEPLOY_PREFIX,
+                _value,
+                _dataHash,
+                _nonce,
+                _gasPrice,
+                _gasMinimal,
+                _gasToken
+            )
         );
     }
 
-    
     /**
      * @notice get callHash
-     * @param _to destination of call
      * @param _value call value (ether)
      * @param _dataHash call data hash
      * @param _nonce current identity nonce
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
-     * @param _gasLimit minimal gasLimit required to execute this call
+     * @param _gasMinimal minimal startGas required to execute this call
      * @param _gasToken token being used for paying `msg.sender` 
      * @return callGasRelayHash the hash to be signed by wallet
      */
@@ -418,40 +370,41 @@ contract IdentityGasRelay is Identity {
         bytes32 _dataHash,
         uint _nonce,
         uint256 _gasPrice,
-        uint256 _gasLimit,
-        address _gasToken
+        uint256 _gasMinimal
     )
         public 
         view 
         returns (bytes32 _callGasRelayHash) 
     {
         _callGasRelayHash = keccak256(
-            address(this), 
-            MSG_APPROVEANDCALL_PREFIX, 
-            _baseToken,
-            _to,
-            _value,
-            _dataHash,
-            _nonce,
-            _gasPrice,
-            _gasLimit,
-            _gasToken
+            abi.encodePacked(
+                address(this), 
+                MSG_APPROVEANDCALL_PREFIX,
+                _baseToken,
+                _to,
+                _value,
+                _dataHash,
+                _nonce,
+                _gasPrice,
+                _gasMinimal
+            )
         );
     }
 
+    
     /**
      * @notice recovers key who signed the message 
      * @param _signHash operation ethereum signed message hash
      * @param _messageSignature message `_signHash` signature
      * @param _pos which signature to read
      */
-    function recoverKey (
+    function recoverKey(
         bytes32 _signHash, 
         bytes _messageSignature,
         uint256 _pos
     )
-        pure
         public
+        pure
         returns(bytes32) 
     {
         uint8 v;
@@ -459,11 +412,13 @@ contract IdentityGasRelay is Identity {
         bytes32 s;
         (v,r,s) = signatureSplit(_messageSignature, _pos);
         return keccak256(
-            ecrecover(
-                _signHash,
-                v,
-                r,
-                s
+            abi.encodePacked(
+                ecrecover(
+                    _signHash,
+                    v,
+                    r,
+                    s
+                )
             )
         );
     }
@@ -474,8 +429,8 @@ contract IdentityGasRelay is Identity {
      * @param _signatures concatenated vrs signatures
      */
     function signatureSplit(bytes _signatures, uint256 _pos)
-        pure
         internal
+        pure
         returns (uint8 v, bytes32 r, bytes32 s)
     {
         uint pos = _pos + 1;
@@ -493,7 +448,7 @@ contract IdentityGasRelay is Identity {
             v := and(mload(add(_signatures, mul(65,pos))), 0xff)
         }
 
-        require(v == 27 || v == 28);
+        require(v == 27 || v == 28, "Bad signature");
     }
 
     /**
@@ -508,12 +463,10 @@ contract IdentityGasRelay is Identity {
         internal 
         returns (address createdContract) 
     {
-        bool failed;
         assembly {
             createdContract := create(_value, add(_code, 0x20), mload(_code))
-            failed := iszero(extcodesize(createdContract))
         }
-        require(!failed);
+        //require(!failed); removed as startGas needs to be lower then inner _gasMinimal
     }
 
 }
