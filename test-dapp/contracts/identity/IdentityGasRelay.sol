@@ -21,7 +21,6 @@ contract IdentityGasRelay is Identity {
         keccak256("approveAndCallGasRelay(address,address,uint256,bytes32,uint256,uint256)")
     );
 
-    event ExecutedGasRelayed(bytes32 messageHash);
     event ContractDeployed(address deployedAddress);
 
     constructor(   
