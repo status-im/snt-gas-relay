@@ -360,7 +360,6 @@ contract IdentityGasRelay is Identity {
      * @param _nonce current identity nonce
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasMinimal minimal startGas required to execute this call
-     * @param _gasToken token being used for paying `msg.sender` 
      * @return callGasRelayHash the hash to be signed by wallet
      */
     function approveAndCallGasRelayHash(
