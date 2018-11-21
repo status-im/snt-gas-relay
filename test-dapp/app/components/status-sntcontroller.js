@@ -60,7 +60,6 @@ class Status extends Component {
             'block': 0,
             'submitState': {
                 'etherSend': false,
-                'changeSNTController': false,
                 'generateSTT': false
             }
         };
@@ -157,28 +156,6 @@ class Status extends Component {
         });
     }
 
-    changeSNTController = event => {
-        event.preventDefault();
-
-        let submitState = this.state.submitState;
-        submitState.changeSNTController = true;
-        this.setState({submitState});
-
-
-        const toSend = STT.methods.changeController(SNTController.options.address);
-
-        toSend.estimateGas()
-        .then(estimatedGas => {
-            return toSend.send({gasLimit: estimatedGas + 100000});
-        })
-        .then(receipt => {
-            console.log(receipt);
-            submitState = this.state.submitState;
-            submitState.changeSNTController = false;
-            this.setState({submitState});
-        });
-    }
-
     sendEther = (event) => {
         event.preventDefault();
 
@@ -220,10 +197,7 @@ class Status extends Component {
                         <AddIcon className={classes.icon} />
                         1. Generate 5K STT (only on dev)
                     </Button> }
-                    { isDev && <Button className={classes.button} color="primary" aria-label="Generate STT" onClick={this.changeSNTController}>
-                        <AddIcon className={classes.icon} />
-                        2. Change SNT Controller
-                    </Button> }
+                   
                 </ListItem>
                 <ListItem className={classes.root}>
                     <ListItemIcon>

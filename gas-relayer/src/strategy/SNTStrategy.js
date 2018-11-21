@@ -23,21 +23,6 @@ class SNTStrategy extends Strategy {
         
         const balance = await this.getBalance(input.address, token);
 
-        let estimatedGas;
-        try {
-            estimatedGas = await this.web3.eth.estimateGas({
-                data: input.payload,
-                from: this.config.node.blockchain.account.address,
-                to: input.contract
-            });
-        } catch(exc){
-            if(exc.message.indexOf("revert") > -1) return {success: false, message: "Transaction will revert"};
-            else {
-                console.error(exc);
-                return {success: false, message: "Transaction will fail"};
-            }
-        }
-
         let tokenRate = await this.getTokenRate(token, cache);
         if(!tokenRate){
             return {
@@ -55,6 +40,23 @@ class SNTStrategy extends Strategy {
         if(gasPrice.lt(gasPrices.inTokens)){
             return {success: false, message: "Gas price is less than the required amount (" + gasPrices.inTokens.toString(10) + ")"};
         }
+
+
+        let estimatedGas;
+        try {
+            estimatedGas = await this.web3.eth.estimateGas({
+                data: input.payload,
+                from: this.config.node.blockchain.account.address,
+                to: input.contract
+            });
+        } catch(exc){
+            if(exc.message.indexOf("revert") > -1) return {success: false, message: "Transaction will revert"};
+            else {
+                console.error(exc);
+                return {success: false, message: "Transaction will fail"};
+            }
+        }
+
 
         if(input.functionName == TransferSNT){
             const gas = this.web3.utils.toBN(estimatedGas);
