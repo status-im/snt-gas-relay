@@ -2,13 +2,12 @@ pragma solidity ^0.4.21;
 
 import "./ERC725.sol";
 import "./ERC735.sol";
-import "../common/MessageSigned.sol";
 
 /**
  * @title Self sovereign Identity
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
  */
-contract Identity is ERC725, ERC735, MessageSigned {
+contract Identity is ERC725, ERC735 {
 
     uint256 public nonce; 
     address public recoveryContract;
@@ -55,30 +54,7 @@ contract Identity is ERC725, ERC735, MessageSigned {
         );
         _;
     }
-    
-    /**
-     * @notice requires `_signature` from a `_key` with `_messageHash`
-     * @param _key key expected out from `_signature` of `_messageHash`
-     * @param _messageHash message signed in `_signature` by `_key`
-     * @param _signature `_messageHash` signed by `_key`
-     */
-    modifier keyMessageSigned (
-        bytes32 _key, 
-        bytes32 _messageHash, 
-        bytes _signature
-    ) {
-        require(
-            _key == keccak256(
-                recoverAddress(
-                    getSignHash(_messageHash),
-                    _signature
-                ),
-                salt
-            )                    
-        );
-        _;
-    }
-
+   
     /**
      * @notice constructor builds identity with provided `_keys` 
      *         or uses `msg.sender` as first MANAGEMENT + ACTION key
@@ -167,77 +143,6 @@ contract Identity is ERC725, ERC735, MessageSigned {
     {   
         return _approveRequest(keccak256(msg.sender), _txId, _approval);
     }
-
-    ////////////////
-    // Message Signed functions
-    ////////////////
-    
-    /**
-     * @notice execute (or request) call using ethereum signed message as authorization
-     * @param _to destination of call
-     * @param _value amount of ETH in call
-     * @param _data data
-     * @param _nonce current nonce
-     * @param _key key authorizing the call
-     * @param _signature signature of key
-     */
-    function executeMessageSigned(
-        address _to,
-        uint256 _value,
-        bytes _data,
-        uint256 _nonce,
-        bytes32 _key, 
-        bytes _signature
-    ) 
-        public 
-        keyMessageSigned(
-            _key,
-            keccak256(
-                address(this), 
-                bytes4(keccak256("execute(address,uint256,bytes)")), 
-                _to,
-                _value,
-                _data,
-                _nonce
-            ),
-            _signature
-        )
-        returns (uint256 txId)
-    {
-        require(_nonce == nonce);
-        txId = _execute(_key, _to, _value, _data);
-        
-    }
-
-    /**
-     * @notice approve a multisigned execution using ethereum signed message as authorization
-     * @param _txId unique id multisig transaction
-     * @param _approval approve (true) or reject (false)
-     * @param _key key authorizing the call
-     * @param _signature signature of key
-     */
-    function approveMessageSigned(
-        uint256 _txId,
-        bool _approval,
-        bytes32 _key, 
-        bytes _signature
-    ) 
-        public 
-        keyMessageSigned(
-            _key,
-            keccak256(
-                address(this),
-                bytes4(keccak256("approve(uint256,bool)")),
-                _txId,
-                _approval
-                ),
-            _signature
-        )
-        returns (bool success)
-    {   
-        return _approveRequest(_key, _txId, _approval);
-    }
-    
     
     ////////////////
     // Management functions 
