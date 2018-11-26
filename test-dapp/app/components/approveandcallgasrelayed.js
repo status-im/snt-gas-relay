@@ -38,8 +38,7 @@ class ApproveAndCallGasRelayed extends Component {
             data: '0x00',
             baseToken: "0x0000000000000000000000000000000000000000",
             gasPrice: 0,
-            gasLimit: 0,
-            gasToken: "0x0000000000000000000000000000000000000000",
+            gasMinimal: 0,
             signature: '',
             relayer: '',
             transactionError: '',
@@ -51,8 +50,7 @@ class ApproveAndCallGasRelayed extends Component {
     componentDidMount(){
         EmbarkJS.onReady(() => {
             this.setState({
-                baseToken: STT.options.address,
-                gasToken: STT.options.address
+                baseToken: STT.options.address
             });
         });
     }
@@ -80,7 +78,7 @@ class ApproveAndCallGasRelayed extends Component {
                                           .setContractFunction(Functions.Identity.approveAndCall)
                                           .setTransaction(this.state.to, this.state.value, this.state.data)
                                           .setBaseToken(this.state.baseToken)
-                                          .setGas(this.state.gasToken, this.state.gasPrice, this.state.gasLimit);
+                                          .setGas(this.state.gasToken, this.state.gasPrice, this.state.gasMinimal);
                                           
             const signature = await s.sign(web3);
 
@@ -143,7 +141,7 @@ class ApproveAndCallGasRelayed extends Component {
                                           .setContractFunction(Functions.Identity.approveAndCall)
                                           .setTransaction(this.state.to, this.state.value, this.state.data)
                                           .setBaseToken(this.state.baseToken)
-                                          .setGas(this.state.gasToken, this.state.gasPrice, this.state.gasLimit)
+                                          .setGas(this.state.gasToken, this.state.gasPrice, this.state.gasMinimal)
                                           .setRelayer(relayer)
                                           .setAsymmetricKeyID(kid);
 
@@ -280,10 +278,10 @@ class ApproveAndCallGasRelayed extends Component {
                     </Grid>
                     <Grid item xs={2}>
                         <TextField
-                            id="gasLimit"
-                            label="Gas Limit"
-                            value={this.state.gasLimit}
-                            onChange={this.handleChange('gasLimit')}
+                            id="gasMinimal"
+                            label="Gas Minimal"
+                            value={this.state.gasMinimal}
+                            onChange={this.handleChange('gasMinimal')}
                             margin="normal"
                             fullWidth
                             />

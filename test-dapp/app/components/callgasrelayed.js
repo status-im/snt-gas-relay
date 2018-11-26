@@ -37,7 +37,7 @@ class CallGasRelayed extends Component {
             value: 0,
             data: '0x00',
             gasPrice: 0,
-            gasLimit: 0,
+            gasMinimal: 0,
             gasToken: "0x0000000000000000000000000000000000000000",
             signature: '',
             kid: null,
@@ -83,7 +83,7 @@ class CallGasRelayed extends Component {
             const s = new StatusGasRelayer.Identity(this.props.identityAddress, web3.eth.defaultAccount)
                                           .setContractFunction(Functions.Identity.call)
                                           .setTransaction(this.state.to, this.state.value, this.state.data)
-                                          .setGas(this.state.gasToken, this.state.gasPrice, this.state.gasLimit);
+                                          .setGas(this.state.gasToken, this.state.gasPrice, this.state.gasMinimal);
                                           
             const signature = await s.sign(web3);
 
@@ -146,7 +146,7 @@ class CallGasRelayed extends Component {
             const s = new StatusGasRelayer.Identity(this.props.identityAddress, web3.eth.defaultAccount)
                                           .setContractFunction(Functions.Identity.call)
                                           .setTransaction(this.state.to, this.state.value, this.state.data)
-                                          .setGas(this.state.gasToken, this.state.gasPrice, this.state.gasLimit)
+                                          .setGas(this.state.gasToken, this.state.gasPrice, this.state.gasMinimal)
                                           .setRelayer(relayer)
                                           .setAsymmetricKeyID(kid);
 
@@ -264,10 +264,10 @@ class CallGasRelayed extends Component {
                     </Grid>
                     <Grid item xs={2}>
                         <TextField
-                            id="gasLimit"
-                            label="Gas Limit"
-                            value={this.state.gasLimit}
-                            onChange={this.handleChange('gasLimit')}
+                            id="gasMinimal"
+                            label="Gas Minimal"
+                            value={this.state.gasMinimal}
+                            onChange={this.handleChange('gasMinimal')}
                             margin="normal"
                             fullWidth
                             />

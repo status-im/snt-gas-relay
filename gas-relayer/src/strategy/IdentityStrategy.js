@@ -32,7 +32,7 @@ class IdentityStrategy extends Strategy {
         
         // Determine if enough balance for baseToken
         const gasPrice = this.web3.utils.toBN(params('_gasPrice'));
-        const gasLimit = this.web3.utils.toBN(params('_gasLimit'));
+        const gasMinimal = this.web3.utils.toBN(params('_gasMinimal'));
         if(this.contract.allowedFunctions[input.functionName].isToken){
             const Token = new this.web3.eth.Contract(erc20ABI.abi);
             Token.options.address = params('_baseToken');
@@ -44,24 +44,27 @@ class IdentityStrategy extends Strategy {
 
         // gasPrice * limit calculation
         const balance = await this.getBalance(input.contract, token);
-        if(balance.lt(this.web3.utils.toBN(gasPrice.mul(gasLimit)))) {
-            return {success: false, message: "Identity has not enough tokens for gasPrice*gasLimit"};
+        if(balance.lt(this.web3.utils.toBN(gasPrice.mul(gasMinimal)))) {
+            return {success: false, message: "Identity has not enough tokens for gasPrice*gasMinimal"};
         }
 
 
         let estimatedGas = 0;
         try {
-            // TODO: Investigate why sometimes geth fails estimations with proxies
             if(input.functionName == CallGasRelayed){
                 estimatedGas = await this._estimateGas(input);
             } else {
                 const tmp = Math.floor(parseInt((await this._estimateGas(input)).toString(10), 10) * 1.05);
-                estimatedGas = this.web3.utils.toBN(tmp); // TODO: tune this
+                estimatedGas = this.web3.utils.toBN(tmp);
             }
 
-            if(gasLimit.lt(estimatedGas)) {
+            // TODO: executing functions with gas minimal causes relayers to incur in a loss. 
+            // TODO: maybe this can be fixed by increasing the gas price for this kind of operations
+            if(gasMinimal.add(this.web3.utils.toBN(75000)).lt(estimatedGas)) {
                 return {success: false, message: "Gas limit below estimated gas (" + estimatedGas + ")"};
-            } 
+            } else {
+                estimatedGas = estimatedGas.add(this.web3.utils.toBN(75000));
+            }
         } catch(exc){
             if(exc.message.indexOf("revert") > -1) return {success: false, message: "Transaction will revert"};
             else {

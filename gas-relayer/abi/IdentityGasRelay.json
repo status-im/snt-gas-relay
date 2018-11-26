@@ -304,7 +304,7 @@
           "type": "uint256"
         },
         {
-          "name": "_gasLimit",
+          "name": "_gasMinimal",
           "type": "uint256"
         },
         {
@@ -427,7 +427,7 @@
           "type": "uint256"
         },
         {
-          "name": "_gasLimit",
+          "name": "_gasMinimal",
           "type": "uint256"
         },
         {
@@ -761,7 +761,7 @@
           "type": "uint256"
         },
         {
-          "name": "_gasLimit",
+          "name": "_gasMinimal",
           "type": "uint256"
         },
         {
@@ -851,7 +851,7 @@
           "type": "uint256"
         },
         {
-          "name": "_gasLimit",
+          "name": "_gasMinimal",
           "type": "uint256"
         },
         {

@@ -189,6 +189,13 @@ class IdentityGasRelayedAction extends Action {
         return this;
     }
 
+    setGas(token, price, gasMinimal){
+        this.gasToken = token;
+        this.gasPrice = price;
+        this.gasMinimal = gasMinimal;
+        return this;
+    }
+
     setContractFunction = contractFunction => {
         this.contractFunction = contractFunction;
         return this;
@@ -231,7 +238,7 @@ class IdentityGasRelayedAction extends Action {
                     this.data == "0x" ? emptyBytesSha : web3.utils.soliditySha3({t: 'bytes', v: this.data}),
                     nonce,
                     this.gasPrice,
-                    this.gasLimit,
+                    this.gasMinimal,
                     this.gasToken
                 ).call();
                 break;
@@ -241,7 +248,7 @@ class IdentityGasRelayedAction extends Action {
                     this.data == "0x" ? emptyBytesSha : web3.utils.soliditySha3({t: 'bytes', v: this.data}),
                     nonce,
                     this.gasPrice,
-                    this.gasLimit,
+                    this.gasMinimal,
                     this.gasToken
                 ).call(); 
                 break;
@@ -274,7 +281,7 @@ class IdentityGasRelayedAction extends Action {
                             this.data, 
                             this.nonce, 
                             this.gasPrice, 
-                            this.gasLimit,
+                            this.gasMinimal,
                             this.gasToken,
                             this.signature
                             ]);
@@ -287,7 +294,7 @@ class IdentityGasRelayedAction extends Action {
                             this.data, 
                             this.nonce, 
                             this.gasPrice, 
-                            this.gasLimit,
+                            this.gasMinimal,
                             this.gasToken,
                             this.signature
                             ]);
@@ -634,7 +641,7 @@ const identityGasRelayABI = [
             "type": "uint256"
         },
         {
-            "name": "_gasLimit",
+            "name": "_gasMinimal",
             "type": "uint256"
         },
         {
@@ -693,7 +700,7 @@ const identityGasRelayABI = [
             "type": "uint256"
           },
           {
-            "name": "_gasLimit",
+            "name": "_gasMinimal",
             "type": "uint256"
           },
           {
@@ -745,7 +752,7 @@ const identityGasRelayABI = [
             "type": "uint256"
           },
           {
-            "name": "_gasLimit",
+            "name": "_gasMinimal",
             "type": "uint256"
           },
           {
@@ -789,7 +796,7 @@ const identityGasRelayABI = [
             "type": "uint256"
           },
           {
-            "name": "_gasLimit",
+            "name": "_gasMinimal",
             "type": "uint256"
           },
           {
