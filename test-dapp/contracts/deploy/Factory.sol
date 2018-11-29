@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 import "../common/Controlled.sol";
 
@@ -85,10 +85,21 @@ contract Factory is Controlled {
     function _setKernel(address _kernel) 
         internal
     {
-        require(_kernel != latestKernel);
+        require(_kernel != latestKernel, "Bad call");
         bytes32 _codeHash = getCodeHash(_kernel);
         versionMap[_kernel] = versionLog.length;
-        versionLog.push(Version({blockNumber: block.number, timestamp: block.timestamp, kernel: _kernel}));
+        if(hashToVersion[_codeHash] == 0){
+            hashToVersion[_codeHash] = versionLog.length;
+        } else {
+            versionLog.push(
+                Version({
+                    blockNumber: block.number,
+                    timestamp: block.timestamp,
+                    kernel: _kernel
+                })
+            );
+        }
+
         latestUpdate = block.timestamp;
         latestKernel = _kernel;
         emit NewKernel(_kernel, _codeHash);
