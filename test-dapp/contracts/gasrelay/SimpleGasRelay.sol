@@ -1,6 +1,7 @@
 pragma solidity ^0.5.0;
 
-import "../GasRelay.sol";
+import "./GasRelayed.sol";
+import "../common/Account.sol";
 import "../common/Controlled.sol";
 import "../common/MessageSigned.sol";
 import "../token/ERC20Token.sol";
@@ -11,34 +12,29 @@ import "../token/ERC20Token.sol";
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
  * @notice enables economic abstraction for Controlled
  */
-contract SimpleGasRelay is Controlled, MessageSigned, GasRelay {
+contract SimpleGasRelay is Account, Controlled, MessageSigned, GasRelayed {
     
-    uint256 nonce;
-
     /**
      * @notice include ethereum signed callHash in return of gas proportional amount multiplied by `_gasPrice` of `_gasToken`
      *         allows identity of being controlled without requiring ether in key balace
      * @param _to destination of call
      * @param _value call value (ether)
      * @param _data call data
-     * @param _nonce current identity nonce
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasLimit maximum gas of this transacton
-     * @param _gasToken token being used for paying `msg.sender`
-     * @param _messageSignatures rsv concatenated ethereum signed message signatures required
+     * @param _gasToken token being used for paying `_gasRelayer` (or msg.sender if relayer is 0)
+     * @param _messageSignature rsv concatenated ethereum signed message signatures required
      */
     function callGasRelayed(
         address _to,
         uint256 _value,
-        bytes _data,
-        uint _nonce,
+        bytes calldata _data,
         uint _gasPrice,
         uint _gasLimit,
         address _gasToken, 
-        bytes _messageSignature
+        bytes calldata _messageSignature
     ) 
         external 
-        returns (bool success)
     {
         
         //query current gas available
@@ -46,7 +42,6 @@ contract SimpleGasRelay is Controlled, MessageSigned, GasRelay {
         
         //verify transaction parameters
         require(startGas >= _gasLimit, ERR_BAD_START_GAS); 
-        require(_nonce == nonce, ERR_BAD_NONCE);
         
         //verify if signatures are valid and came from correct actor;
         require(
@@ -56,36 +51,32 @@ contract SimpleGasRelay is Controlled, MessageSigned, GasRelay {
                         _to,
                         _value,
                         keccak256(_data),
-                        _nonce,
+                        nonce,
                         _gasPrice,
                         _gasLimit,
-                        _gasToken                
+                        _gasToken,
+                        msg.sender                
                     )
                 ), 
                 _messageSignature
             ),
             ERR_BAD_SIGNER
         );
-        
-        //increase nonce
-        nonce++;
-        
-        //executes transaction
-        success = _to.call.value(_value)(_data);
+
+        _execute(_to, _value,_data);
+     
 
         //refund gas used using contract held ERC20 tokens or ETH
-        if (_gasPrice > 0) {
-            uint256 _amount = 21000 + (startGas - gasleft());
-            require(_amount <= _gasLimit, ERR_GAS_LIMIT_EXCEEDED);
-            _amount = _amount * _gasPrice;
-            if (_gasToken == address(0)) {
-                address(msg.sender).transfer(_amount);
-            } else {
-                ERC20Token(_gasToken).transfer(msg.sender, _amount);
-            }
-        }
+        payGasRelayer(
+            startGas,
+            _gasPrice,
+            _gasLimit,
+            _gasToken,
+            msg.sender
+        );
         
     }
+
 
     
     /**
@@ -93,7 +84,6 @@ contract SimpleGasRelay is Controlled, MessageSigned, GasRelay {
      *         allows identity of being controlled without requiring ether in key balace
      * @param _value call value (ether) to be sent to newly created contract
      * @param _data contract code data
-     * @param _nonce current identity nonce
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasLimit maximum gas of this transacton
      * @param _gasToken token being used for paying `msg.sender`
@@ -101,22 +91,19 @@ contract SimpleGasRelay is Controlled, MessageSigned, GasRelay {
      */
     function deployGasRelayed(
         uint256 _value, 
-        bytes _data,
-        uint _nonce,
+        bytes calldata _data,
         uint _gasPrice,
         uint _gasLimit,
         address _gasToken, 
-        bytes _messageSignature
+        bytes calldata _messageSignature
     ) 
-        external 
-        returns(address deployedAddress)
+        external
     {
         //query current gas available
         uint startGas = gasleft(); 
         
         //verify transaction parameters
         require(startGas >= _gasLimit, ERR_BAD_START_GAS); 
-        require(_nonce == nonce, ERR_BAD_NONCE);
         
         //verify if signatures are valid and came from correct actor;
         require(
@@ -125,10 +112,11 @@ contract SimpleGasRelay is Controlled, MessageSigned, GasRelay {
                     deployGasRelayHash(
                         _value,
                         keccak256(_data),
-                        _nonce,
+                        nonce,
                         _gasPrice,
                         _gasLimit,
-                        _gasToken                
+                        _gasToken,
+                        msg.sender                
                     )
                 ), 
                 _messageSignature
@@ -136,23 +124,16 @@ contract SimpleGasRelay is Controlled, MessageSigned, GasRelay {
             ERR_BAD_SIGNER
         );
         
-        //increase nonce
-        nonce++;
-
-        deployedAddress = doCreate(_value, _data);
-        emit ContractDeployed(deployedAddress); 
+        _deploy(_value, _data);
 
         //refund gas used using contract held ERC20 tokens or ETH
-        if (_gasPrice > 0) {
-            uint256 _amount = 21000 + (startGas - gasleft());
-            require(_amount <= _gasLimit, ERR_GAS_LIMIT_EXCEEDED);
-            _amount = _amount * _gasPrice;
-            if (_gasToken == address(0)) {
-                address(msg.sender).transfer(_amount);
-            } else {
-                ERC20Token(_gasToken).transfer(msg.sender, _amount);
-            }
-        }       
+        payGasRelayer(
+            startGas,
+            _gasPrice,
+            _gasLimit,
+            _gasToken,
+            msg.sender
+        );   
     }
 
 
@@ -165,23 +146,20 @@ contract SimpleGasRelay is Controlled, MessageSigned, GasRelay {
      * @param _to destination of call
      * @param _value call value (in `_baseToken`)
      * @param _data call data
-     * @param _nonce current identity nonce
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasLimit maximum gas of this transacton
-     * @param _messageSignatures rsv concatenated ethereum signed message signatures required
+     * @param _messageSignature rsv concatenated ethereum signed message signatures required
      */
     function approveAndCallGasRelayed(
         address _baseToken, 
         address _to,
         uint256 _value,
-        bytes _data,
-        uint _nonce,
+        bytes calldata _data,
         uint _gasPrice,
         uint _gasLimit,
-        bytes _messageSignature
+        bytes calldata _messageSignature
     ) 
         external 
-        returns(bool success)
     {
                         
         //query current gas available
@@ -189,7 +167,6 @@ contract SimpleGasRelay is Controlled, MessageSigned, GasRelay {
         
         //verify transaction parameters
         require(startGas >= _gasLimit, ERR_BAD_START_GAS); 
-        require(_nonce == nonce, ERR_BAD_NONCE);
         
         //verify if signatures are valid and came from correct actor;
         require(
@@ -200,9 +177,10 @@ contract SimpleGasRelay is Controlled, MessageSigned, GasRelay {
                         _to,
                         _value,
                         keccak256(_data),
-                        _nonce,
+                        nonce,
                         _gasPrice,
-                        _gasLimit
+                        _gasLimit,
+                        msg.sender
                     )
                 ), 
                 _messageSignature
@@ -210,46 +188,16 @@ contract SimpleGasRelay is Controlled, MessageSigned, GasRelay {
             ERR_BAD_SIGNER
         );
         
-        //increase nonce
-        nonce++;
+        _approveAndCall(_baseToken, _to, _value, _data);
         
-        require(_baseToken != address(0), ERR_BAD_TOKEN_ADDRESS); //_baseToken should be something!
-        require(_to != address(0) && _to != address(this), ERR_BAD_DESTINATION); //need valid destination
-        ERC20Token(_baseToken).approve(_to, _value);
-        success = _to.call.value(_value)(_data);
-
         //refund gas used using contract held _baseToken
-        if (_gasPrice > 0) {
-            uint256 _amount = 21000 + (startGas - gasleft());
-            require(_amount <= _gasLimit, ERR_GAS_LIMIT_EXCEEDED); 
-            ERC20Token(_baseToken).transfer(msg.sender, _amount * _gasPrice);
-        }
-    }
-
-    /**
-     * @notice creates new contract based on input `_code` and transfer `_value` ETH to this instance
-     * @param _value amount ether in wei to sent to deployed address at its initialization
-     * @param _code contract code
-     */
-    function doCreate(
-        uint _value,
-        bytes _code
-    ) 
-        internal 
-        returns (address createdContract) 
-    {
-        assembly {
-            createdContract := create(_value, add(_code, 0x20), mload(_code))
-        }
-        /* 
-        //enabling this would prevent gas relayers from executing failed calls
-        //however would insert this identity to gas relayer blocklist when this happens
-        bool failed;
-        assembly {
-            failed := iszero(extcodesize(createdContract))
-        }
-        require(!failed); 
-        */
+        payGasRelayer(
+            startGas,
+            _gasPrice,
+            _gasLimit,
+            _baseToken,
+            msg.sender
+        );
     }
 
 }

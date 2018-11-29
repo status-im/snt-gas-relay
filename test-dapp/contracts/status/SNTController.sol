@@ -1,29 +1,20 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.5.0;
 
 import "../token/TokenController.sol";
 import "../common/Owned.sol";
 import "../common/MessageSigned.sol";
 import "../token/ERC20Token.sol";
 import "../token/MiniMeToken.sol";
+import "../gasrelay/TokenGasRelayed.sol";
 import "../identity/IdentityFactory.sol";
 /**
  * @title SNTController
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
  * @notice enables economic abstraction for SNT
  */
-contract SNTController is TokenController, Owned, MessageSigned {
+contract SNTController is TokenController, Owned, TokenGasRelayed, MessageSigned {
 
     
-    bytes4 public constant TRANSFER_PREFIX = bytes4(
-        keccak256("transferSNT(address,uint256,uint256,uint256)")
-    );
-    bytes4 public constant EXECUTE_PREFIX = bytes4(
-        keccak256("executeGasRelayed(address,bytes,uint256,uint256,uint256)")
-    );
-
-    bytes4 public constant CONVERT_PREFIX = bytes4(
-        keccak256("convert(uint256,uint256,uint256)")
-    );
 
     MiniMeToken public snt;
     mapping (address => uint256) public signNonce;
@@ -40,10 +31,10 @@ contract SNTController is TokenController, Owned, MessageSigned {
      * @param _owner Authority address
      * @param _snt SNT token
      */
-    constructor(address _owner, address _snt, address _identityFactory) public {
+    constructor(address payable _owner, address _snt, IdentityFactory _identityFactory) public {
         owner = _owner;
-        snt = MiniMeToken(_snt);
-        identityFactory = IdentityFactory(_identityFactory);
+        snt = MiniMeToken(uint160(_snt));
+        identityFactory = _identityFactory;
     }
     
     /**
@@ -53,26 +44,30 @@ contract SNTController is TokenController, Owned, MessageSigned {
         uint256 _amount,
         uint256 _nonce,
         uint256 _gasPrice,
-        bytes _signature
+        bytes calldata _signature
     ) 
         external
     {
         require(address(identityFactory) != address(0), "Unavailable");
         uint256 startGas = gasleft();
-        bytes32 msgSigned = getSignHash(
-            getConvertHash(
-                _amount,
-                _nonce,
-                _gasPrice
-            )
-        );
 
-        address msgSigner = recoverAddress(msgSigned, _signature);
+        address msgSigner = recoverAddress(
+            getSignHash(
+                getConvertHash(
+                    _amount,
+                    _nonce,
+                    _gasPrice,
+                    msg.sender
+                )
+            ),
+            _signature
+        );
+        
         require(signNonce[msgSigner] == _nonce, "Bad nonce");
         signNonce[msgSigner]++;
-        address _to = identityFactory.createIdentity();
+        address userIdentity = identityFactory.createIdentity();
         require(
-            snt.transferFrom(msgSigner, _to, _amount),
+            snt.transferFrom(msgSigner, userIdentity, _amount),
             "Transfer fail"
         );
         require(
@@ -93,26 +88,30 @@ contract SNTController is TokenController, Owned, MessageSigned {
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _signature concatenated rsv of message
      */
-    function transferSNT(
+    function transfer(
         address _to,
         uint256 _amount,
         uint256 _nonce,
         uint256 _gasPrice,
-        bytes _signature
+        bytes calldata _signature
     )
         external 
     {
         uint256 startGas = gasleft();
-        bytes32 msgSigned = getSignHash(
-            getTransferSNTHash(
-                _to,
-                _amount,
-                _nonce,
-                _gasPrice
-            )
+
+        address msgSigner = recoverAddress(
+            getSignHash(
+                getTransferSNTHash(
+                    _to,
+                    _amount,
+                    _nonce,
+                    _gasPrice,
+                    msg.sender
+                )
+            ),
+             _signature
         );
 
-        address msgSigner = recoverAddress(msgSigned, _signature);
         require(signNonce[msgSigner] == _nonce, "Bad nonce");
         signNonce[msgSigner]++;
         require(
@@ -135,45 +134,46 @@ contract SNTController is TokenController, Owned, MessageSigned {
      * @param _data msg.data to be sent to `_allowedContract`
      * @param _nonce current signNonce of message signer
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
-     * @param _gasMinimal minimal amount of gas needed to complete the execution
+     * @param _gasLimit maximum amount tokens that can be used to pay gas
      * @param _signature concatenated rsv of message
      */
     function executeGasRelayed(
         address _allowedContract,
-        bytes _data,
+        bytes calldata _data,
         uint256 _nonce,
         uint256 _gasPrice,
-        uint256 _gasMinimal,
-        bytes _signature
+        uint256 _gasLimit,
+        bytes calldata _signature
     )
         external
     {
         uint256 startGas = gasleft();
-        require(startGas >= _gasMinimal, "Bad gas left");
-        require(allowPublicExecution[_allowedContract], "Unallowed call");
-        bytes32 msgSigned = getSignHash(
-            getExecuteGasRelayedHash(
-                _allowedContract,
-                _data,
-                _nonce,
-                _gasPrice,
-                _gasMinimal
-            )
+        require(startGas >= _gasLimit, "Bad gas left");
+        require(allowPublicExecution[_allowedContract], "Unauthorized");
+        address msgSigner = recoverAddress(
+            getSignHash(
+                getExecuteGasRelayedHash(
+                    _allowedContract,
+                    _data,
+                    _nonce,
+                    _gasPrice,
+                    _gasLimit,
+                    msg.sender
+                )
+            ),
+            _signature
         );
-
-        address msgSigner = recoverAddress(msgSigned, _signature);
         require(signNonce[msgSigner] == _nonce, "Bad nonce");
         signNonce[msgSigner]++;
-        bool success = _allowedContract.call(_data);
-        emit GasRelayedExecution(msgSigner, msgSigned, success);
-        require(
-            snt.transferFrom(
-                msgSigner,
-                msg.sender,
-                (21000 + startGas-gasleft()) * _gasPrice
-            ),
-            "Gas transfer fail"
-        );   
+        bool success;
+        (success,) = _allowedContract.call(_data);
+
+        if (_gasPrice > 0) {
+            uint256 _amount = 21000 + (startGas - gasleft());
+            require(_amount <= _gasLimit, ERR_GAS_LIMIT_EXCEEDED);
+            _amount = _amount * _gasPrice;
+            snt.transferFrom(msgSigner,  msg.sender, _amount);
+        }
     }
 
     /** 
@@ -181,7 +181,7 @@ contract SNTController is TokenController, Owned, MessageSigned {
      *  Please, be sure that the owner is a trusted agent or 0x0 address.
      *  @param _newController The address of the new controller
      */
-    function changeController(address _newController) public onlyOwner {
+    function changeController(address  payable _newController) public onlyOwner {
         snt.changeController(_newController);
         emit ControllerChanged(_newController);
     }
@@ -205,13 +205,13 @@ contract SNTController is TokenController, Owned, MessageSigned {
         if (snt.controller() == address(this)) {
             snt.claimTokens(_token);
         }
-        if (_token == 0x0) {
+        if (_token == address(0)) {
             address(owner).transfer(address(this).balance);
             return;
         }
 
         ERC20Token token = ERC20Token(_token);
-        uint256 balance = token.balanceOf(this);
+        uint256 balance = token.balanceOf(address(this));
         token.transfer(owner, balance);
         emit ClaimedTokens(_token, owner, balance);
     }
@@ -222,103 +222,18 @@ contract SNTController is TokenController, Owned, MessageSigned {
     //////////
 
     // In between the offering and the network. Default settings for allowing token transfers.
-    function proxyPayment(address) public payable returns (bool) {
+    function proxyPayment(address) external payable returns (bool) {
         return false;
     }
 
-    function onTransfer(address, address, uint256) public returns (bool) {
+    function onTransfer(address, address, uint256) external returns (bool) {
         return true;
     }
 
-    function onApprove(address, address, uint256) public returns (bool) {
+    function onApprove(address, address, uint256) external returns (bool) {
         return true;
     }
 
-    /**
-     * @notice get execution hash
-     * @param _allowedContract address of a contracts in execution trust list;
-     * @param _data msg.data to be sent to `_allowedContract`
-     * @param _nonce current signNonce of message signer
-     * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
-     * @param _gasMinimal minimal amount of gas needed to complete the execution
-     */
-    function getExecuteGasRelayedHash(
-        address _allowedContract,
-        bytes _data,
-        uint256 _nonce,
-        uint256 _gasPrice,
-        uint256 _gasMinimal
-    ) 
-        public 
-        view 
-        returns (bytes32 execHash) 
-    {
-        execHash = keccak256(
-            abi.encodePacked(
-                address(this),
-                EXECUTE_PREFIX,
-                _allowedContract,
-                keccak256(_data),
-                _nonce,
-                _gasPrice,
-                _gasMinimal
-            )
-        );
-    }
 
-    /**
-     * @notice get transfer hash
-     * @param _to address receving the tokens from message signer
-     * @param _amount total being transfered
-     * @param _nonce current signNonce of message signer
-     * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
-     */
-    function getTransferSNTHash(
-        address _to,
-        uint256 _amount,
-        uint256 _nonce,
-        uint256 _gasPrice
-    ) 
-        public 
-        view 
-        returns (bytes32 txHash) 
-    {
-        txHash = keccak256(
-            abi.encodePacked(
-                address(this),
-                TRANSFER_PREFIX,
-                _to,
-                _amount,
-                _nonce,
-                _gasPrice
-            )
-        );
-    }
-       /**
-     * @notice get transfer hash
-     * @param _to address receving the tokens from message signer
-     * @param _amount total being transfered
-     * @param _nonce current signNonce of message signer
-     * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
-     */
-    function getConvertHash(
-        uint256 _amount,
-        uint256 _nonce,
-        uint256 _gasPrice
-    ) 
-        public 
-        view 
-        returns (bytes32 txHash) 
-    {
-        txHash = keccak256(
-            abi.encodePacked(
-                address(this),
-                CONVERT_PREFIX,
-                _amount,
-                _nonce,
-                _gasPrice
-            )
-        );
-    }
     
 }

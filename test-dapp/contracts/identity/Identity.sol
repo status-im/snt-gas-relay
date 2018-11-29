@@ -1,15 +1,16 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.5.0;
 
+import "../common/Account.sol";
 import "./ERC725.sol";
 import "./ERC735.sol";
+
 
 /**
  * @title Self sovereign Identity
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
  */
-contract Identity is ERC725, ERC735 {
+contract Identity is Account, ERC725, ERC735 {
 
-    uint256 public nonce; 
     address public recoveryContract;
     uint256 salt;
 
@@ -40,7 +41,7 @@ contract Identity is ERC725, ERC735 {
         if(msg.sender == address(this)) {
             _;
         } else {
-            _execute(keccak256(msg.sender), address(this), 0, msg.data);
+            _requestExecute(keccak256(abi.encodePacked(msg.sender)), address(this), 0, msg.data);
         }
     }
 
@@ -50,7 +51,8 @@ contract Identity is ERC725, ERC735 {
     modifier recoveryOnly {
         require(
             recoveryContract != address(0) && 
-            msg.sender == recoveryContract
+            msg.sender == recoveryContract,
+            "Unauthorized"
         );
         _;
     }
@@ -66,9 +68,9 @@ contract Identity is ERC725, ERC735 {
      * @param _recoveryContract Option to initialize with recovery defined
      */
     constructor(   
-        bytes32[] _keys,
-        uint256[] _purposes,
-        uint256[] _types,
+        bytes32[] memory _keys,
+        uint256[] memory _purposes,
+        uint256[] memory _types,
         uint256 _managerThreshold,
         uint256 _actorThreshold,
         address _recoveryContract
@@ -82,7 +84,7 @@ contract Identity is ERC725, ERC735 {
             initKeys = new bytes32[](2);
             initPurposes = new uint256[](2);
             initTypes = new uint256[](2);
-            initKeys[0] = keccak256(msg.sender);
+            initKeys[0] = keccak256(abi.encodePacked(msg.sender));
             initKeys[1] = initKeys[0];
             initPurposes[0] = MANAGEMENT_KEY;
             initPurposes[1] = ACTION_KEY;
@@ -105,7 +107,7 @@ contract Identity is ERC725, ERC735 {
      * @notice default function allows deposit of ETH
      */
     function () 
-        public 
+        external 
         payable 
     {
 
@@ -124,12 +126,12 @@ contract Identity is ERC725, ERC735 {
     function execute(
         address _to,
         uint256 _value,
-        bytes _data
+        bytes memory _data
     ) 
         public 
         returns (uint256 txId)
     {
-        txId = _execute(keccak256(msg.sender), _to, _value, _data);   
+        txId = _requestExecute(keccak256(abi.encodePacked(msg.sender)), _to, _value, _data);   
     }
 
     /**
@@ -141,7 +143,7 @@ contract Identity is ERC725, ERC735 {
         public 
         returns (bool success)
     {   
-        return _approveRequest(keccak256(msg.sender), _txId, _approval);
+        return _approveRequest(keccak256(abi.encodePacked(msg.sender)), _txId, _approval);
     }
     
     ////////////////
@@ -214,8 +216,8 @@ contract Identity is ERC725, ERC735 {
         public 
         managementOnly
     {
-        require(_minimumApprovals > 0);
-        require(_minimumApprovals <= keysByPurpose[keccak256(_purpose, salt)].length);
+        require(_minimumApprovals > 0,"Invalid argument");
+        require(_minimumApprovals <= keysByPurpose[keccak256(abi.encodePacked(_purpose, salt))].length, "Invalid argument");
         purposeThreshold[_purpose] = _minimumApprovals;
     }
     
@@ -227,7 +229,7 @@ contract Identity is ERC725, ERC735 {
         public
         managementOnly
     {
-        require(recoveryContract == address(0));
+        require(recoveryContract == address(0), "Unauthorized");
         recoveryContract = _recoveryContract;
     }
     
@@ -239,14 +241,14 @@ contract Identity is ERC725, ERC735 {
         uint256 _topic,
         uint256 _scheme,
         address _issuer,
-        bytes _signature,
-        bytes _data,
-        string _uri
+        bytes memory _signature,
+        bytes memory _data,
+        string memory _uri
     ) 
         public 
         returns (bytes32 claimHash)
     {
-        claimHash = keccak256(_issuer, _topic);
+        claimHash = keccak256(abi.encodePacked(_issuer, _topic));
         if (msg.sender == address(this)) {
             if (claims[claimHash].topic > 0) {
                 _modifyClaim(claimHash, _topic, _scheme, _issuer, _signature, _data, _uri);
@@ -254,7 +256,7 @@ contract Identity is ERC725, ERC735 {
                 _includeClaim(claimHash, _topic, _scheme, _issuer, _signature, _data, _uri);
             }
         } else {
-            require(keyHasPurpose(keccak256(msg.sender), CLAIM_SIGNER_KEY));
+            require(keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), CLAIM_SIGNER_KEY), "Bad key");
             _requestApproval(0, address(this), 0, msg.data);
             emit ClaimRequested(
                 claimHash,
@@ -276,8 +278,8 @@ contract Identity is ERC725, ERC735 {
         
         require(
             msg.sender == c.issuer ||
-            msg.sender == address(this)
-            );
+            msg.sender == address(this),
+            "Unauthorized");
         
         // MUST only be done by the issuer of the claim, or KEYS OF PURPOSE 1, or the identity itself.
         // TODO If its the identity itself, the approval process will determine its approval.
@@ -321,9 +323,9 @@ contract Identity is ERC725, ERC735 {
     ) 
         public 
         view 
-        returns(uint256[] purposes, uint256 keyType, bytes32 key) 
+        returns(uint256[] memory purposes, uint256 keyType, bytes32 key) 
     {
-        Key storage myKey = keys[keccak256(_key, salt)];
+        Key storage myKey = keys[keccak256(abi.encodePacked(_key, salt))];
         return (myKey.purposes, myKey.keyType, myKey.key);
     }
     
@@ -332,23 +334,23 @@ contract Identity is ERC725, ERC735 {
         view 
         returns (bool exists) 
     {
-        return isKeyPurpose[keccak256(keccak256(_key, salt), _purpose)];
+        return isKeyPurpose[keccak256(abi.encodePacked(keccak256(abi.encodePacked(_key, salt)), _purpose))];
     }
 
     function getKeyPurpose(bytes32 _key)
         public 
         view 
-        returns(uint256[] purpose)
+        returns(uint256[] memory purpose)
     {
-        return keys[keccak256(_key, salt)].purposes;
+        return keys[keccak256(abi.encodePacked(_key, salt))].purposes;
     }
     
     function getKeysByPurpose(uint256 _purpose)
         public
         view
-        returns(bytes32[])
+        returns(bytes32[] memory)
     {
-        return keysByPurpose[keccak256(_purpose, salt)];
+        return keysByPurpose[keccak256(abi.encodePacked(_purpose, salt))];
     }
     
     function getClaim(bytes32 _claimId)
@@ -358,9 +360,9 @@ contract Identity is ERC725, ERC735 {
             uint256 topic,
             uint256 scheme,
             address issuer,
-            bytes signature,
-            bytes data,
-            string uri
+            bytes memory signature,
+            bytes memory data,
+            string memory uri
             ) 
     {
         Claim memory _claim = claims[_claimId];
@@ -370,7 +372,7 @@ contract Identity is ERC725, ERC735 {
     function getClaimIdsByTopic(uint256 _topic)
         public
         view
-        returns(bytes32[] claimIds)
+        returns(bytes32[] memory claimIds)
     {
         return claimsByType[_topic];
     }
@@ -380,9 +382,9 @@ contract Identity is ERC725, ERC735 {
     ////////////////
 
     function _constructIdentity(
-        bytes32[] _keys,
-        uint256[] _purposes,
-        uint256[] _types,
+        bytes32[] memory _keys,
+        uint256[] memory _purposes,
+        uint256[] memory _types,
         uint256 _managerThreshold,
         uint256 _actorThreshold,
         address _recoveryContract
@@ -391,9 +393,9 @@ contract Identity is ERC725, ERC735 {
     {
         uint256 _salt = salt;
         uint len = _keys.length;
-        require(len > 0);
+        require(len > 0, "Bad argument");
         require(purposeThreshold[MANAGEMENT_KEY] == 0, "Already Initialized (1)");
-        require(keysByPurpose[keccak256(MANAGEMENT_KEY, _salt)].length == 0, "Already Initialized (2)");
+        require(keysByPurpose[keccak256(abi.encodePacked(MANAGEMENT_KEY, _salt))].length == 0, "Already Initialized (2)");
         require(len == _purposes.length, "Wrong _purposes lenght");
         uint managersAdded = 0;
         for(uint i = 0; i < len; i++) {
@@ -409,47 +411,31 @@ contract Identity is ERC725, ERC735 {
         recoveryContract = _recoveryContract;
     }
 
-    function _execute(
+    function _requestExecute(
         bytes32 _key,
         address _to,
         uint256 _value,
-        bytes _data
+        bytes memory _data
     ) 
         internal 
         returns (uint256 txId)
     {
         uint256 requiredPurpose = _to == address(this) ? MANAGEMENT_KEY : ACTION_KEY;
-        require(keyHasPurpose(_key, requiredPurpose));
+        require(keyHasPurpose(_key, requiredPurpose), "Unauthorized");
         if (purposeThreshold[requiredPurpose] == 1) {
-            txId = nonce++;
-            _commitCall(txId, _to, _value, _data);
+            txId = _execute(_to, _value, _data);
         } else {
             txId = _requestApproval(_key, _to, _value, _data);
         } 
     }
 
-    function _commitCall(
-        uint256 _txId,
-        address _to,
-        uint256 _value,
-        bytes _data
-    ) 
-        internal 
-        returns(bool success)
-    {
-        success = _to.call.value(_value)(_data);
-        if (success) {
-            emit Executed(_txId, _to, _value, _data); 
-        } else {
-            emit ExecutionFailed(_txId, _to, _value, _data);
-        }
-    }
+
 
     function _requestApproval(
         bytes32 _key,
         address _to,
         uint256 _value,
-        bytes _data
+        bytes memory _data
     )
         internal 
         returns (uint256 txId)
@@ -484,16 +470,16 @@ contract Identity is ERC725, ERC735 {
     {
         
         Transaction memory approvedTx = pendingTx[_txId];
-        require(approvedTx.approverCount > 0);
+        require(approvedTx.approverCount > 0 || approvedTx.to == address(this), "Unknown trasaction");
         uint256 requiredKeyPurpose = approvedTx.to == address(this) ? MANAGEMENT_KEY : ACTION_KEY;
-        require(keyHasPurpose(_key, requiredKeyPurpose));
-        require(pendingTx[_txId].approvals[_key] != _approval);
+        require(keyHasPurpose(_key, requiredKeyPurpose), "Unauthorized");
+        require(pendingTx[_txId].approvals[_key] != _approval, "Bad call");
         
         if (_approval) {
             if (approvedTx.approverCount + 1 == purposeThreshold[requiredKeyPurpose]) {
                 delete pendingTx[_txId];
                 emit Approved(_txId, _approval);
-                return _commitCall(_txId, approvedTx.to, approvedTx.value, approvedTx.data);
+                _execute(approvedTx.to, approvedTx.value, approvedTx.data);
             } else {
                 pendingTx[_txId].approvals[_key] = true;
                 pendingTx[_txId].approverCount++;
@@ -517,13 +503,13 @@ contract Identity is ERC725, ERC735 {
     ) 
         private
     {
-        require(_key != 0);
-        require(_purpose != 0);
+        require(_key != 0, "Bad argument");
+        require(_purpose != 0, "Bad argument");
         
-        bytes32 keySaltedHash = keccak256(_key, _salt); //key storage pointer
-        bytes32 saltedKeyPurposeHash = keccak256(keySaltedHash, _purpose); // accounts by purpose hash element index pointer
+        bytes32 keySaltedHash = keccak256(abi.encodePacked(_key, _salt)); //key storage pointer
+        bytes32 saltedKeyPurposeHash = keccak256(abi.encodePacked(keySaltedHash, _purpose)); // accounts by purpose hash element index pointer
 
-        require(!isKeyPurpose[saltedKeyPurposeHash]); //cannot add a key already added
+        require(!isKeyPurpose[saltedKeyPurposeHash],"Bad call"); //cannot add a key already added
         isKeyPurpose[saltedKeyPurposeHash] = true; //set authorization
         uint256 keyElementIndex = keysByPurpose[saltedKeyPurposeHash].push(_key) - 1; //add key to list by purpose 
         indexes[saltedKeyPurposeHash] = keyElementIndex; //save index of key in list by purpose
@@ -533,7 +519,7 @@ contract Identity is ERC725, ERC735 {
             keys[keySaltedHash] = Key(purposes,_type,_key); //add new key
         } else {
             uint256 addedPurposeElementIndex = keys[keySaltedHash].purposes.push(_purpose) - 1; //add purpose to key
-            bytes32 keyPurposeSaltedHash = keccak256(_key, _purpose, _salt); //index of purpose in key pointer
+            bytes32 keyPurposeSaltedHash = keccak256(abi.encodePacked(_key, _purpose, _salt)); //index of purpose in key pointer
             indexes[keyPurposeSaltedHash] = addedPurposeElementIndex; //save index
         }
         
@@ -547,13 +533,13 @@ contract Identity is ERC725, ERC735 {
     )
         private 
     {
-        bytes32 keySaltedHash = keccak256(_key, _salt); // key storage pointer
+        bytes32 keySaltedHash = keccak256(abi.encodePacked(_key, _salt)); // key storage pointer
         _removeKeyFromPurposes(keySaltedHash, _purpose, _salt);
         //remove key purposes array purpose element
         Key storage myKey = keys[keySaltedHash]; //load Key storage pointer
         uint256 _type = myKey.keyType; //save type for case key deleted
         uint256 replacerPurposeIndex = myKey.purposes.length; //load amount of purposes
-        bytes32 keyPurposeSaltedHash = keccak256(_key, _purpose, _salt); //account purpose array element index
+        bytes32 keyPurposeSaltedHash = keccak256(abi.encodePacked(_key, _purpose, _salt)); //account purpose array element index
         uint256 removedPurposeIndex = indexes[keyPurposeSaltedHash]; //read old index
         delete indexes[keyPurposeSaltedHash]; //delete key's purpose index
         if (replacerPurposeIndex > 1) { //is not the last key
@@ -561,7 +547,7 @@ contract Identity is ERC725, ERC735 {
             if(removedPurposeIndex != replacerPurposeIndex) { //removed element is not last element
                 uint256 replacerPurpose = myKey.purposes[replacerPurposeIndex]; //take last element
                 myKey.purposes[removedPurposeIndex] = replacerPurpose; //replace removed element with replacer element
-                indexes[keccak256(_key, replacerPurpose, _salt)] = removedPurposeIndex; //update index
+                indexes[keccak256(abi.encodePacked(_key, replacerPurpose, _salt))] = removedPurposeIndex; //update index
             }
             myKey.purposes.length--; //remove last element
         } else { //is the last purpose
@@ -576,14 +562,14 @@ contract Identity is ERC725, ERC735 {
         uint256 _purpose,
         uint256 _salt
     ) private {
-        bytes32 purposeSaltedHash = keccak256(_purpose, _salt); // salted accounts by purpose array index pointer   
+        bytes32 purposeSaltedHash = keccak256(abi.encodePacked(_purpose, _salt)); // salted accounts by purpose array index pointer   
         // forbidden to remove last management key
         if (_purpose == MANAGEMENT_KEY) {
-            require(purposeThreshold[MANAGEMENT_KEY] <= keysByPurpose[purposeSaltedHash].length-1);
+            require(purposeThreshold[MANAGEMENT_KEY] <= keysByPurpose[purposeSaltedHash].length-1, "Bad call");
         }
 
-        bytes32 saltedKeyPurposeHash = keccak256(keySaltedHash, _purpose); // accounts by purpose hash element index pointer
-        require(isKeyPurpose[saltedKeyPurposeHash]); //not possible to remove what not exists
+        bytes32 saltedKeyPurposeHash = keccak256(abi.encodePacked(keySaltedHash, _purpose)); // accounts by purpose hash element index pointer
+        require(isKeyPurpose[saltedKeyPurposeHash], "Unknown key"); //not possible to remove what not exists
         delete isKeyPurpose[saltedKeyPurposeHash]; //remove authorization
 
         // remove keys by purpose array key element
@@ -594,7 +580,7 @@ contract Identity is ERC725, ERC735 {
         if (removedKeyIndex != replacerKeyIndex) {  // deleted not the last element, replace deleted by last element
             bytes32 replacerKey = keysByPurpose[purposeSaltedHash][replacerKeyIndex]; // get replacer key 
             keysByPurpose[purposeSaltedHash][removedKeyIndex] = replacerKey; // overwrite removed index by replacer
-            indexes[keccak256(keccak256(replacerKey, _salt), _purpose)] = removedKeyIndex; // update saltedKeyPurposeHash index of replacer
+            indexes[keccak256(abi.encodePacked(keccak256(abi.encodePacked(replacerKey, _salt)), _purpose))] = removedKeyIndex; // update saltedKeyPurposeHash index of replacer
         }
         keysByPurpose[purposeSaltedHash].length--; // remove last element
     }
@@ -615,12 +601,12 @@ contract Identity is ERC725, ERC735 {
         private
         returns (bool success)
     {   
-        bytes32 newKeySaltedHash = keccak256(_newKey, _salt); // key storage pointer     
+        bytes32 newKeySaltedHash = keccak256(abi.encodePacked(_newKey, _salt)); // key storage pointer     
         if (_oldKey == _newKey) { //not replacing key, just keyType
             keys[newKeySaltedHash].keyType == _newType; 
             return true;
         }
-        bytes32 oldKeySaltedHash = keccak256(_oldKey, _salt); // key storage pointer     
+        bytes32 oldKeySaltedHash = keccak256(abi.encodePacked(_oldKey, _salt)); // key storage pointer     
         Key memory oldKey = keys[oldKeySaltedHash];
         delete keys[oldKeySaltedHash];
         uint256 len = oldKey.purposes.length;
@@ -640,11 +626,11 @@ contract Identity is ERC725, ERC735 {
         uint256 _salt
     ) internal
     {
-        bytes32 purposeSaltedHash = keccak256(_purpose, _salt); // salted accounts by purpose array index pointer   
-        bytes32 saltedOldKeyPurposeHash = keccak256(oldKeySaltedHash, _purpose); // accounts by purpose hash element index pointer
-        bytes32 saltedNewKeyPurposeHash = keccak256(newKeySaltedHash, _purpose); // accounts by purpose hash element index pointer
-        bytes32 oldKeyPurposeSaltedHash = keccak256(_oldKey, _purpose, _salt); //account purpose array element index
-        bytes32 newKeyPurposeSaltedHash = keccak256(_newKey, _purpose, _salt); //account purpose array element index
+        bytes32 purposeSaltedHash = keccak256(abi.encodePacked(_purpose, _salt)); // salted accounts by purpose array index pointer   
+        bytes32 saltedOldKeyPurposeHash = keccak256(abi.encodePacked(oldKeySaltedHash, _purpose)); // accounts by purpose hash element index pointer
+        bytes32 saltedNewKeyPurposeHash = keccak256(abi.encodePacked(newKeySaltedHash, _purpose)); // accounts by purpose hash element index pointer
+        bytes32 oldKeyPurposeSaltedHash = keccak256(abi.encodePacked(_oldKey, _purpose, _salt)); //account purpose array element index
+        bytes32 newKeyPurposeSaltedHash = keccak256(abi.encodePacked(_newKey, _purpose, _salt)); //account purpose array element index
 
         delete isKeyPurpose[saltedOldKeyPurposeHash]; //clear oldKey auth
         isKeyPurpose[saltedNewKeyPurposeHash] = true; //set newKey auth
@@ -663,9 +649,9 @@ contract Identity is ERC725, ERC735 {
         uint256 _topic,
         uint256 _scheme,
         address _issuer,
-        bytes _signature,
-        bytes _data,
-        string _uri
+        bytes memory _signature,
+        bytes memory _data,
+        string memory _uri
     ) 
         private
     {
@@ -697,13 +683,13 @@ contract Identity is ERC725, ERC735 {
         uint256 _topic,
         uint256 _scheme,
         address _issuer,
-        bytes _signature,
-        bytes _data,
-        string _uri
+        bytes memory _signature,
+        bytes memory _data,
+        string memory _uri
     ) 
         private
     {
-        require(msg.sender == _issuer);
+        require(msg.sender == _issuer, "Unauthorized");
         claims[_claimHash] = Claim({
             topic: _topic,
             scheme: _scheme,

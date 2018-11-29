@@ -34,6 +34,7 @@ module.exports = {
     gas: "auto",
     contracts: {      
       "Identity": {"deploy": false},
+      "IdentityGasRelay": {"deploy": false},
       "ERC20Receiver": {"deploy": false},
       "TestToken": {"deploy": false},
       "SafeMath": {"deploy": false},
@@ -55,17 +56,13 @@ module.exports = {
         "args":["$MiniMeTokenFactory", "0x0", "0x0", "Status Gas Relayer Test Token", 18, "STT", true],
         "gasLimit": 4000000
       },
-      "SNTController": {
-        "args": ["0x5f803F54679577fC974813E48abF012A243dD439", "$STT"]
-       },
-      "IdentityGasRelay": {
-        "deploy": true,
-        "args": [[], [], [], 1, 1, "0x0000000000000000000000000000000000000000"] 
-      },
       "IdentityFactory": {
         "args":[], 
         "gasLimit": 5000000
       },
+      "SNTController": {
+        "args": ["0x5f803F54679577fC974813E48abF012A243dD439", "$STT", "$IdentityFactory"]
+       },
       "TestContract": {
         "args": ["$STT"]
       }
