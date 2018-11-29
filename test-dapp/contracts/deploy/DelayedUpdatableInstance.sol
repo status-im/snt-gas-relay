@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.5.0;
 
 import "./DelayedUpdatableInstanceStorage.sol";
 import "./DelegatedCall.sol";
@@ -34,7 +34,7 @@ contract DelayedUpdatableInstance is DelayedUpdatableInstanceStorage, DelegatedC
     ) 
         external
     {
-        require(msg.sender == address(this));
+        require(msg.sender == address(this), "Unauthorized");
         uint activation = block.timestamp + 30 days;
         update = Update(_kernel, activation);
         emit UpdateRequested(_kernel, activation);
@@ -45,10 +45,10 @@ contract DelayedUpdatableInstance is DelayedUpdatableInstanceStorage, DelegatedC
     )
         external
     {
-        require(msg.sender == address(this));
+        require(msg.sender == address(this), "Unauthorized");
         Update memory pending = update;
-        require(pending.kernel == _kernel);
-        require(pending.activation < block.timestamp);
+        require(pending.kernel == _kernel, "Bad call");
+        require(pending.activation < block.timestamp, "Unauthorized");
         kernel = pending.kernel;
         delete update;
         emit UpdateConfirmed(kernel, pending.kernel);
@@ -57,7 +57,7 @@ contract DelayedUpdatableInstance is DelayedUpdatableInstanceStorage, DelegatedC
     function updateCancelUpdatableInstance() 
         external
     {
-        require(msg.sender == address(this));
+        require(msg.sender == address(this), "Unauthorized");
         delete update;
     }
 

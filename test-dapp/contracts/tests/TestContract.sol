@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 import "../token/ERC20Token.sol";
 
 contract TestContract {
@@ -18,8 +18,8 @@ contract TestContract {
     }
 
     function sentSTT(uint _amount) public {
-        require(token.allowance(msg.sender, address(this)) >= _amount);
-        require(token.transferFrom(msg.sender, address(this), _amount));
+        require(token.allowance(msg.sender, address(this)) >= _amount, "Allowance fail");
+        require(token.transferFrom(msg.sender, address(this), _amount), "Transfer fail");
     }
 
     /*
@@ -32,14 +32,23 @@ contract TestContract {
         address identity,
         bytes32 _revealedSecret,
         address _dest,
-        bytes _data,
+        bytes memory _data,
         bytes32 _newSecret,
-        bytes32[] _newFriendsHashes)
+        bytes32[] memory _newFriendsHashes)
         public
         pure
         returns(bytes32)
     {
-        return keccak256(identity, _revealedSecret, _dest, _data, _newSecret, _newFriendsHashes);
+        return keccak256(
+            abi.encodePacked(
+                identity, 
+                _revealedSecret, 
+                _dest, 
+                _data, 
+                _newSecret, 
+                _newFriendsHashes
+            )
+        );
         
     }
 

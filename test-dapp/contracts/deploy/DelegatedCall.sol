@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 
 /**
@@ -17,12 +17,12 @@ contract DelegatedCall {
      */
     modifier delegated {
         //require successfull delegate call to remote `_target()`
-        require(targetDelegatedCall().delegatecall(msg.data)); 
+        bytes memory returned;
+        bool success;
+        (success, returned) = targetDelegatedCall().delegatecall(msg.data);
+        require(success, "Call failed"); 
         assembly {
-            let outSize := returndatasize 
-            let outDataPtr := mload(0x40) //load memory
-            returndatacopy(outDataPtr, 0, outSize) //copy last return into pointer
-            return(outDataPtr, outSize) 
+            return(add(returned, 0x20), returned) 
         }
         assert(false); //should never reach here
         _; //never will execute local logic

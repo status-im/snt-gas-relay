@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 import "./Instance.sol";
 
@@ -20,7 +20,7 @@ contract UpdatableInstance is Instance {
     }
     
     function updateUpdatableInstance(address _kernel) external {
-        require(msg.sender == address(this));
+        require(msg.sender == address(this), "Unauthorized");
         emit InstanceUpdated(kernel, _kernel);
         kernel = _kernel;
     }

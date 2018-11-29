@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.5.0;
 
 import "../deploy/DelayedUpdatableInstanceStorage.sol";
 import "../gasrelay/IdentityGasRelay.sol";
@@ -12,7 +12,7 @@ contract IdentityKernel is DelayedUpdatableInstanceStorage, IdentityGasRelay {
             new uint256[](0),
             0,
             0,
-            0
+            address(0)
         ) 
         public
     {
@@ -20,9 +20,9 @@ contract IdentityKernel is DelayedUpdatableInstanceStorage, IdentityGasRelay {
     }
 
     function initIdentity(   
-        bytes32[] _keys,
-        uint256[] _purposes,
-        uint256[] _types,
+        bytes32[] calldata _keys,
+        uint256[] calldata _purposes,
+        uint256[] calldata _types,
         uint256 _managerThreshold,
         uint256 _actorThreshold,
         address _recoveryContract

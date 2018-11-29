@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.5.0;
 
 import "./ERC20Token.sol";
 
@@ -17,7 +17,7 @@ contract MiniMeTokenInterface is ERC20Token {
     function approveAndCall(
         address _spender,
         uint256 _amount,
-        bytes _extraData
+        bytes memory _extraData
     ) 
         public 
         returns (bool success);
@@ -35,9 +35,9 @@ contract MiniMeTokenInterface is ERC20Token {
      * @return The address of the new MiniMeToken Contract
      */
     function createCloneToken(
-        string _cloneTokenName,
+        string memory _cloneTokenName,
         uint8 _cloneDecimalUnits,
-        string _cloneTokenSymbol,
+        string memory _cloneTokenSymbol,
         uint _snapshotBlock,
         bool _transfersEnabled
     ) 
@@ -95,7 +95,7 @@ contract MiniMeTokenInterface is ERC20Token {
         uint _blockNumber
     ) 
         public
-        constant
+        view
         returns (uint);
 
     /**

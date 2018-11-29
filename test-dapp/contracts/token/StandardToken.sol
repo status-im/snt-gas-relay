@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 import "./ERC20Token.sol";
 
@@ -79,7 +79,7 @@ contract StandardToken is ERC20Token {
     {
         balances[_to] += _amount;
         supply += _amount;
-        emit Transfer(0x0, _to, _amount);
+        emit Transfer(address(0x0), _to, _amount);
     }
 
     function transfer(

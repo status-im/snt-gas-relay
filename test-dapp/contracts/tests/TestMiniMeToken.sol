@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 
 /*
@@ -132,11 +132,11 @@ contract TestMiniMeToken is MiniMeTokenInterface {
         _; 
     }
 
-    address public controller;
+    address payable public controller;
 
     /// @notice Changes the controller of the contract
     /// @param _newController The new controller of the contract
-    function changeController(address _newController) public {
+    function changeController(address payable _newController) public {
         controller = _newController;
     }
 
@@ -164,9 +164,9 @@ contract TestMiniMeToken is MiniMeTokenInterface {
         address _tokenFactory,
         address _parentToken,
         uint _parentSnapShotBlock,
-        string _tokenName,
+        string memory _tokenName,
         uint8 _decimalUnits,
-        string _tokenSymbol,
+        string memory _tokenSymbol,
         bool _transfersEnabled
     ) 
         public
@@ -177,7 +177,7 @@ contract TestMiniMeToken is MiniMeTokenInterface {
         name = _tokenName;                                 // Set the name
         decimals = _decimalUnits;                          // Set the decimals
         symbol = _tokenSymbol;                             // Set the symbol
-        parentToken = MiniMeToken(_parentToken);
+        parentToken = MiniMeToken(address(uint160(_parentToken)));
         parentSnapShotBlock = _parentSnapShotBlock;
         transfersEnabled = _transfersEnabled;
         creationBlock = block.number;
@@ -256,7 +256,7 @@ contract TestMiniMeToken is MiniMeTokenInterface {
         require(parentSnapShotBlock < block.number);
 
         // Do not allow transfer to 0x0 or the token contract itself
-        require((_to != 0) && (_to != address(this)));
+        require((_to != address(0)) && (_to != address(this)));
 
         // If the amount being transfered is more than the balance of the
         //  account the transfer returns false
@@ -361,7 +361,7 @@ contract TestMiniMeToken is MiniMeTokenInterface {
     function approveAndCall(
         address _spender,
         uint256 _amount,
-        bytes _extraData
+        bytes memory _extraData
     ) 
         public
         returns (bool success)
@@ -371,7 +371,7 @@ contract TestMiniMeToken is MiniMeTokenInterface {
         ApproveAndCallFallBack(_spender).receiveApproval(
             msg.sender,
             _amount,
-            this,
+            address(this),
             _extraData
         );
 
@@ -413,7 +413,7 @@ contract TestMiniMeToken is MiniMeTokenInterface {
         //  this token
         if ((balances[_owner].length == 0)
             || (balances[_owner][0].fromBlock > _blockNumber)) {
-            if (address(parentToken) != 0) {
+            if (address(parentToken) != address(0)) {
                 return parentToken.balanceOfAt(_owner, min(_blockNumber, parentSnapShotBlock));
             } else {
                 // Has no parent
@@ -440,7 +440,7 @@ contract TestMiniMeToken is MiniMeTokenInterface {
         //  token at this block number.
         if ((totalSupplyHistory.length == 0)
             || (totalSupplyHistory[0].fromBlock > _blockNumber)) {
-            if (address(parentToken) != 0) {
+            if (address(parentToken) != address(0)) {
                 return parentToken.totalSupplyAt(min(_blockNumber, parentSnapShotBlock));
             } else {
                 return 0;
@@ -469,9 +469,9 @@ contract TestMiniMeToken is MiniMeTokenInterface {
      * @return The address of the new MiniMeToken Contract
      */
     function createCloneToken(
-        string _cloneTokenName,
+        string memory _cloneTokenName,
         uint8 _cloneDecimalUnits,
-        string _cloneTokenSymbol,
+        string memory _cloneTokenSymbol,
         uint _snapshotBlock,
         bool _transfersEnabled
         ) 
@@ -483,7 +483,7 @@ contract TestMiniMeToken is MiniMeTokenInterface {
             snapshotBlock = block.number;
         }
         MiniMeToken cloneToken = tokenFactory.createCloneToken(
-            this,
+            address(this),
             snapshotBlock,
             _cloneTokenName,
             _cloneDecimalUnits,
@@ -522,7 +522,7 @@ contract TestMiniMeToken is MiniMeTokenInterface {
         require(previousBalanceTo + _amount >= previousBalanceTo); // Check for overflow
         updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
         updateValueAtNow(balances[_owner], previousBalanceTo + _amount);
-        emit Transfer(0, _owner, _amount);
+        emit Transfer(address(0), _owner, _amount);
         return true;
     }
 
@@ -546,7 +546,7 @@ contract TestMiniMeToken is MiniMeTokenInterface {
         require(previousBalanceFrom >= _amount);
         updateValueAtNow(totalSupplyHistory, curTotalSupply - _amount);
         updateValueAtNow(balances[_owner], previousBalanceFrom - _amount);
-        emit Transfer(_owner, 0, _amount);
+        emit Transfer(_owner, address(0), _amount);
         return true;
     }
 
@@ -576,7 +576,7 @@ contract TestMiniMeToken is MiniMeTokenInterface {
         Checkpoint[] storage checkpoints,
         uint _block
     ) 
-        constant
+        view
         internal
         returns (uint)
     {
@@ -631,7 +631,7 @@ contract TestMiniMeToken is MiniMeTokenInterface {
      */
     function isContract(address _addr) internal view returns(bool) {
         uint size;
-        if (_addr == 0){
+        if (_addr == address(0)){
             return false;
         }    
         assembly {
@@ -643,7 +643,7 @@ contract TestMiniMeToken is MiniMeTokenInterface {
     /**
      * @dev Helper function to return a min betwen the two uints
      */
-    function min(uint a, uint b) internal returns (uint) {
+    function min(uint a, uint b) internal pure returns (uint) {
         return a < b ? a : b;
     }
 
@@ -652,7 +652,7 @@ contract TestMiniMeToken is MiniMeTokenInterface {
      *  set to 0, then the `proxyPayment` method is called which relays the
      *  ether and creates tokens as described in the token controller contract
      */
-    function () public payable {
+    function () external payable {
         require(isContract(controller));
         require(TokenController(controller).proxyPayment.value(msg.value)(msg.sender));
     }
@@ -668,12 +668,12 @@ contract TestMiniMeToken is MiniMeTokenInterface {
      *  set to 0 in case you want to extract ether.
      */
     function claimTokens(address _token) public onlyController {
-        if (_token == 0x0) {
+        if (_token == address(0)) {
             controller.transfer(address(this).balance);
             return;
         }
 
-        MiniMeToken token = MiniMeToken(_token);
+        MiniMeToken token = MiniMeToken(address(uint160(_token)));
         uint balance = token.balanceOf(address(this));
         token.transfer(controller, balance);
         emit ClaimedTokens(_token, controller, balance);

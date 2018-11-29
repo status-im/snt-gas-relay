@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 import "../deploy/Factory.sol";
 import "../deploy/DelayedUpdatableInstance.sol";
@@ -11,7 +11,7 @@ contract IdentityFactory is Factory {
 
     constructor() 
         public
-        Factory(new IdentityKernel()) 
+        Factory(address(new IdentityKernel())) 
     {
     }
 
@@ -35,32 +35,25 @@ contract IdentityFactory is Factory {
             initTypes,
             1,
             1,
-            0
+            address(0)
             );
     }
 
     function createIdentity(   
-        bytes32[] _keys,
-        uint256[] _purposes,
-        uint256[] _types,
+        bytes32[] memory _keys,
+        uint256[] memory _purposes,
+        uint256[] memory _types,
         uint256 _managerThreshold,
         uint256 _actorThreshold,
         address _recoveryContract
     ) 
         public 
-        returns (address)
+        returns (address payable)
     {
-        IdentityKernel instance = IdentityKernel(new DelayedUpdatableInstance(address(latestKernel)));
-
-        // Saving hash for version in case it does not exist
-        bytes32 codeHash = getCodeHash(address(instance));
-        if(hashToVersion[codeHash] == 0){
-            hashToVersion[codeHash] = versionLog.length;
-        }
-
+        IdentityKernel instance = IdentityKernel(address(uint160(address(new DelayedUpdatableInstance(address(latestKernel)))))); 
         instance.initIdentity(_keys,_purposes,_types,_managerThreshold,_actorThreshold,_recoveryContract);
         emit IdentityCreated(address(instance));
-        return instance;
+        return address(instance);
     }
 
 }
