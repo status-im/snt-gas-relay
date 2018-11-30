@@ -74,9 +74,9 @@ class StatusGasRelayer {
 
         web3.shh.subscribe('messages', {
             "privateKeyID": options.privateKeyID,
-            "ttl": options.ttl || 1000,
+            "ttl": options.ttl || 10,
             "minPow": options.minPow || 0.002,
-            "powTime": options.powTime || 1000
+            "powTime": options.powTime || 1
           }, (error, message) => {
             if(error){
                 cb(error);

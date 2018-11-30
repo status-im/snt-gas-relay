@@ -7,7 +7,7 @@ module.exports = {
     rpcCorsDomain: "auto",  // Comma separated list of domains from which to accept cross origin requests (browser enforced)
                             // When set to "auto", Embark will automatically set the cors to the address of the webserver
     wsRPC: true, // Enable the WS-RPC server
-    wsOrigins: "auto",  // Origins from which to accept websockets requests
+    wsOrigins: "http://localhost:8000,gas-relayer",  // Origins from which to accept websockets requests
                         // When set to "auto", Embark will automatically set the cors to the address of the webserver
     wsHost: "localhost", // WS-RPC server listening interface (default: "localhost")
     wsPort: 8546 // WS-RPC server listening port (default: 8546)

@@ -11,7 +11,7 @@ module.exports = {
             "port": 8545
         },
         "blockchain": {
-            "account": "0xb8d851486d1c953e31a44374aca11151d49b8bb3"
+            privateKey: "0x......" //
         },
         "whisper": {
             "symKey": "0xd0d905c1c62b810b787141430417caf2b3f54cffadb395b7bb39fdeb8f17266b",
@@ -28,8 +28,8 @@ module.exports = {
             "minAcceptedRate": 1,
             "refreshPricePeriod": 60000
         },
-        "0x91a3473a3e1e3D61C29fa2fAcDf17fa0Db922a08": {
-            "name": "Status Gas Relayer Test Token",
+        "0x139724523662E54447B70d043b711b2A00c5EF49": {
+            "name": "Status Test Token",
             "symbol": "SNT",
             "minAcceptedRate": 150000000000000,
             "refreshPricePeriod": 60000,
@@ -41,7 +41,7 @@ module.exports = {
         "IdentityGasRelay": {
             "abiFile": "../abi/IdentityGasRelay.json",
             "isIdentity": true,
-            "factoryAddress": "0xC83a746c3B73457FF51eCE216bfBFb524aa4fDD0",
+            "factoryAddress": "0xCf3473C2A50F7A94D3D7Dcc2BeBbeE989dAA014E",
             "kernelVerification": "isKernel(bytes32)",
             "allowedFunctions": [
                 { 
@@ -58,7 +58,7 @@ module.exports = {
         "SNTController": {
             "abiFile": "../abi/SNTController.json",
             "isIdentity": false,
-            "address": "0x39bFD424c2A83ca56FD557b373C01A27475bB314",
+            "address": "0x1f42B87b375b8ac6C77A8CAd8E78319c18695E75",
             "allowedFunctions": [
                 {
                     "function":"transferSNT(address,uint256,uint256,uint256,bytes)"

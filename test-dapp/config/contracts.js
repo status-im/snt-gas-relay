@@ -1,5 +1,6 @@
 module.exports = {
   // default applies to all environments
+   
   default: {
     // Blockchain node to deploy the contracts
     deployment: {
@@ -98,6 +99,68 @@ module.exports = {
   // merges with the settings in default
   // used with "embark run testnet"
   testnet: {
+    deployment: {
+      accounts: [
+        { 
+          privateKey: '5AC0FF313884BC134DC5B8D92C40360BFB9FC16F8552B60587D27C942564201E',
+        }
+      ],
+      host: "ropsten.infura.io/v3/e62b6ada19b042ee9c6d68746b965ccf",
+      port: false,
+      protocol: 'https', // <=== must be specified for infura, can also be http, or ws
+      type: "rpc"
+    },
+    contracts: {
+      // Reuse contracts on testnet
+      "MiniMeTokenFactory": {
+        "address": "0x6bfa86a71a7dbc68566d5c741f416e3009804279"
+      },
+      "STT": {
+        "instanceOf": "TestMiniMeToken",
+        "address": "0x139724523662E54447B70d043b711b2A00c5EF49"
+      },
+      "SNTController": {
+        "address": "0x1f42B87b375b8ac6C77A8CAd8E78319c18695E75"
+       },
+      "IdentityGasRelay": {
+        "deploy": false
+      },
+      "IdentityFactory": {
+        "address": "0xCf3473C2A50F7A94D3D7Dcc2BeBbeE989dAA014E"
+      },
+      "TestContract": {
+        "address": "0x19fbEE3C3eB0070Df1ab9ba4cB8ab24F0efEBdF8"
+      }
+
+      // Deploy new contracts to testnet
+      /*      
+      "MiniMeTokenFactory": {
+        "address": "0x6bfa86a71a7dbc68566d5c741f416e3009804279"
+      },
+      "STT": {
+        "instanceOf": "TestMiniMeToken",
+        "args":["$MiniMeTokenFactory", "0x0", "0x0", "Status Gas Relayer Test Token", 18, "SGasT", true],
+        "gasLimit": 4000000
+      },
+      "SNTController": {
+        "args": ["$accounts[0]", "$STT"],
+       },
+      "IdentityGasRelay": {
+        "deploy": true,
+        "args": [[], [], [], 1, 1, "0x0000000000000000000000000000000000000000"] 
+      },
+      "IdentityFactory": {
+        "args":[], 
+        "gasLimit": 5000000
+      },
+      "TestContract": {
+        "args": ["$STT"]
+      }*/
+    },
+    "afterDeploy": [
+      "STT.methods.changeController(SNTController.options.address).send()",
+      "SNTController.methods.enablePublicExecution(TestContract.options.address, true).send()"
+    ]
   },
 
   // merges with the settings in default

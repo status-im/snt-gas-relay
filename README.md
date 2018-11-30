@@ -15,5 +15,5 @@ Gas relayer mplementation for economic abstraction. This project consists of two
 ## Deployment Details
 | Contract                   | Ropsten Address                            | Mainnet Address                            |
 | ---------------------------|------------------------------------------- | ------------------------------------------ |
-| status/SNTController       | 0xA77A1014F55157c3119FB3f53E653E42f8fa634c | -                                          |
-| identity/IdentityFactory   | 0x7F106A1Bc637AC4AAed3DC72582749c4562D4323 | -                                          |
+| status/SNTController       | 0x1f42B87b375b8ac6C77A8CAd8E78319c18695E75 | -                                          |
+| identity/IdentityFactory   | 0xCf3473C2A50F7A94D3D7Dcc2BeBbeE989dAA014E | -                                          |

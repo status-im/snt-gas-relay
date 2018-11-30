@@ -29,7 +29,7 @@ const events = new EventEmitter();
 
 // Web3 Connection
 const connectionURL = `${config.node.local.protocol}://${config.node.local.host}:${config.node.local.port}`;
-const wsProvider = new Web3.providers.WebsocketProvider(connectionURL, {headers: {Origin: "embark"}});
+const wsProvider = new Web3.providers.WebsocketProvider(connectionURL, {headers: {Origin: "gas-relayer"}});
 const web3 = new Web3(wsProvider);
 let account;
 
