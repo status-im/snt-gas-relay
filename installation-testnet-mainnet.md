@@ -128,13 +128,3 @@ chmod +x ./launch-geth-testnet.sh
 
 #### NOTE
 Work is in progress for using the test-dapp inside status.
-
-```
-  testnet: {
-    accounts: [
-      { 
-        privateKey: "your_private_key_here" 
-      }
-    ],
-     ....
- ```
