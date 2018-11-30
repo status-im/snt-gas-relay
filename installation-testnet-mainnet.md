@@ -40,18 +40,7 @@ geth --testnet --syncmode=light console
 > exit
 ```
 
-2. Create an account (at the moment, this install procedure has only been tested with Ropsten testnet). It will ask you for a password
-```
-geth --testnet account new
-```
-
-3. Create a file `geth_pass` that will contain the password. Ensure the permissions are read/write for the owner. This file can be put in any secure folder you determine. YOu need access to this file from the folder where the gas-relayer will execute
-```
-echo "MyPassword" > testnet_password
-chmod 600 testnet_password
-```
-
-4. There aren't enough geth peers with Whisper enabled to guarantee that messages will arrive from one node to other. We need to create a `static-nodes.json` file in `~/.ethereum/testnet/geth/`.
+2. There aren't enough geth peers with Whisper enabled to guarantee that messages will arrive from one node to other. We need to create a `static-nodes.json` file in `~/.ethereum/testnet/geth/`.
 `vi ~/.ethereum/testnet/geth/`
 
 This file needs to contain the following array:
@@ -78,12 +67,12 @@ These enodes were extracted from https://github.com/status-im/status-go/blob/dev
 Before executing this program, `config/config.json` must be setup and `npm install` needs to be executed. Important values to verify are related to the node configuration, just like:
 - Host, port and protocol to connect to the geth node
 - Host, port and protocol Ganache will use when forking the blockchain for gas estimations and other operations
-- Wallet account used for processing the transactions
+- Account used for processing the transactions
 - Symmetric key used to receive the Whisper messages
 - Accepted tokens information
 - Contract configuration
 
-1. For testnet, a config file is provided with the required configuration.
+1. For testnet, a config file is provided with the required configuration, you just need to set the account information
 ```
 cd config
 rm config.js 
@@ -110,9 +99,7 @@ mv config.testnet.js config.js
 
 
 ### Launching the relayer
-A `launch-geth-testnet.sh` script is provided in the `snt-gas-relayer/gas-relayer` folder. You need to edit this file and set the `--unlock` option with the address used for procesing the transactions, and also the `--password` with the path to the password file. This script assumes the password file is called `testnet_password` and it's located in the same folder of the gas-relayer service.
-
-After editing the file, assuming your account has eth, launch geth:
+A `launch-geth-testnet.sh` script is provided in the `snt-gas-relayer/gas-relayer` folder:
 
 ```
 chmod +x ./launch-geth-testnet.sh
@@ -129,15 +116,18 @@ nodemon src/service.js
 
 
 ### Using the testdapp with testnet
-The test dapp may be used for testnet from your computer. It requires a provider that allows websockets:
-1. Edit `launch-geth-testnet.sh`  in the `test-dapp` folder to use an address you control. Then execute `launch-geth-testnet.sh` to start the geth node with the required config to communicate with the status cluster via whisper. 
-2. Execute `embark run testnet` to launch the dapp connected to testnet
-3. Navigate in your browser to http://localhost:8000. Remember to disable Metamask (The provider injected by Metamask does not support Whisper)
-4. You're now able to use the dapp normally. The status for the relayer that can be seen in the footer of the dapp won't reflect accurate information, since the relayers account are not deterministic anymore since you're not in a development environment
+The test dapp may be used for testnet from your computer. It requires a node that allows websockets. You may use this command to launch a geth instance pointing to testnet:
+
+```
+chmod +x ./launch-geth-testnet.sh
+./launch-geth-testnet.sh
+```
+
+1. Execute `embark run testnet` to launch the dapp connected to testnet
+2. Navigate in your browser to http://localhost:8000. Use metamask to connect to your local node.
+3. You're now able to use the dapp normally. The status for the relayer that can be seen in the footer of the dapp won't reflect accurate information, since the relayers account are not deterministic anymore since you're not in a development environment
 
 #### NOTE
-For using Identity operations, or of you wish to use the functionality to generate tokens, and sending ether, you need to configure `config/contracts.js` to add a private key you control, and from which the SNTController and the Identity Contract was deployed.
-
 Work is in progress for using the test-dapp inside status.
 
 ```
