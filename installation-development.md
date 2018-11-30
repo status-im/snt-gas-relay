@@ -25,7 +25,7 @@ To run the test dapp, use `embark run` and then browse `http://localhost:8000/in
 
 The gas relayer service needs to be running, and configured correctly to process the transactions. Things to take in account are: the account used in embark, and the contract addresses.
 
-You may use the test dapp to generate SNT and fund the relayer account before running the gas relayer, as it requires ether to start.
+You may use the test dapp to generate SNT and fund the relayer account before running the gas relayer, as it requires ether to start. You may fund the relayer with `web3.eth.sendTransaction` or configure embark so it funds an account when it starts the chain.
 
 ## Relayer Node
 
