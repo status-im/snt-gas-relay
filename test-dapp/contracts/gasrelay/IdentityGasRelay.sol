@@ -148,7 +148,7 @@ contract IdentityGasRelay is Identity, GasRelayed, MessageSigned {
     /**
      * @notice include ethereum signed approve ERC20 and call hash 
      *         (`ERC20Token(baseToken).approve(_to, _value)` + `_to.call(_data)`).
-     *         in return of gas proportional amount multiplied by `_gasPrice` of `_gasToken`
+     *         in return of gas proportional amount multiplied by `_gasPrice` of `_baseToken`
      *         fixes race condition in double transaction for ERC20.
      * @param _baseToken token approved for `_to` and token being used for paying `msg.sender`
      * @param _to destination of call
