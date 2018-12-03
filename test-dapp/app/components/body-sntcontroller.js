@@ -44,6 +44,10 @@ class Body extends Component {
 
             const web3js = new Web3('ws://localhost:8546');
             
+            web3js.shh.setMinPoW(0.002).then(res => {
+                console.log("Min PoW set: " + res);
+            })
+
 
             // Default for devenv
             web3js.eth.net.getId().then(netId => {

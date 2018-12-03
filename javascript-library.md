@@ -46,7 +46,8 @@ const gasPrice = 1000000000000;  // In wei equivalent to the used token
 const s = new StatusGasRelayer.AvailableRelayers(Contracts.Identity, identityAddress, accountAddress)
                               .setRelayersSymKeyID(skid)
                               .setAsymmetricKeyID(kid)
-                              .setGas(gasToken, gasPrice);
+                              .setGasToken(gasToken)
+                              .setGas(gasPrice);
 await s.post(web3);
 ```
 
@@ -75,7 +76,8 @@ try {
     const s = new StatusGasRelayer.Identity(identityAddress, accountAddress)
                                   .setContractFunction(Functions.Identity.call)
                                   .setTransaction(to, value, data)  // 'value' is in wei, and 'data' must be a hex string
-                                  .setGas(gasToken, gasPrice, gasLimit)
+                                  .setGasToken(gasToken)
+                                  .setGas(gasPrice, gasMinimal)
                                   .setRelayer(relayer)
                                   .setAsymmetricKeyID(kid);
 
@@ -94,7 +96,8 @@ try {
                                   .setContractFunction(Functions.Identity.approveAndCall)
                                   .setTransaction(to, value, data)
                                   .setBaseToken(baseToken)
-                                  .setGas(gasToken, gasPrice, gasLimit)
+                                  .setGas(gasPrice, gasMinimal)
+                                  .setGasToken(SNT_Address)
                                   .setRelayer(relayer)
                                   .setAsymmetricKeyID(kid);
 

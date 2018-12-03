@@ -83,7 +83,8 @@ class CallGasRelayed extends Component {
             const s = new StatusGasRelayer.Identity(this.props.identityAddress, web3.eth.defaultAccount)
                                           .setContractFunction(Functions.Identity.call)
                                           .setTransaction(this.state.to, this.state.value, this.state.data)
-                                          .setGas(this.state.gasToken, this.state.gasPrice, this.state.gasMinimal);
+                                          .setGasToken(this.state.gasToken)
+                                          .setGas(this.state.gasPrice, this.state.gasMinimal);
                                           
             const signature = await s.sign(web3);
 
@@ -108,7 +109,9 @@ class CallGasRelayed extends Component {
             const s = new StatusGasRelayer.AvailableRelayers(Contracts.Identity, this.props.identityAddress, web3.eth.defaultAccount)
                                           .setRelayersSymKeyID(skid)
                                           .setAsymmetricKeyID(kid)
-                                          .setGas(this.state.gasToken, this.state.gasPrice);
+                                          .setGasToken(this.state.gasToken)
+                                          .setGas(this.state.gasPrice);
+
             await s.post(web3);
             
             console.log("Message sent");
@@ -146,7 +149,8 @@ class CallGasRelayed extends Component {
             const s = new StatusGasRelayer.Identity(this.props.identityAddress, web3.eth.defaultAccount)
                                           .setContractFunction(Functions.Identity.call)
                                           .setTransaction(this.state.to, this.state.value, this.state.data)
-                                          .setGas(this.state.gasToken, this.state.gasPrice, this.state.gasMinimal)
+                                          .setGasToken(this.state.gasToken)
+                                          .setGas(this.state.gasPrice, this.state.gasMinimal)
                                           .setRelayer(relayer)
                                           .setAsymmetricKeyID(kid);
 

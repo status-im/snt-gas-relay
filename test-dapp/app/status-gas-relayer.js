@@ -189,8 +189,12 @@ class IdentityGasRelayedAction extends Action {
         return this;
     }
 
-    setGas(token, price, gasMinimal){
+    setGasToken(token){
         this.gasToken = token;
+        return this;
+    }
+
+    setGas(price, gasMinimal){
         this.gasPrice = price;
         this.gasMinimal = gasMinimal;
         return this;
@@ -243,13 +247,14 @@ class IdentityGasRelayedAction extends Action {
                 ).call();
                 break;
             case Functions.Identity.approveAndCall:
-                hashedMessage = await contract.methods.deployGasRelayHash(
+                hashedMessage = await contract.methods.approveAndCallGasRelayHash(
+                    this.baseToken,
+                    this.to,
                     this.value,
                     this.data == "0x" ? emptyBytesSha : web3.utils.soliditySha3({t: 'bytes', v: this.data}),
                     nonce,
                     this.gasPrice,
-                    this.gasMinimal,
-                    this.gasToken
+                    this.gasMinimal
                 ).call(); 
                 break;
             default:
@@ -295,7 +300,6 @@ class IdentityGasRelayedAction extends Action {
                             this.nonce, 
                             this.gasPrice, 
                             this.gasMinimal,
-                            this.gasToken,
                             this.signature
                             ]);
                 break;
@@ -443,7 +447,19 @@ class AvailableRelayersAction extends Action {
         return this;
     }
 
+    setGasToken(token){
+        this.gasToken = token;
+        return this;
+    }
+
+    setGas(price, gasMinimal){
+        this.gasPrice = price;
+        this.gasMinimal = gasMinimal;
+        return this;
+    }
+
     _getMessage = web3 => {
+        console.log(this);
         return {
             contract: this.contractAddress,
             address: this.accountAddress || web3.eth.defaultAccount,
@@ -620,47 +636,46 @@ const identityGasRelayABI = [
     {
         "constant": true,
         "inputs": [
-        {
+          {
             "name": "_to",
             "type": "address"
-        },
-        {
+          },
+          {
             "name": "_value",
             "type": "uint256"
-        },
-        {
+          },
+          {
             "name": "_dataHash",
             "type": "bytes32"
-        },
-        {
+          },
+          {
             "name": "_nonce",
             "type": "uint256"
-        },
-        {
+          },
+          {
             "name": "_gasPrice",
             "type": "uint256"
-        },
-        {
+          },
+          {
             "name": "_gasMinimal",
             "type": "uint256"
-        },
-        {
+          },
+          {
             "name": "_gasToken",
             "type": "address"
-        }
+          }
         ],
         "name": "callGasRelayHash",
         "outputs": [
-        {
+          {
             "name": "_callGasRelayHash",
             "type": "bytes32"
-        }
+          }
         ],
         "payable": false,
         "stateMutability": "view",
-        "type": "function",
-        "signature": "0xe27e2e5c"
-    },
+        "type": "function"
+      },
     {
         "constant": true,
         "inputs": [],
@@ -677,55 +692,54 @@ const identityGasRelayABI = [
         "signature": "0xaffed0e0"
     },
     {
-        "constant": false,
-        "inputs": [
-          {
-            "name": "_to",
-            "type": "address"
-          },
-          {
-            "name": "_value",
-            "type": "uint256"
-          },
-          {
-            "name": "_data",
-            "type": "bytes"
-          },
-          {
-            "name": "_nonce",
-            "type": "uint256"
-          },
-          {
-            "name": "_gasPrice",
-            "type": "uint256"
-          },
-          {
-            "name": "_gasMinimal",
-            "type": "uint256"
-          },
-          {
-            "name": "_gasToken",
-            "type": "address"
-          },
-          {
-            "name": "_messageSignatures",
-            "type": "bytes"
-          }
-        ],
-        "name": "callGasRelayed",
-        "outputs": [
-          {
-            "name": "success",
-            "type": "bool"
-          }
-        ],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function",
-        "signature": "0xfd0dded5"
-      },
-      {
-        "constant": false,
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_to",
+          "type": "address"
+        },
+        {
+          "name": "_value",
+          "type": "uint256"
+        },
+        {
+          "name": "_data",
+          "type": "bytes"
+        },
+        {
+          "name": "_nonce",
+          "type": "uint256"
+        },
+        {
+          "name": "_gasPrice",
+          "type": "uint256"
+        },
+        {
+          "name": "_gasMinimal",
+          "type": "uint256"
+        },
+        {
+          "name": "_gasToken",
+          "type": "address"
+        },
+        {
+          "name": "_messageSignatures",
+          "type": "bytes"
+        }
+      ],
+      "name": "callGasRelayed",
+      "outputs": [
+        {
+          "name": "success",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+        "constant": true,
         "inputs": [
           {
             "name": "_baseToken",
@@ -735,50 +749,6 @@ const identityGasRelayABI = [
             "name": "_to",
             "type": "address"
           },
-          {
-            "name": "_value",
-            "type": "uint256"
-          },
-          {
-            "name": "_data",
-            "type": "bytes"
-          },
-          {
-            "name": "_nonce",
-            "type": "uint256"
-          },
-          {
-            "name": "_gasPrice",
-            "type": "uint256"
-          },
-          {
-            "name": "_gasMinimal",
-            "type": "uint256"
-          },
-          {
-            "name": "_gasToken",
-            "type": "address"
-          },
-          {
-            "name": "_messageSignatures",
-            "type": "bytes"
-          }
-        ],
-        "name": "approveAndCallGasRelayed",
-        "outputs": [
-          {
-            "name": "success",
-            "type": "bool"
-          }
-        ],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function",
-        "signature": "0x59f4ac61"
-      },
-      {
-        "constant": true,
-        "inputs": [
           {
             "name": "_value",
             "type": "uint256"
@@ -798,13 +768,9 @@ const identityGasRelayABI = [
           {
             "name": "_gasMinimal",
             "type": "uint256"
-          },
-          {
-            "name": "_gasToken",
-            "type": "address"
           }
         ],
-        "name": "deployGasRelayHash",
+        "name": "approveAndCallGasRelayHash",
         "outputs": [
           {
             "name": "_callGasRelayHash",
@@ -813,9 +779,55 @@ const identityGasRelayABI = [
         ],
         "payable": false,
         "stateMutability": "view",
-        "type": "function",
-        "signature": "0x86962d85"
-      }
+        "type": "function"
+    },
+    {
+    "constant": false,
+    "inputs": [
+        {
+        "name": "_baseToken",
+        "type": "address"
+        },
+        {
+        "name": "_to",
+        "type": "address"
+        },
+        {
+        "name": "_value",
+        "type": "uint256"
+        },
+        {
+        "name": "_data",
+        "type": "bytes"
+        },
+        {
+        "name": "_nonce",
+        "type": "uint256"
+        },
+        {
+        "name": "_gasPrice",
+        "type": "uint256"
+        },
+        {
+        "name": "_gasMinimal",
+        "type": "uint256"
+        },
+        {
+        "name": "_messageSignatures",
+        "type": "bytes"
+        }
+    ],
+    "name": "approveAndCallGasRelayed",
+    "outputs": [
+        {
+        "name": "success",
+        "type": "bool"
+        }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+    },
 ];
 
 export default StatusGasRelayer;

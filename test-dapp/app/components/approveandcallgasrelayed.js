@@ -78,7 +78,8 @@ class ApproveAndCallGasRelayed extends Component {
                                           .setContractFunction(Functions.Identity.approveAndCall)
                                           .setTransaction(this.state.to, this.state.value, this.state.data)
                                           .setBaseToken(this.state.baseToken)
-                                          .setGas(this.state.gasToken, this.state.gasPrice, this.state.gasMinimal);
+                                          .setGasToken(STT.options.address)
+                                          .setGas(this.state.gasPrice, this.state.gasMinimal);
                                           
             const signature = await s.sign(web3);
 
@@ -103,7 +104,8 @@ class ApproveAndCallGasRelayed extends Component {
             const s = new StatusGasRelayer.AvailableRelayers(Contracts.Identity, this.props.identityAddress, web3.eth.defaultAccount)
                                           .setRelayersSymKeyID(skid)
                                           .setAsymmetricKeyID(kid)
-                                          .setGas(this.state.gasToken, this.state.gasPrice);
+                                          .setGasToken(STT.options.address)
+                                          .setGas(this.state.gasPrice);
             await s.post(web3);
             
             console.log("Message sent");
@@ -137,11 +139,14 @@ class ApproveAndCallGasRelayed extends Component {
 
   
         try {
+            console.log(web3.eth.defaultAccount);
+            
             const s = new StatusGasRelayer.Identity(this.props.identityAddress, web3.eth.defaultAccount)
                                           .setContractFunction(Functions.Identity.approveAndCall)
                                           .setTransaction(this.state.to, this.state.value, this.state.data)
                                           .setBaseToken(this.state.baseToken)
-                                          .setGas(this.state.gasToken, this.state.gasPrice, this.state.gasMinimal)
+                                          .setGasToken(STT.options.address)
+                                          .setGas(this.state.gasPrice, this.state.gasMinimal)
                                           .setRelayer(relayer)
                                           .setAsymmetricKeyID(kid);
 
@@ -245,27 +250,7 @@ class ApproveAndCallGasRelayed extends Component {
                             }}
                             />
                     </Grid>
-                    <Grid item xs={6}>
-                        <TextField
-                            id="gasToken"
-                            label="Gas Token"
-                            value={this.state.gasToken}
-                            onChange={this.handleChange('gasToken')}
-                            margin="normal"
-                            fullWidth
-                            select
-                            SelectProps={{
-                                native: true
-                            }}
-                            >
-                            <option key={STT.options.address} value={STT.options.address}>
-                            {STT.options.address} (STT)
-                            </option>
-                            <option key="0x0000000000000000000000000000000000000000" value="0x0000000000000000000000000000000000000000">
-                            0x0000000000000000000000000000000000000000 (ETH)
-                            </option>
-                        </TextField>
-                    </Grid>
+                    
                     <Grid item xs={2}>
                         <TextField
                             id="gasPrice"

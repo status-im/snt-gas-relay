@@ -112,7 +112,8 @@ class TransferSNT extends Component {
             const s = new StatusGasRelayer.AvailableRelayers(Contracts.SNT, SNTController.options.address, this.state.account)
                                           .setRelayersSymKeyID(skid)
                                           .setAsymmetricKeyID(kid)
-                                          .setGas(STT.options.address, this.state.gasPrice);
+                                          .setGasToken(STT.options.address)
+                                          .setGas(this.state.gasPrice);
             await s.post(web3);
             
             console.log("Message sent");
