@@ -41,7 +41,6 @@ geth --testnet --syncmode=light console
 ```
 
 2. There aren't enough geth peers with Whisper enabled to guarantee that messages will arrive from one node to other. We need to create a `static-nodes.json` file in `~/.ethereum/testnet/geth/`.
-`vi ~/.ethereum/testnet/geth/`
 
 This file needs to contain the following array:
 ```
@@ -129,13 +128,3 @@ chmod +x ./launch-geth-testnet.sh
 
 #### NOTE
 Work is in progress for using the test-dapp inside status.
-
-```
-  testnet: {
-    accounts: [
-      { 
-        privateKey: "your_private_key_here" 
-      }
-    ],
-     ....
- ```
