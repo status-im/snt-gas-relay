@@ -28,8 +28,8 @@ contract Account {
     {
         bool success;
         bytes memory returndata;
-        _nonce = nonce++;
-        (success,returndata) = _to.call.value(_value)(_data);
+        _nonce = nonce++; // Important: Must be incremented always BEFORE external call
+        (success,returndata) = _to.call.value(_value)(_data); //external call
         emit Executed(_nonce, success, returndata);
     }
 
@@ -47,9 +47,9 @@ contract Account {
     {
         address createdContract;
         bool failed;
-        _nonce = nonce++;
+        _nonce = nonce++; // Important: Must be incremented always BEFORE deploy
         assembly {
-            createdContract := create(_value, add(_code, 0x20), mload(_code))
+            createdContract := create(_value, add(_code, 0x20), mload(_code)) //deploy
             failed := iszero(extcodesize(createdContract))
         }
         emit Deployed(_nonce, !failed, createdContract);
@@ -66,11 +66,11 @@ contract Account {
     {
         bool success;
         bytes memory returndata;
-        _nonce = nonce++;
+        _nonce = nonce++; // Important: Must be incremented always BEFORE external call
         require(_baseToken != address(0), ERR_BAD_TOKEN_ADDRESS); //_baseToken should be something!
         require(_to != address(0) && _to != address(this), ERR_BAD_DESTINATION); //need valid destination
-        ERC20Token(_baseToken).approve(_to, _value);
-        (success,returndata) = _to.call.value(_value)(_data);
+        ERC20Token(_baseToken).approve(_to, _value); //external call
+        (success,returndata) = _to.call.value(_value)(_data); //external call
         emit Executed(_nonce, success, returndata);
     }
 }
