@@ -35,6 +35,8 @@ module.exports = {
     contracts: {      
       "Identity": {"deploy": false},
       "IdentityGasRelay": {"deploy": false},
+      "IdentityGasChannel": {"deploy": false},
+      "IdentityGasAbstract": {"deploy": false},
       "ERC20Receiver": {"deploy": false},
       "TestToken": {"deploy": false},
       "SafeMath": {"deploy": false},
@@ -50,14 +52,16 @@ module.exports = {
       "UpdatableInstance": {"deploy": false},
       "Controlled": {"deploy": false},
       "Owned": {"deploy": false},
-      "IdentityKernel": {"deploy": false},
+      "NonceChannelETH": {"deploy": false},
+      "NonceChannelERC20": {"deploy": false},
+      "IdentityKernel": {"deploy": true},
       "STT": {
         "instanceOf": "TestMiniMeToken",
         "args":["$MiniMeTokenFactory", "0x0", "0x0", "Status Gas Relayer Test Token", 18, "STT", true],
         "gasLimit": 4000000
       },
       "IdentityFactory": {
-        "args":[], 
+        "args":[ "$IdentityKernel" ], 
         "gasLimit": 5000000
       },
       "SNTController": {

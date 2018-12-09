@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.6.0;
 
 import "../token/ERC20Token.sol";
 
@@ -7,15 +7,15 @@ import "../token/ERC20Token.sol";
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
  * @notice abstract gas abstraction
  */
-contract GasRelayed {
+contract GasRelay {
     
-    bytes4 public constant MSG_CALL_PREFIX = bytes4(
+    bytes4 public constant MSG_CALL_GASRELAY_PREFIX = bytes4(
         keccak256("callGasRelay(address,uint256,bytes32,uint256,uint256,address,address)")
     );
-    bytes4 public constant MSG_DEPLOY_PREFIX = bytes4(
+    bytes4 public constant MSG_DEPLOY_GASRELAY_PREFIX = bytes4(
         keccak256("deployGasRelay(uint256,bytes32,uint256,uint256,address,address)")
     );
-    bytes4 public constant MSG_APPROVEANDCALL_PREFIX = bytes4(
+    bytes4 public constant MSG_APPROVEANDCALL_GASRELAY_PREFIX = bytes4(
         keccak256("approveAndCallGasRelay(address,address,uint256,bytes32,uint256,uint256,address)")
     );
     
@@ -32,43 +32,43 @@ contract GasRelayed {
 
     /**
      * @notice include ethereum signed callHash in return of gas proportional amount multiplied by `_gasPrice` of `_gasToken`
-     *         allows identity of being controlled without requiring ether in key balace
+     *         allows account of being controlled without requiring ether in key balace
      * @param _to destination of call
      * @param _value call value (ether)
      * @param _data call data
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasLimit maximum gas of this transacton
      * @param _gasToken token being used for paying `msg.sender`
-     * @param _messageSignatures rsv concatenated ethereum signed message signatures required
+     * @param _signature rsv concatenated ethereum signed message signatures required
      */
-    function callGasRelayed(
+    function callGasRelay(
         address _to,
         uint256 _value,
         bytes calldata _data,
         uint _gasPrice,
         uint _gasLimit,
         address _gasToken, 
-        bytes calldata _messageSignatures
+        bytes calldata _signature
     ) 
         external;
 
     /**
      * @notice deploys contract in return of gas proportional amount multiplied by `_gasPrice` of `_gasToken`
-     *         allows identity of being controlled without requiring ether in key balace
+     *         allows account of being controlled without requiring ether in key balace
      * @param _value call value (ether) to be sent to newly created contract
      * @param _data contract code data
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasLimit maximum gas of this transacton
      * @param _gasToken token being used for paying `msg.sender`
-     * @param _messageSignatures rsv concatenated ethereum signed message signatures required
+     * @param _signature rsv concatenated ethereum signed message signatures required
      */
-    function deployGasRelayed(
+    function deployGasRelay(
         uint256 _value, 
         bytes calldata _data,
         uint _gasPrice,
         uint _gasLimit,
         address _gasToken, 
-        bytes calldata _messageSignatures
+        bytes calldata _signature
     ) 
         external;
     
@@ -83,16 +83,16 @@ contract GasRelayed {
      * @param _data call data
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasLimit maximum gas of this transacton
-     * @param _messageSignatures rsv concatenated ethereum signed message signatures required
+     * @param _signature rsv concatenated ethereum signed message signatures required
      */
-    function approveAndCallGasRelayed(
+    function approveAndCallGasRelay(
         address _baseToken, 
         address _to,
         uint256 _value,
         bytes calldata _data,
         uint _gasPrice,
         uint _gasLimit,
-        bytes calldata _messageSignatures        
+        bytes calldata _signature        
     ) 
         external;
 
@@ -101,7 +101,7 @@ contract GasRelayed {
      * @param _to destination of call
      * @param _value call value (ether)
      * @param _dataHash call data hash
-     * @param _nonce current identity nonce
+     * @param _nonce current account nonce
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasLimit maximum gas of this transacton
      * @param _gasToken token being used for paying `_gasRelayer`
@@ -120,12 +120,12 @@ contract GasRelayed {
     )
         public 
         view 
-        returns (bytes32 _callGasRelayHash) 
+        returns (bytes32) 
     {
-        _callGasRelayHash = keccak256(
+        return keccak256(
             abi.encodePacked(
                 address(this), 
-                MSG_CALL_PREFIX, 
+                MSG_CALL_GASRELAY_PREFIX, 
                 _to,
                 _value,
                 _dataHash,
@@ -142,7 +142,7 @@ contract GasRelayed {
      * @notice get callHash
      * @param _value call value (ether)
      * @param _dataHash call data hash
-     * @param _nonce current identity nonce
+     * @param _nonce current account nonce
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasLimit maximum gas of this transacton
      * @param _gasToken token being used for paying `_gasRelayer` 
@@ -160,12 +160,12 @@ contract GasRelayed {
     )
         public 
         view 
-        returns (bytes32 _callGasRelayHash) 
+        returns (bytes32) 
     {
-        _callGasRelayHash = keccak256(
+        return keccak256(
             abi.encodePacked(
                 address(this), 
-                MSG_DEPLOY_PREFIX,
+                MSG_DEPLOY_GASRELAY_PREFIX,
                 _value,
                 _dataHash,
                 _nonce,
@@ -200,12 +200,12 @@ contract GasRelayed {
     )
         public 
         view 
-        returns (bytes32 approveAndCallHash) 
+        returns (bytes32) 
     {
-        approveAndCallHash = keccak256(
+        return keccak256(
             abi.encodePacked(
                 address(this), 
-                MSG_APPROVEANDCALL_PREFIX,
+                MSG_APPROVEANDCALL_GASRELAY_PREFIX,
                 _baseToken,
                 _to,
                 _value,

@@ -18,7 +18,7 @@ contract Instance is InstanceStorage, DelegatedCall {
      * @dev delegatecall everything (but declared functions) to `_target()`
      * @notice Verify `kernel()` code to predict behavior
      */
-    function () external delegated {
+    function () external payable delegated {
         //all goes to kernel
     }
 

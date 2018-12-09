@@ -9,9 +9,9 @@ contract IdentityFactory is Factory {
 
     event IdentityCreated(address instance);
 
-    constructor() 
+    constructor(IdentityKernel _kernel) 
         public
-        Factory(address(new IdentityKernel())) 
+        Factory(address(_kernel)) 
     {
     }
 
@@ -50,6 +50,7 @@ contract IdentityFactory is Factory {
         public 
         returns (address payable)
     {
+        require(latestKernel != address(0), "Model not set");
         IdentityKernel instance = IdentityKernel(address(uint160(address(new DelayedUpdatableInstance(address(latestKernel)))))); 
         instance.initIdentity(_keys,_purposes,_types,_managerThreshold,_actorThreshold,_recoveryContract);
         emit IdentityCreated(address(instance));

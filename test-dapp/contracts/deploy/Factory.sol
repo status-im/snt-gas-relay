@@ -22,7 +22,9 @@ contract Factory is Controlled {
     constructor(address _kernel)
         public 
     {
-        _setKernel(_kernel);
+        if(_kernel != address(0)){
+            _setKernel(_kernel);
+        }
     }
 
     function setKernel(address _kernel)

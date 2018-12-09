@@ -1,8 +1,8 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.6.0;
 
 import "../token/ERC20Token.sol";
 
-contract TokenGasRelayed {
+contract TokenGasRelay {
     
     bytes4 public constant TRANSFER_PREFIX = bytes4(
         keccak256("transferGasRelay(address,uint256,uint256,uint256)")
@@ -60,7 +60,7 @@ contract TokenGasRelayed {
      * @param _gasLimit maximum gas of this transacton
      * @param _signature concatenated rsv of message
      */
-    function executeGasRelayed(
+    function executeGasRelay(
         address _allowedContract,
         bytes calldata _data,
         uint256 _nonce,
@@ -80,7 +80,7 @@ contract TokenGasRelayed {
      * @param _gasLimit maximum gas of this transacton
      * @param _gasRelayer beneficiary of gas, if address(0), msg.sender
      */
-    function getExecuteGasRelayedHash(
+    function getExecuteGasRelayHash(
         address _allowedContract,
         bytes memory _data,
         uint256 _nonce,

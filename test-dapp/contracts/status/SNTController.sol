@@ -1,20 +1,18 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.6.0;
 
 import "../token/TokenController.sol";
 import "../common/Owned.sol";
 import "../common/MessageSigned.sol";
 import "../token/ERC20Token.sol";
 import "../token/MiniMeToken.sol";
-import "../gasrelay/TokenGasRelayed.sol";
+import "../gasrelay/TokenGasRelay.sol";
 import "../identity/IdentityFactory.sol";
 /**
  * @title SNTController
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
  * @notice enables economic abstraction for SNT
  */
-contract SNTController is TokenController, Owned, TokenGasRelayed, MessageSigned {
-
-    
+contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
 
     MiniMeToken public snt;
     mapping (address => uint256) public signNonce;
@@ -22,7 +20,6 @@ contract SNTController is TokenController, Owned, TokenGasRelayed, MessageSigned
     IdentityFactory identityFactory;
 
     event PublicExecutionEnabled(address indexed contractAddress, bool enabled);
-    event GasRelayedExecution(address indexed msgSigner, bytes32 signedHash, bool executed);
     event ClaimedTokens(address indexed _token, address indexed _controller, uint256 _amount);
     event ControllerChanged(address indexed _newController);
 
@@ -137,7 +134,7 @@ contract SNTController is TokenController, Owned, TokenGasRelayed, MessageSigned
      * @param _gasLimit maximum amount tokens that can be used to pay gas
      * @param _signature concatenated rsv of message
      */
-    function executeGasRelayed(
+    function executeGasRelay(
         address _allowedContract,
         bytes calldata _data,
         uint256 _nonce,
@@ -152,7 +149,7 @@ contract SNTController is TokenController, Owned, TokenGasRelayed, MessageSigned
         require(allowPublicExecution[_allowedContract], "Unauthorized");
         address msgSigner = recoverAddress(
             getSignHash(
-                getExecuteGasRelayedHash(
+                getExecuteGasRelayHash(
                     _allowedContract,
                     _data,
                     _nonce,
@@ -167,7 +164,6 @@ contract SNTController is TokenController, Owned, TokenGasRelayed, MessageSigned
         signNonce[msgSigner]++;
         bool success;
         (success,) = _allowedContract.call(_data);
-
         if (_gasPrice > 0) {
             uint256 _amount = 21000 + (startGas - gasleft());
             require(_amount <= _gasLimit, ERR_GAS_LIMIT_EXCEEDED);
