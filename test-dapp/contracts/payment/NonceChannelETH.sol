@@ -14,6 +14,7 @@ contract NonceChannelETH is NonceChannel {
         uint256 _duration
     ) 
         public 
+        payable
         NonceChannel(
             _signer, 
             _recipient, 
