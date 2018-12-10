@@ -4,7 +4,6 @@ import "./GasRelay.sol";
 import "./GasChannel.sol";
 import "../common/MessageSigned.sol";
 import "../identity/Identity.sol";
-import "../token/ERC20Token.sol";
 
 /**
  * @title IdentityGasAbstract
@@ -33,7 +32,7 @@ contract IdentityGasAbstract is Identity, GasChannel, GasRelay, MessageSigned {
     {
 
     }
-    
+
     /**
      * @notice include ethereum signed callHash in return of gas proportional amount multiplied by `_gasPrice` of `_gasToken`
      *         allows identity of being controlled without requiring ether in key balace

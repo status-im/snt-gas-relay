@@ -1,7 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
 import "./GasChannel.sol";
-import "../payment/NonceChannelFactory.sol";
 import "../common/Account.sol";
 import "../common/Controlled.sol";
 import "../common/MessageSigned.sol";

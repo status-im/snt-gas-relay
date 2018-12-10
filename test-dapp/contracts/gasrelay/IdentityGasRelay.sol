@@ -3,7 +3,6 @@ pragma solidity >=0.5.0 <0.6.0;
 import "./GasRelay.sol";
 import "../common/MessageSigned.sol";
 import "../identity/Identity.sol";
-import "../token/ERC20Token.sol";
 
 /**
  * @title IdentityGasRelay
