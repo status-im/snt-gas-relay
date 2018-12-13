@@ -1,6 +1,6 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.6.0;
 
-contract ERC735 {
+interface ERC735 {
 
     event ClaimRequested(
         bytes32 indexed claimRequestId,
@@ -49,7 +49,7 @@ contract ERC735 {
     }
 
     function getClaim(bytes32 _claimId) 
-        public
+        external
         view
         returns(
             uint256 topic,
@@ -61,7 +61,7 @@ contract ERC735 {
         );
     
     function getClaimIdsByTopic(uint256 _topic) 
-        public 
+        external 
         view 
         returns(bytes32[] memory claimIds);
     
@@ -69,12 +69,12 @@ contract ERC735 {
         uint256 _topic,
         uint256 _scheme,
         address _issuer,
-        bytes memory _signature,
-        bytes memory _data,
-        string memory _uri
+        bytes calldata _signature,
+        bytes calldata _data,
+        string calldata _uri
     ) 
-        public 
+        external 
         returns (bytes32 claimRequestId);
 
-    function removeClaim(bytes32 _claimId) public returns (bool success);
+    function removeClaim(bytes32 _claimId) external returns (bool success);
 }

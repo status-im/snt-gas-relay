@@ -1,13 +1,13 @@
 pragma solidity ^0.5.0;
 
-import "../identity/IdentityKernel.sol";
+import "../identity/IdentityBase.sol";
 
 
-contract UpdatedIdentityKernel is IdentityKernel {
+contract UpdatedIdentityKernel is IdentityBase {
 
     event TestFunctionExecuted(uint256 minApprovalsByManagementKeys);
 
     function test() public {
-        emit TestFunctionExecuted(purposeThreshold[MANAGEMENT_KEY]);
+        emit TestFunctionExecuted(purposeThreshold[uint256(Purpose.ManagementKey)]);
     }   
 }

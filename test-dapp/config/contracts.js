@@ -54,14 +54,13 @@ module.exports = {
       "Owned": {"deploy": false},
       "NonceChannelETH": {"deploy": false},
       "NonceChannelERC20": {"deploy": false},
-      "IdentityKernel": {"deploy": true},
       "STT": {
         "instanceOf": "TestMiniMeToken",
         "args":["$MiniMeTokenFactory", "0x0", "0x0", "Status Gas Relayer Test Token", 18, "STT", true],
         "gasLimit": 4000000
       },
       "IdentityFactory": {
-        "args":[ "$IdentityKernel" ], 
+        "args":[], 
         "gasLimit": 5000000
       },
       "SNTController": {

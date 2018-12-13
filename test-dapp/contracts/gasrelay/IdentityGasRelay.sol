@@ -1,37 +1,16 @@
 pragma solidity >=0.5.0 <0.6.0;
 
+import "../identity/IdentityExtension.sol";
 import "./GasRelay.sol";
 import "../common/MessageSigned.sol";
-import "../identity/Identity.sol";
 
 /**
  * @title IdentityGasRelay
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
  * @notice enables economic abstraction for Identity
  */
-contract IdentityGasRelay is Identity, GasRelay, MessageSigned {
+contract IdentityGasRelay is IdentityExtension, GasRelay, MessageSigned {
     
-    constructor(   
-        bytes32[] memory _keys,
-        uint256[] memory _purposes,
-        uint256[] memory _types,           
-        uint256 _managerThreshold,
-        uint256 _actorThreshold,
-        address _recoveryContract
-    ) 
-        Identity(
-            _keys,
-            _purposes,
-            _types,
-            _managerThreshold,
-            _actorThreshold,
-            _recoveryContract
-        ) 
-        public
-    {
-
-    }
-
     /**
      * @notice include ethereum signed callHash in return of gas proportional amount multiplied by `_gasPrice` of `_gasToken`
      *         allows identity of being controlled without requiring ether in key balace
@@ -63,7 +42,7 @@ contract IdentityGasRelay is Identity, GasRelay, MessageSigned {
         
         //verify if signatures are valid and came from correct actors;
         verifySignatures(
-            _to == address(this) ? MANAGEMENT_KEY : ACTION_KEY,
+            _to == address(this) ? Purpose.ManagementKey : Purpose.ActionKey,
             callGasRelayHash(
                 _to,
                 _value,
@@ -118,7 +97,7 @@ contract IdentityGasRelay is Identity, GasRelay, MessageSigned {
         
         //verify if signatures are valid and came from correct actors;
         verifySignatures(
-            ACTION_KEY,
+            Purpose.ActionKey,
             deployGasRelayHash(
                 _value,
                 keccak256(_data),
@@ -176,7 +155,7 @@ contract IdentityGasRelay is Identity, GasRelay, MessageSigned {
         require(startGas >= _gasLimit, ERR_BAD_START_GAS); 
         //verify if signatures are valid and came from correct actors;
         verifySignatures(
-            ACTION_KEY,
+            Purpose.ActionKey,
             approveAndCallGasRelayHash(
                 _baseToken,
                 _to,
@@ -210,7 +189,7 @@ contract IdentityGasRelay is Identity, GasRelay, MessageSigned {
      * @return true case valid
      */    
     function verifySignatures(
-        uint256 _requiredKey,
+        Purpose _requiredKey,
         bytes32 _messageHash,
         bytes memory _signatures
     ) 
@@ -221,7 +200,7 @@ contract IdentityGasRelay is Identity, GasRelay, MessageSigned {
         // calculates signHash
         bytes32 signHash = getSignHash(_messageHash);
         uint _amountSignatures = _signatures.length / 65;
-        require(_amountSignatures == purposeThreshold[_requiredKey], "Too few signatures");
+        require(_amountSignatures == purposeThreshold[uint256(_requiredKey)], "Too few signatures");
         bytes32 _lastKey = 0;
         for (uint256 i = 0; i < _amountSignatures; i++) {
             bytes32 _currentKey = recoverKey(
@@ -230,7 +209,7 @@ contract IdentityGasRelay is Identity, GasRelay, MessageSigned {
                 i
                 );
             require(_currentKey > _lastKey, "Bad signatures order"); //assert keys are different
-            require(keyHasPurpose(_currentKey, _requiredKey), ERR_BAD_SIGNER);
+            require(_keyHasPurpose(_currentKey, _requiredKey), ERR_BAD_SIGNER);
             _lastKey = _currentKey;
         }
         return true;

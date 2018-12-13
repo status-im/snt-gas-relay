@@ -1,37 +1,16 @@
 pragma solidity >=0.5.0 <0.6.0;
 
+import "../identity/IdentityExtension.sol";
 import "./GasChannel.sol";
 import "../common/MessageSigned.sol";
-import "../identity/Identity.sol";
 
 /**
  * @title IdentityGasChannel
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
  * @notice enables economic abstraction through gas channel for Identity
  */
-contract IdentityGasChannel is Identity, GasChannel, MessageSigned {
+contract IdentityGasChannel is IdentityExtension, GasChannel, MessageSigned {
     
-    constructor(   
-        bytes32[] memory _keys,
-        uint256[] memory _purposes,
-        uint256[] memory _types,           
-        uint256 _managerThreshold,
-        uint256 _actorThreshold,
-        address _recoveryContract
-    ) 
-        Identity(
-            _keys,
-            _purposes,
-            _types,
-            _managerThreshold,
-            _actorThreshold,
-            _recoveryContract
-        ) 
-        public
-    {
-
-    }
-
     /**
      * @notice creates a new channel and pay gas in the newly created channel 
      * @param _channelFactory address of trusted factory
@@ -57,7 +36,7 @@ contract IdentityGasChannel is Identity, GasChannel, MessageSigned {
 
         //verify if signatures are valid and came from correct actor;
         verifySignatures(
-            MANAGEMENT_KEY,
+            Purpose.ManagementKey,
             newChannelHash(
                 nonce,
                 _channelFactory,
@@ -106,7 +85,7 @@ contract IdentityGasChannel is Identity, GasChannel, MessageSigned {
         require(gasleft() >= _gasLimit, ERR_BAD_START_GAS);
 
         verifySignatures(
-            _to == address(this) ? MANAGEMENT_KEY : ACTION_KEY,
+            _to == address(this) ? Purpose.ManagementKey : Purpose.ActionKey,
             callGasChannelHash(
                 _to,
                 _value,
@@ -143,7 +122,7 @@ contract IdentityGasChannel is Identity, GasChannel, MessageSigned {
         require(gasleft() >= _gasLimit, ERR_BAD_START_GAS);
 
         verifySignatures(
-            ACTION_KEY,
+            Purpose.ActionKey,
             deployGasChannelHash(
                 _value,
                 keccak256(_data),
@@ -187,7 +166,7 @@ contract IdentityGasChannel is Identity, GasChannel, MessageSigned {
         require(gasleft() >= _gasLimit, ERR_BAD_START_GAS);
 
         verifySignatures(
-            ACTION_KEY,
+            Purpose.ActionKey,
             approveAndCallGasChannelHash(
                 _baseToken,
                 _to,
@@ -214,7 +193,7 @@ contract IdentityGasChannel is Identity, GasChannel, MessageSigned {
      * @return true case valid
      */    
     function verifySignatures(
-        uint256 _requiredKey,
+        Purpose _requiredKey,
         bytes32 _messageHash,
         bytes memory _signatures
     ) 
@@ -225,7 +204,7 @@ contract IdentityGasChannel is Identity, GasChannel, MessageSigned {
         // calculates signHash
         bytes32 signHash = getSignHash(_messageHash);
         uint _amountSignatures = _signatures.length / 65;
-        require(_amountSignatures == purposeThreshold[_requiredKey], "Too few signatures");
+        require(_amountSignatures == purposeThreshold[uint256(_requiredKey)], "Too few signatures");
         bytes32 _lastKey = 0;
         for (uint256 i = 0; i < _amountSignatures; i++) {
             bytes32 _currentKey = recoverKey(
@@ -234,7 +213,7 @@ contract IdentityGasChannel is Identity, GasChannel, MessageSigned {
                 i
                 );
             require(_currentKey > _lastKey, "Bad signatures order"); //assert keys are different
-            require(keyHasPurpose(_currentKey, _requiredKey), ERR_BAD_SIGNER);
+            require(_keyHasPurpose(_currentKey, _requiredKey), ERR_BAD_SIGNER);
             _lastKey = _currentKey;
         }
         return true;

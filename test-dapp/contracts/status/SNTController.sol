@@ -62,7 +62,12 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
         
         require(signNonce[msgSigner] == _nonce, "Bad nonce");
         signNonce[msgSigner]++;
-        address userIdentity = identityFactory.createIdentity();
+        address userIdentity = address(
+            identityFactory.createIdentity(
+                keccak256(abi.encodePacked(msgSigner)),
+                address(0)
+            )
+        );
         require(
             snt.transferFrom(msgSigner, userIdentity, _amount),
             "Transfer fail"

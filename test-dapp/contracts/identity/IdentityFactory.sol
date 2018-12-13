@@ -1,60 +1,52 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.6.0;
 
-import "../deploy/Factory.sol";
-import "../deploy/DelayedUpdatableInstance.sol";
-import "./IdentityKernel.sol";
+import "../deploy/Extendable.sol";
+import "./IdentityBase.sol";
+import "./IdentityInit.sol";
 
+/**
+ * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
+ * @notice creates Extendable Identity 
+ */
+contract IdentityFactory {
+    IdentityBase public base;
+    IdentityInit public init;
 
-contract IdentityFactory is Factory {
+    event IdentityCreated(IdentityBase instance);
 
-    event IdentityCreated(address instance);
-
-    constructor(IdentityKernel _kernel) 
+    constructor() 
         public
-        Factory(address(_kernel)) 
     {
+        base = new IdentityBase();
+        init = new IdentityInit();
     }
 
-    function createIdentity() 
+    /** @dev should be the same method signature of `init` function */
+    function createIdentity(
+        bytes32 _owner,
+        address _recoveryContract
+    ) 
         external 
-        returns (address)
-    {      
-        
-        bytes32[] memory initKeys = new bytes32[](2);
-        uint256[] memory initPurposes = new uint256[](2);
-        uint256[] memory initTypes = new uint256[](2);
-        initKeys[0] = keccak256(abi.encodePacked(msg.sender));
-        initKeys[1] = initKeys[0];
-        initPurposes[0] = 1;
-        initPurposes[1] = 2;
-        initTypes[0] = 0;
-        initTypes[1] = 0;
-        return createIdentity(
-            initKeys,
-            initPurposes,
-            initTypes,
-            1,
-            1,
-            address(0)
-            );
+        returns (IdentityBase instance)
+    {
+        instance = IdentityBase(address(new Extendable(base, init, msg.data)));
+        emit IdentityCreated(instance);
     }
 
+    /** @dev should be the same method signature of `init` function */
     function createIdentity(   
-        bytes32[] memory _keys,
-        uint256[] memory _purposes,
-        uint256[] memory _types,
+        bytes32[] calldata _keys,
+        uint256[] calldata _purposes,
+        uint256[] calldata _types,
         uint256 _managerThreshold,
         uint256 _actorThreshold,
         address _recoveryContract
     ) 
-        public 
-        returns (address payable)
+        external 
+        returns (IdentityBase instance)
     {
-        require(latestKernel != address(0), "Model not set");
-        IdentityKernel instance = IdentityKernel(address(uint160(address(new DelayedUpdatableInstance(address(latestKernel)))))); 
-        instance.initIdentity(_keys,_purposes,_types,_managerThreshold,_actorThreshold,_recoveryContract);
-        emit IdentityCreated(address(instance));
-        return address(instance);
+        instance = IdentityBase(address(new Extendable(base, init, msg.data)));
+        emit IdentityCreated(instance);
     }
 
 }
