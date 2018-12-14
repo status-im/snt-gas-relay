@@ -8,7 +8,7 @@ import "./IdentityAbstract.sol";
  * @dev Implement all IdentityAbstract methods with no behavior, used for implementing extensions
  */
 contract IdentityExtension is IdentityAbstract {   
-  
+    constructor() internal {}
     function execute(address, uint256, bytes calldata) external returns (uint256) {}
     function approve(uint256, bool) external returns (bool) {}
     function addKey(bytes32, Purpose, uint256) external returns (bool) {}
@@ -21,5 +21,5 @@ contract IdentityExtension is IdentityAbstract {
     function getClaimIdsByTopic(uint256) external view returns(bytes32[] memory) {}
     function addClaim(uint256,uint256,address,bytes calldata,bytes calldata,string calldata) external returns (bytes32) {}
     function removeClaim(bytes32) external returns (bool) {}
-
+    
 }

@@ -23,6 +23,8 @@ contract TokenGasRelay {
     string public constant ERR_BAD_TOKEN_ADDRESS = "Bad token address";
     string public constant ERR_BAD_DESTINATION = "Bad destination";
 
+    constructor() internal {}
+    
     /**
      * @notice creates an identity and transfer _amount to the newly generated identity.
      */

@@ -1,12 +1,13 @@
 pragma solidity >=0.5.0 <0.6.0;
 
 import "./ExtendableStorage.sol";
+import "./DelegatedCall.sol";
 
 /**
  * @title Extendable
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
  */
-contract Extendable is ExtendableStorage {
+contract Extendable is ExtendableStorage, DelegatedCall {
 
     /**
      * @notice delegatecall `_init` with `_initMsg` and set base as `_base` 
@@ -18,30 +19,29 @@ contract Extendable is ExtendableStorage {
         ExtendableStorage _base,
         ExtendableStorage _init,
         bytes memory _initMsg
-    ) public {
-        address(_init).delegatecall(_initMsg);
+    ) 
+        public
+        DelegatedCall(address(_init), _initMsg)
+    {
         base = _base;
     }
 
     /**
      * @dev delegatecall everything (but declared functions) to `_target()`
      */
-    function () external payable {
-        bytes memory returned;
-        bool success;
-        (success, returned) = targetDelegatedCall().delegatecall(msg.data);
-        require(success, "Call failed"); 
-        assembly {
-            return(add(returned, 0x20), returned) 
-        }
-        assert(false); //should never reach here
+    function () 
+        external 
+        payable 
+        delegated(_target()) 
+    {
+
     }
 
     /**
      * @dev returns address for delegatecall
      * @return delegatecall address
      */
-    function targetDelegatedCall()
+    function _target()
         private
         view
         returns(address)

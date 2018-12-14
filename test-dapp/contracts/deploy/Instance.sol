@@ -10,29 +10,33 @@ import "./DelegatedCall.sol";
  */
 contract Instance is InstanceStorage, DelegatedCall {
 
-    constructor(address _kernel) public {
-        kernel = _kernel;
+    /**
+     * @notice delegatecall `_init` with `_initMsg` and set base as `_base` 
+     * @param _base base for delegatecall 
+     * @param _init constructor contract 
+     * @param _initMsg arguments to be passed for the single delegatecall on `_init` 
+     */
+    constructor(
+        InstanceStorage _base,
+        InstanceStorage _init,
+        bytes memory _initMsg
+    ) 
+        public 
+        DelegatedCall(address(_init), _initMsg)
+    {
+        base = _base;
     }
 
     /**
      * @dev delegatecall everything (but declared functions) to `_target()`
      * @notice Verify `kernel()` code to predict behavior
      */
-    function () external payable delegated {
-        //all goes to kernel
-    }
-
-    /**
-     * @dev returns kernel if kernel that is configured
-     * @return kernel address
-     */
-    function targetDelegatedCall()
-        internal
-        view
-        returns(address)
+    function () 
+        external 
+        payable 
+        delegated(address(base)) 
     {
-        return kernel;
+       
     }
-
 
 }

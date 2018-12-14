@@ -14,9 +14,7 @@ contract Account {
 
     uint256 public nonce;
 
-    constructor() internal {
-
-    }
+    constructor() internal {}
 
     function _execute(
         address _to,

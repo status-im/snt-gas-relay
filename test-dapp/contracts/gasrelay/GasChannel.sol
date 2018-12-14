@@ -34,9 +34,7 @@ contract GasChannel {
     string public constant ERR_BAD_TOKEN_ADDRESS = "Bad token address";
     string public constant ERR_BAD_DESTINATION = "Bad destination";
 
-    constructor() internal {
-
-    }
+    constructor() internal {}
 
     /**
      * @notice creates a new channel and pay gas in the newly created channel 

@@ -9,7 +9,7 @@ pragma solidity >=0.5.0 <0.6.0;
  */
 contract InstanceStorage {    
     // protected zone start (InstanceStorage vars)
-    address public kernel;
+    InstanceStorage public base;
     // protected zone end
     constructor() internal { }
 }
