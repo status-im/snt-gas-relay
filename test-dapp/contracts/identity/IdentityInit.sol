@@ -37,11 +37,12 @@ contract IdentityInit is IdentityExtension {
         uint256 _actorThreshold,
         address _recoveryContract
     ) external {
-        uint256 _salt = salt;
+        require(purposeThreshold[uint256(Purpose.ManagementKey)] == 0, "Already Initialized");
         uint len = _keys.length;
         require(len > 0, "Bad argument");
-        require(purposeThreshold[uint256(Purpose.ManagementKey)] == 0, "Already Initialized");
-        require(len == _purposes.length, "Wrong _purposes lenght");
+        require(len == _purposes.length, "Wrong purposes lenght");
+        require(len == _types.length, "Wrong types lenght");
+        uint256 _salt = salt;
         uint managersAdded = 0;
         for(uint i = 0; i < len; i++) {
             Purpose _purpose = _purposes[i];
@@ -50,7 +51,7 @@ contract IdentityInit is IdentityExtension {
                 managersAdded++;
             }
         }
-        require(_managerThreshold <= managersAdded, "managers added is less then required");
+        require(_managerThreshold <= managersAdded, "Managers added is less then required");
         purposeThreshold[uint256(Purpose.ManagementKey)] = _managerThreshold;
         purposeThreshold[uint256(Purpose.ActionKey)] = _actorThreshold;
         recoveryContract = _recoveryContract;
