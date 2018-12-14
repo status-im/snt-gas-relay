@@ -1,6 +1,7 @@
 pragma solidity >=0.5.0 <0.6.0;
 
 import "./IdentityAbstract.sol";
+import "../status/LibraryCuration.sol";
 
 /**
  * @title IdentityBase
@@ -8,17 +9,6 @@ import "./IdentityAbstract.sol";
  * @notice Cannot be used stand-alone, use IdentityFactory.createIdentity
  */
 contract IdentityBase is IdentityAbstract {
-    
-    /**
-     * @notice requires called by identity itself, otherwise forward to execute process
-     */
-    modifier managementOnly {
-        if(msg.sender == address(this)) {
-            _;
-        } else {
-            _requestExecute(keccak256(abi.encodePacked(msg.sender)), address(this), 0, msg.data);
-        }
-    }
 
     /**
      * @notice requires called by recovery address
@@ -162,18 +152,55 @@ contract IdentityBase is IdentityAbstract {
         recoveryContract = _recoveryContract;
     }
 
-        
-    function setExtension(
-        bytes4 _sig, 
-        IdentityAbstract _extension
+    function installBase(
+        IdentityAbstract _newBase,
+        bytes calldata _installMsg
     ) 
         external
         managementOnly
     {
-        extensions[_sig] = _extension;
+        require(getLibraryCuration().isUpgradable(address(base),address(_newBase)));
+        address(_newBase).delegatecall(_installMsg);
+    }
+        
+    function installExtension(
+        IdentityAbstract _extension,
+        bytes calldata _installMsg
+    ) 
+        external
+        managementOnly
+    {
+        require(getLibraryCuration().isExtension(address(base),address(_extension)));
+        address(_extension).delegatecall(_installMsg);
     }
     
+    function getLibraryCuration() public view returns(LibraryCuration c) {
+
+        address check = address(1);
+        if (getCodeSize(check)>0){ //mainnet
+            return LibraryCuration(check);
+        }
+        check = address(2);
+        if (getCodeSize(check)>0){ //ropsten
+            return LibraryCuration(check);
+        }
+        check = address(3);
+        if (getCodeSize(check)>0){ //rinkeby
+            return LibraryCuration(check);
+        }
+        check = address(4);
+        if (getCodeSize(check)>0){ //kovan
+            return LibraryCuration(check);
+        }
+        revert("library curation not found");
+    }
+
     
+    function getCodeSize(address _addr) internal view returns(uint _size) {
+        assembly {
+            _size := extcodesize(_addr)
+        }   
+    }
     ////////////////
     // Claim related
     ////////////////

@@ -34,8 +34,19 @@ contract IdentityAbstract is ExtendableStorage, Account, ERC725, ERC735 {
     mapping (bytes32 => Claim) claims;
     mapping (uint256 => bytes32[]) claimsByType;
     
-    constructor() internal {}
+    /**
+     * @notice requires called by identity itself, otherwise forward to execute process
+     */
+    modifier managementOnly {
+        if(msg.sender == address(this)) {
+            _;
+        } else {
+            _requestExecute(keccak256(abi.encodePacked(msg.sender)), address(this), 0, msg.data);
+        }
+    }
 
+    constructor() internal {}
+    
     function _requestExecute(
         bytes32 _key,
         address _to,

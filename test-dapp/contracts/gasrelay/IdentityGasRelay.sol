@@ -11,6 +11,30 @@ import "../common/MessageSigned.sol";
  */
 contract IdentityGasRelay is IdentityExtension, GasRelay, MessageSigned {
     
+    function enableExtension(IdentityGasRelay _extension, bool _enable) 
+        external 
+        managementOnly 
+    {
+        bytes4 callSig = bytes4(
+            keccak256("callGasRelay(address,uint256,bytes32,uint256,uint256,address,address)")
+        );
+        bytes4 deploySig = bytes4(
+            keccak256("deployGasRelay(uint256,bytes32,uint256,uint256,address,address)")
+        );
+        bytes4 approveAndCallSig = bytes4(
+            keccak256("approveAndCallGasRelay(address,address,uint256,bytes32,uint256,uint256,address)")
+        );
+        if (_enable) {
+            extensions[callSig] = _extension;
+            extensions[deploySig] = _extension;
+            extensions[approveAndCallSig] = _extension;
+        } else {
+            delete extensions[callSig];
+            delete extensions[deploySig];
+            delete extensions[approveAndCallSig];
+        }
+    }
+
     /**
      * @notice include ethereum signed callHash in return of gas proportional amount multiplied by `_gasPrice` of `_gasToken`
      *         allows identity of being controlled without requiring ether in key balace

@@ -11,6 +11,35 @@ import "../common/MessageSigned.sol";
  */
 contract IdentityGasChannel is IdentityExtension, GasChannel, MessageSigned {
     
+    function enableExtension(IdentityGasChannel _extension, bool _enable) 
+        external 
+        managementOnly 
+    {
+        bytes4 createSig = bytes4(
+            keccak256("newChannel(address,address,address,address,uint256,uint256,uint256,bytes)")
+        );
+        bytes4 callSig = bytes4(
+            keccak256("callGasChannel(address,uint256,bytes32,uint256,address,bytes)")
+        );
+        bytes4 deploySig = bytes4(
+            keccak256("deployGasChannel(uint256,bytes32,uint256,address,bytes)")
+        );
+        bytes4 approveAndCallSig = bytes4(
+            keccak256("approveAndCallGasChannel(address,address,uint256,bytes32,uint256,address,bytes)")
+        );
+        if (_enable) {
+            extensions[createSig] = _extension;
+            extensions[callSig] = _extension;
+            extensions[deploySig] = _extension;
+            extensions[approveAndCallSig] = _extension;
+        } else {
+            delete extensions[createSig];
+            delete extensions[callSig];
+            delete extensions[deploySig];
+            delete extensions[approveAndCallSig];
+        }
+    }
+
     /**
      * @notice creates a new channel and pay gas in the newly created channel 
      * @param _channelFactory address of trusted factory
