@@ -16,17 +16,27 @@ contract IdentityInit is IdentityExtension {
     {
         purposeThreshold[uint256(Purpose.ManagementKey)] = 1;
     }
-
+    
+    function () external {
+        require(purposeThreshold[uint256(Purpose.ManagementKey)] == 0, "Already Initialized");
+        bytes32 _ownerKey = keccak256(abi.encodePacked(msg.sender));
+        purposeThreshold[uint256(Purpose.ManagementKey)] = 1;
+        purposeThreshold[uint256(Purpose.ActionKey)] = 1;
+        _addKey(_ownerKey, Purpose.ManagementKey, 0, 0);
+        _addKey(_ownerKey, Purpose.ActionKey, 0, 0);
+    }
+    
     function createIdentity(
-        bytes32 _ownerKey,
-        address _recoveryContract
-    ) external {
+        bytes32 _ownerKey
+    ) 
+        external 
+        returns (IdentityAbstract)
+    {
         require(purposeThreshold[uint256(Purpose.ManagementKey)] == 0, "Already Initialized");
         purposeThreshold[uint256(Purpose.ManagementKey)] = 1;
         purposeThreshold[uint256(Purpose.ActionKey)] = 1;
         _addKey(_ownerKey, Purpose.ManagementKey, 0, 0);
         _addKey(_ownerKey, Purpose.ActionKey, 0, 0);
-        recoveryContract = _recoveryContract;
     }
 
     function createIdentity(   
@@ -34,9 +44,11 @@ contract IdentityInit is IdentityExtension {
         Purpose[] calldata _purposes,
         uint256[] calldata _types,
         uint256 _managerThreshold,
-        uint256 _actorThreshold,
-        address _recoveryContract
-    ) external {
+        uint256 _actorThreshold
+    ) 
+        external 
+        returns (IdentityAbstract)
+    {
         require(purposeThreshold[uint256(Purpose.ManagementKey)] == 0, "Already Initialized");
         uint len = _keys.length;
         require(len > 0, "Bad argument");
@@ -54,7 +66,6 @@ contract IdentityInit is IdentityExtension {
         require(_managerThreshold <= managersAdded, "Managers added is less then required");
         purposeThreshold[uint256(Purpose.ManagementKey)] = _managerThreshold;
         purposeThreshold[uint256(Purpose.ActionKey)] = _actorThreshold;
-        recoveryContract = _recoveryContract;
     }
 
     function _addKey(
@@ -65,15 +76,16 @@ contract IdentityInit is IdentityExtension {
     ) 
         private
     {
+        
         require(_key != 0, "Bad argument");
         require(_purpose != Purpose.DisabledKey, "Bad argument");
-        
+        bytes32 purposeSaltedHash = keccak256(abi.encodePacked(_purpose, _salt));
         bytes32 keySaltedHash = keccak256(abi.encodePacked(_key, _salt)); //key storage pointer
         bytes32 saltedKeyPurposeHash = keccak256(abi.encodePacked(keySaltedHash, _purpose)); // accounts by purpose hash element index pointer
 
         require(!isKeyPurpose[saltedKeyPurposeHash],"Bad call"); //cannot add a key already added
         isKeyPurpose[saltedKeyPurposeHash] = true; //set authorization
-        uint256 keyElementIndex = keysByPurpose[saltedKeyPurposeHash].push(_key) - 1; //add key to list by purpose 
+        uint256 keyElementIndex = keysByPurpose[purposeSaltedHash].push(_key) - 1; //add key to list by purpose 
         indexes[saltedKeyPurposeHash] = keyElementIndex; //save index of key in list by purpose
         if (keys[keySaltedHash].key == 0) { //is a new key
             Purpose[] memory purposes = new Purpose[](1);  //create new array with first purpose

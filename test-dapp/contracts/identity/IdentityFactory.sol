@@ -1,12 +1,12 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-import "../deploy/Extendable.sol";
+import "../deploy/Instance.sol";
 import "./IdentityBase.sol";
 import "./IdentityInit.sol";
 
 /**
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
- * @notice creates Extendable Identity 
+ * @notice creates Instance as Identity 
  */
 contract IdentityFactory {
     IdentityBase public base;
@@ -22,14 +22,22 @@ contract IdentityFactory {
     }
 
     /** @dev should be the same method signature of `init` function */
+    function createIdentity() 
+        external 
+        returns (IdentityBase instance)
+    {
+        instance = IdentityBase(address(new Instance(base, init, msg.data)));
+        emit IdentityCreated(instance);
+    }
+
+    /** @dev should be the same method signature of `init` function */
     function createIdentity(
-        bytes32 _owner,
-        address _recoveryContract
+        bytes32 _owner
     ) 
         external 
         returns (IdentityBase instance)
     {
-        instance = IdentityBase(address(new Extendable(base, init, msg.data)));
+        instance = IdentityBase(address(new Instance(base, init, msg.data)));
         emit IdentityCreated(instance);
     }
 
@@ -39,13 +47,12 @@ contract IdentityFactory {
         uint256[] calldata _purposes,
         uint256[] calldata _types,
         uint256 _managerThreshold,
-        uint256 _actorThreshold,
-        address _recoveryContract
+        uint256 _actorThreshold
     ) 
         external 
         returns (IdentityBase instance)
     {
-        instance = IdentityBase(address(new Extendable(base, init, msg.data)));
+        instance = IdentityBase(address(new Instance(base, init, msg.data)));
         emit IdentityCreated(instance);
     }
 

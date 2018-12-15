@@ -1,6 +1,7 @@
 pragma solidity >=0.5.0 <0.6.0;
 
 import "./IdentityAbstract.sol";
+import "../deploy/DelegatedCall.sol";
 import "../status/LibraryCuration.sol";
 
 /**
@@ -8,7 +9,19 @@ import "../status/LibraryCuration.sol";
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
  * @notice Cannot be used stand-alone, use IdentityFactory.createIdentity
  */
-contract IdentityBase is IdentityAbstract {
+contract IdentityBase is IdentityAbstract, DelegatedCall {
+    
+    constructor() 
+        public
+        DelegatedCall(address(0), new bytes(0))
+    {
+
+    }
+
+    modifier initialized {
+        require(purposeThreshold[uint256(Purpose.ManagementKey)] > 0, "Unauthorized");
+        _;
+    }
 
     /**
      * @notice requires called by recovery address
@@ -28,9 +41,9 @@ contract IdentityBase is IdentityAbstract {
     function () 
         external 
         payable 
-    {
-        require(purposeThreshold[uint256(Purpose.ManagementKey)] > 0, "Unauthorized");
-    }
+        initialized
+        delegateAndReturn(address(extensions[msg.sig]))
+    {}
 
     ////////////////
     // Execute calls and multisig approval
@@ -153,14 +166,13 @@ contract IdentityBase is IdentityAbstract {
     }
 
     function installBase(
-        IdentityAbstract _newBase,
-        bytes calldata _installMsg
+        IdentityAbstract _newBase
     ) 
         external
         managementOnly
     {
         require(getLibraryCuration().isUpgradable(address(base),address(_newBase)));
-        address(_newBase).delegatecall(_installMsg);
+        base = _newBase;
     }
         
     function installExtension(
@@ -171,7 +183,9 @@ contract IdentityBase is IdentityAbstract {
         managementOnly
     {
         require(getLibraryCuration().isExtension(address(base),address(_extension)));
-        address(_extension).delegatecall(_installMsg);
+        bool success;
+        (success, ) = address(_extension).delegatecall(_installMsg);
+        require(success, "Install failed");
     }
     
     function getLibraryCuration() public view returns(LibraryCuration c) {
@@ -369,6 +383,7 @@ contract IdentityBase is IdentityAbstract {
                 delete pendingTx[_txId];
                 emit Approved(_txId, _approval);
                 _execute(approvedTx.to, approvedTx.value, approvedTx.data);
+                success = true;
             } else {
                 pendingTx[_txId].approvals[_key] = true;
                 pendingTx[_txId].approverCount++;
@@ -392,15 +407,16 @@ contract IdentityBase is IdentityAbstract {
     ) 
         private
     {
+        
         require(_key != 0, "Bad argument");
         require(_purpose != Purpose.DisabledKey, "Bad argument");
-        
+        bytes32 purposeSaltedHash = keccak256(abi.encodePacked(_purpose, _salt));
         bytes32 keySaltedHash = keccak256(abi.encodePacked(_key, _salt)); //key storage pointer
         bytes32 saltedKeyPurposeHash = keccak256(abi.encodePacked(keySaltedHash, _purpose)); // accounts by purpose hash element index pointer
 
         require(!isKeyPurpose[saltedKeyPurposeHash],"Bad call"); //cannot add a key already added
         isKeyPurpose[saltedKeyPurposeHash] = true; //set authorization
-        uint256 keyElementIndex = keysByPurpose[saltedKeyPurposeHash].push(_key) - 1; //add key to list by purpose 
+        uint256 keyElementIndex = keysByPurpose[purposeSaltedHash].push(_key) - 1; //add key to list by purpose 
         indexes[saltedKeyPurposeHash] = keyElementIndex; //save index of key in list by purpose
         if (keys[keySaltedHash].key == 0) { //is a new key
             Purpose[] memory purposes = new Purpose[](1);  //create new array with first purpose

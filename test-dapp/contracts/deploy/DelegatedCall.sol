@@ -8,7 +8,7 @@ pragma solidity >=0.5.0 <0.6.0;
  */
 contract DelegatedCall {
 
-    constructor(address _init, bytes memory _initMsg) internal {
+    constructor(address _init, bytes memory _initMsg) public {
         if(_init == address(0)) return;
         bool success;
         (success, ) = _init.delegatecall(_initMsg);
@@ -17,17 +17,21 @@ contract DelegatedCall {
     /**
      * @dev delegates the call of this function
      */
-    modifier delegated(address target) {
-        //require successfull delegate call to remote `_target()`
-        bytes memory returned;
-        bool success;
-        (success, returned) = target.delegatecall(msg.data);
-        require(success, "Delegated Call failed"); 
-        assembly {
-            return(add(returned, 0x20), returned) 
+    modifier delegateAndReturn(address _target) {
+        if(_target == address(0)) {
+            _; //normal execution 
+        } else {
+            //delegated execution
+            bytes memory returnData;
+            bool success;
+            (success, returnData) = _target.delegatecall(msg.data);
+            require(success, "Delegated Call failed"); 
+
+            //exit-return delegatecall returnData
+            assembly {
+                return(add(returnData, 0x20), returnData) 
+            }
         }
-        assert(false); //should never reach here
-        _; //never will execute local logic
     }
 
 }

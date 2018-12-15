@@ -34,7 +34,7 @@ contract Instance is InstanceStorage, DelegatedCall {
     function () 
         external 
         payable 
-        delegated(address(base)) 
+        delegateAndReturn(address(base)) 
     {
        
     }

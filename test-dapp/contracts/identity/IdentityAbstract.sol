@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-import "../deploy/ExtendableStorage.sol";
+import "../deploy/InstanceStorage.sol";
 import "../common/Account.sol";
 import "./ERC725.sol";
 import "./ERC735.sol";
@@ -9,8 +9,8 @@ import "./ERC735.sol";
  * @title IdentityAbstract
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH)
  */
-contract IdentityAbstract is ExtendableStorage, Account, ERC725, ERC735 {
-    
+contract IdentityAbstract is InstanceStorage, Account, ERC725, ERC735 {
+
     struct Transaction {
         uint256 approverCount;
         address to;
@@ -19,6 +19,7 @@ contract IdentityAbstract is ExtendableStorage, Account, ERC725, ERC735 {
         mapping(bytes32 => bool) approvals;
     }
 
+    mapping(bytes4 => IdentityAbstract) extensions;
     address public recoveryContract;
     uint256 salt;
 
