@@ -6,7 +6,7 @@ import "./DelegatedCall.sol";
 /**
  * @title Instance
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
- * @dev Contract that forward everything through delegatecall to defined kernel
+ * @dev Contract that forward everything through delegatecall to defined base
  */
 contract Instance is InstanceStorage, DelegatedCall {
 
@@ -29,14 +29,12 @@ contract Instance is InstanceStorage, DelegatedCall {
 
     /**
      * @dev delegatecall everything (but declared functions) to `_target()`
-     * @notice Verify `kernel()` code to predict behavior
+     * @notice Verify `base()` code to predict behavior
      */
     function () 
         external 
         payable 
         delegateAndReturn(address(base)) 
-    {
-       
-    }
+    { }
 
 }
