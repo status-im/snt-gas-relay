@@ -9,8 +9,8 @@ contract Account {
 
     event Executed(uint256 nonce, bool success, bytes returndata);
     event Deployed(uint256 nonce, bool success, address returnaddress);
-    string public constant ERR_BAD_TOKEN_ADDRESS = "Bad token address";
-    string public constant ERR_BAD_DESTINATION = "Bad destination";
+    string internal constant ERR_BAD_TOKEN_ADDRESS = "Bad token address";
+    string internal constant ERR_BAD_DESTINATION = "Bad destination";
 
     uint256 public nonce;
 

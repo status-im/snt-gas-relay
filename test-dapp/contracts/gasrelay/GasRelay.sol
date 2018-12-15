@@ -19,12 +19,12 @@ contract GasRelay {
         keccak256("approveAndCallGasRelay(address,address,uint256,bytes32,uint256,uint256,address)")
     );
     
-    string public constant ERR_BAD_START_GAS = "Bad start gas";
-    string public constant ERR_BAD_NONCE = "Bad nonce";
-    string public constant ERR_BAD_SIGNER = "Bad signer";
-    string public constant ERR_GAS_LIMIT_EXCEEDED = "Gas limit exceeded";
-    string public constant ERR_BAD_TOKEN_ADDRESS = "Bad token address";
-    string public constant ERR_BAD_DESTINATION = "Bad destination";
+    string internal constant ERR_BAD_START_GAS = "Bad start gas";
+    string internal constant ERR_BAD_NONCE = "Bad nonce";
+    string internal constant ERR_BAD_SIGNER = "Bad signer";
+    string internal constant ERR_GAS_LIMIT_EXCEEDED = "Gas limit exceeded";
+    string internal constant ERR_BAD_TOKEN_ADDRESS = "Bad token address";
+    string internal constant ERR_BAD_DESTINATION = "Bad destination";
 
     constructor() internal {}
 
