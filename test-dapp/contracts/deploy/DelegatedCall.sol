@@ -8,7 +8,7 @@ pragma solidity >=0.5.0 <0.6.0;
  */
 contract DelegatedCall {
 
-    constructor(address _init, bytes memory _initMsg) public {
+    constructor(address _init, bytes memory _initMsg) internal {
         if(_init == address(0)) return;
         bool success;
         (success, ) = _init.delegatecall(_initMsg);
