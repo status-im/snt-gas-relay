@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-import "../deploy/InstanceStorage.sol";
+import "../deploy/InstanceAbstract.sol";
 import "../common/Controlled.sol";
 import "../common/MessageSigned.sol";
 import "../token/ERC20Token.sol";
@@ -10,7 +10,7 @@ import "../token/ERC20Token.sol";
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
  * @notice enables offchain payment agreements with payout limited by a nonce.
  */
-contract NonceChannel is InstanceStorage, Controlled, MessageSigned {
+contract NonceChannel is InstanceAbstract, Controlled, MessageSigned {
     address payable public recipient; 
     address public signer; 
     uint256 public expiration; 
