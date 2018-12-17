@@ -64,8 +64,7 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
         signNonce[msgSigner]++;
         address userIdentity = address(
             identityFactory.createIdentity(
-                keccak256(abi.encodePacked(msgSigner)),
-                address(0)
+                keccak256(abi.encodePacked(msgSigner))
             )
         );
         require(
@@ -103,7 +102,7 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
 
         address msgSigner = recoverAddress(
             getSignHash(
-                getTransferSNTHash(
+                getTransferHash(
                     _to,
                     _amount,
                     _nonce,
@@ -128,53 +127,6 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
             ),
             "Gas transfer fail"
         );
-    }
-
-    /**
-     * @notice allows externally owned address sign a message to offer SNT for a execution 
-     * @param _allowedContract address of a contracts in execution trust list;
-     * @param _data msg.data to be sent to `_allowedContract`
-     * @param _nonce current signNonce of message signer
-     * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
-     * @param _gasLimit maximum amount tokens that can be used to pay gas
-     * @param _signature concatenated rsv of message
-     */
-    function executeGasRelay(
-        address _allowedContract,
-        bytes calldata _data,
-        uint256 _nonce,
-        uint256 _gasPrice,
-        uint256 _gasLimit,
-        bytes calldata _signature
-    )
-        external
-    {
-        uint256 startGas = gasleft();
-        require(startGas >= _gasLimit, "Bad gas left");
-        require(allowPublicExecution[_allowedContract], "Unauthorized");
-        address msgSigner = recoverAddress(
-            getSignHash(
-                getExecuteGasRelayHash(
-                    _allowedContract,
-                    _data,
-                    _nonce,
-                    _gasPrice,
-                    _gasLimit,
-                    msg.sender
-                )
-            ),
-            _signature
-        );
-        require(signNonce[msgSigner] == _nonce, "Bad nonce");
-        signNonce[msgSigner]++;
-        bool success;
-        (success,) = _allowedContract.call(_data);
-        if (_gasPrice > 0) {
-            uint256 _amount = 21000 + (startGas - gasleft());
-            require(_amount <= _gasLimit, ERR_GAS_LIMIT_EXCEEDED);
-            _amount = _amount * _gasPrice;
-            snt.transferFrom(msgSigner,  msg.sender, _amount);
-        }
     }
 
     /** 

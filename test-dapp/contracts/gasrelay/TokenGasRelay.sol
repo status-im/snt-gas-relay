@@ -116,7 +116,7 @@ contract TokenGasRelay {
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasRelayer beneficiary of gas, if address(0), msg.sender
      */
-    function getTransferSNTHash(
+    function getTransferHash(
         address _to,
         uint256 _amount,
         uint256 _nonce,
