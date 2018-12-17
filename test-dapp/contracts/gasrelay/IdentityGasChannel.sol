@@ -11,7 +11,7 @@ import "../common/MessageSigned.sol";
  */
 contract IdentityGasChannel is IdentityExtension, GasChannel, MessageSigned {
     
-    function enableExtension(IdentityGasChannel _extension, bool _enable) 
+    function enableExtension(IdentityExtension _extension, bool _enable) 
         external 
         managementOnly 
     {

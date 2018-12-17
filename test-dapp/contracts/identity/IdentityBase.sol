@@ -1,38 +1,26 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-import "./IdentityAbstract.sol";
+import "./IdentityView.sol";
 import "../deploy/DelegatedCall.sol";
-import "../status/LibraryCuration.sol";
+import "../deploy/PrototypeRegistry.sol";
 
 /**
  * @title IdentityBase
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
  * @notice Cannot be used stand-alone, use IdentityFactory.createIdentity
  */
-contract IdentityBase is IdentityAbstract, DelegatedCall {
+contract IdentityBase is IdentityView, DelegatedCall {
     
+    modifier curatedExtension(address _extension) {
+        require(getPrototypeRegistry().isExtension(address(base),_extension));
+        _;
+    }
+
     constructor() 
         public
         DelegatedCall(address(0), new bytes(0))
     {
 
-    }
-
-    modifier initialized {
-        require(purposeThreshold[uint256(Purpose.ManagementKey)] > 0, "Unauthorized");
-        _;
-    }
-
-    /**
-     * @notice requires called by recovery address
-     */
-    modifier recoveryOnly {
-        require(
-            recoveryContract != address(0) && 
-            msg.sender == recoveryContract,
-            "Unauthorized"
-        );
-        _;
     }
 
     /**
@@ -43,7 +31,10 @@ contract IdentityBase is IdentityAbstract, DelegatedCall {
         payable 
         initialized
         delegateAndReturn(address(extensions[msg.sig]))
-    {}
+    {
+        //executes only when no extension found
+        //no behavior, but msg.value is accepted
+    }
 
     ////////////////
     // Execute calls and multisig approval
@@ -165,48 +156,43 @@ contract IdentityBase is IdentityAbstract, DelegatedCall {
         recoveryContract = _recoveryContract;
     }
 
-    function installBase(
+    function upgradeBase(
         IdentityAbstract _newBase
     ) 
         external
         managementOnly
     {
-        require(getLibraryCuration().isUpgradable(address(base),address(_newBase)));
+        require(getPrototypeRegistry().isUpgradable(address(base),address(_newBase)));
         base = _newBase;
     }
-        
-    function installExtension(
-        IdentityAbstract _extension,
-        bytes calldata _installMsg
-    ) 
-        external
+
+    function enableExtension(IdentityAbstract _extension, bool _enable) 
+        external 
         managementOnly
+        curatedExtension(address(_extension))
+        delegateAndReturn(address(_extension))
     {
-        require(getLibraryCuration().isExtension(address(base),address(_extension)));
-        bool success;
-        (success, ) = address(_extension).delegatecall(_installMsg);
-        require(success, "Install failed");
+        assert(false);
     }
     
-    function getLibraryCuration() public view returns(LibraryCuration c) {
-
+    function getPrototypeRegistry() public view returns(PrototypeRegistry c) {
         address check = address(1);
         if (getCodeSize(check)>0){ //mainnet
-            return LibraryCuration(check);
+            return PrototypeRegistry(check);
         }
         check = address(2);
         if (getCodeSize(check)>0){ //ropsten
-            return LibraryCuration(check);
+            return PrototypeRegistry(check);
         }
         check = address(3);
         if (getCodeSize(check)>0){ //rinkeby
-            return LibraryCuration(check);
+            return PrototypeRegistry(check);
         }
         check = address(4);
         if (getCodeSize(check)>0){ //kovan
-            return LibraryCuration(check);
+            return PrototypeRegistry(check);
         }
-        revert("library curation not found");
+        revert("prototype registry not found");
     }
 
     
@@ -296,324 +282,6 @@ contract IdentityBase is IdentityAbstract, DelegatedCall {
         purposeThreshold[uint256(Purpose.ManagementKey)] = 1;
     }
     
-    ////////////////
-    // Public Views
-    ////////////////
-
-    function getKey(
-        bytes32 _key
-    ) 
-        external 
-        view 
-        returns(Purpose[] memory purposes, uint256 keyType, bytes32 key) 
-    {
-        Key storage myKey = keys[keccak256(abi.encodePacked(_key, salt))];
-        return (myKey.purposes, myKey.keyType, myKey.key);
-    }
-    
-    function keyHasPurpose(bytes32 _key, Purpose _purpose) 
-        external
-        view 
-        returns (bool exists) 
-    {
-        return _keyHasPurpose(_key, _purpose);
-    }
-
-    function getKeyPurpose(bytes32 _key)
-        external 
-        view 
-        returns(Purpose[] memory purpose)
-    {
-        return keys[keccak256(abi.encodePacked(_key, salt))].purposes;
-    }
-    
-    function getKeysByPurpose(Purpose _purpose)
-        external
-        view
-        returns(bytes32[] memory)
-    {
-        return keysByPurpose[keccak256(abi.encodePacked(_purpose, salt))];
-    }
-    
-    function getClaim(bytes32 _claimId)
-        external
-        view 
-        returns(
-            uint256 topic,
-            uint256 scheme,
-            address issuer,
-            bytes memory signature,
-            bytes memory data,
-            string memory uri
-            ) 
-    {
-        Claim memory _claim = claims[_claimId];
-        return (_claim.topic, _claim.scheme, _claim.issuer, _claim.signature, _claim.data, _claim.uri);
-    }
-    
-    function getClaimIdsByTopic(uint256 _topic)
-        external
-        view
-        returns(bytes32[] memory claimIds)
-    {
-        return claimsByType[_topic];
-    }
-
-    ////////////////
-    // Private methods
-    ////////////////
-
-    function _approveRequest(
-        bytes32 _key,
-        uint256 _txId,
-        bool _approval
-    ) 
-        private 
-        returns(bool success) //(?) should return approved instead of success?
-    {
-        
-        Transaction memory approvedTx = pendingTx[_txId];
-        require(approvedTx.approverCount > 0 || approvedTx.to == address(this), "Unknown trasaction");
-        Purpose requiredKeyPurpose = approvedTx.to == address(this) ? Purpose.ManagementKey : Purpose.ActionKey;
-        require(_keyHasPurpose(_key, requiredKeyPurpose), "Unauthorized");
-        require(pendingTx[_txId].approvals[_key] != _approval, "Bad call");
-        
-        if (_approval) {
-            if (approvedTx.approverCount + 1 == purposeThreshold[uint256(requiredKeyPurpose)]) {
-                delete pendingTx[_txId];
-                emit Approved(_txId, _approval);
-                _execute(approvedTx.to, approvedTx.value, approvedTx.data);
-                success = true;
-            } else {
-                pendingTx[_txId].approvals[_key] = true;
-                pendingTx[_txId].approverCount++;
-            }
-        } else {
-            delete pendingTx[_txId].approvals[_key];
-            if (pendingTx[_txId].approverCount == 1) {
-                delete pendingTx[_txId];
-                emit Approved(_txId, _approval);
-            } else {
-                pendingTx[_txId].approverCount--;
-            }
-        }
-    }
-
-    function _addKey(
-        bytes32 _key,
-        Purpose _purpose,
-        uint256 _type,
-        uint256 _salt
-    ) 
-        private
-    {
-        
-        require(_key != 0, "Bad argument");
-        require(_purpose != Purpose.DisabledKey, "Bad argument");
-        bytes32 purposeSaltedHash = keccak256(abi.encodePacked(_purpose, _salt));
-        bytes32 keySaltedHash = keccak256(abi.encodePacked(_key, _salt)); //key storage pointer
-        bytes32 saltedKeyPurposeHash = keccak256(abi.encodePacked(keySaltedHash, _purpose)); // accounts by purpose hash element index pointer
-
-        require(!isKeyPurpose[saltedKeyPurposeHash],"Bad call"); //cannot add a key already added
-        isKeyPurpose[saltedKeyPurposeHash] = true; //set authorization
-        uint256 keyElementIndex = keysByPurpose[purposeSaltedHash].push(_key) - 1; //add key to list by purpose 
-        indexes[saltedKeyPurposeHash] = keyElementIndex; //save index of key in list by purpose
-        if (keys[keySaltedHash].key == 0) { //is a new key
-            Purpose[] memory purposes = new Purpose[](1);  //create new array with first purpose
-            purposes[0] = _purpose;
-            keys[keySaltedHash] = Key(purposes,_type,_key); //add new key
-        } else {
-            uint256 addedPurposeElementIndex = keys[keySaltedHash].purposes.push(_purpose) - 1; //add purpose to key
-            bytes32 keyPurposeSaltedHash = keccak256(abi.encodePacked(_key, _purpose, _salt)); //index of purpose in key pointer
-            indexes[keyPurposeSaltedHash] = addedPurposeElementIndex; //save index
-        }
-        
-        emit KeyAdded(_key, _purpose, _type);
-    }
-    
-    function _removeKey(
-        bytes32 _key,
-        Purpose _purpose,
-        uint256 _salt
-    )
-        private 
-    {
-        bytes32 keySaltedHash = keccak256(abi.encodePacked(_key, _salt)); // key storage pointer
-        _removeKeyFromPurposes(keySaltedHash, _purpose, _salt);
-        //remove key purposes array purpose element
-        Key storage myKey = keys[keySaltedHash]; //load Key storage pointer
-        uint256 _type = myKey.keyType; //save type for case key deleted
-        uint256 replacerPurposeIndex = myKey.purposes.length; //load amount of purposes
-        bytes32 keyPurposeSaltedHash = keccak256(abi.encodePacked(_key, _purpose, _salt)); //account purpose array element index
-        uint256 removedPurposeIndex = indexes[keyPurposeSaltedHash]; //read old index
-        delete indexes[keyPurposeSaltedHash]; //delete key's purpose index
-        if (replacerPurposeIndex > 1) { //is not the last key
-            replacerPurposeIndex--; //move to last element pos
-            if(removedPurposeIndex != replacerPurposeIndex) { //removed element is not last element
-                Purpose replacerPurpose = myKey.purposes[replacerPurposeIndex]; //take last element
-                myKey.purposes[removedPurposeIndex] = replacerPurpose; //replace removed element with replacer element
-                indexes[keccak256(abi.encodePacked(_key, replacerPurpose, _salt))] = removedPurposeIndex; //update index
-            }
-            myKey.purposes.length--; //remove last element
-        } else { //is the last purpose
-            delete keys[keySaltedHash]; //drop this Key 
-        }
-        
-        emit KeyRemoved(_key, _purpose, _type);
-    }
-
-    function _removeKeyFromPurposes(
-        bytes32 keySaltedHash,
-        Purpose _purpose,
-        uint256 _salt
-    ) private {
-        bytes32 purposeSaltedHash = keccak256(abi.encodePacked(_purpose, _salt)); // salted accounts by purpose array index pointer   
-        // forbidden to remove last management key
-        if (_purpose == Purpose.ManagementKey) {
-            require(purposeThreshold[uint256(Purpose.ManagementKey)] <= keysByPurpose[purposeSaltedHash].length-1, "Bad call");
-        }
-
-        bytes32 saltedKeyPurposeHash = keccak256(abi.encodePacked(keySaltedHash, _purpose)); // accounts by purpose hash element index pointer
-        require(isKeyPurpose[saltedKeyPurposeHash], "Unknown key"); //not possible to remove what not exists
-        delete isKeyPurpose[saltedKeyPurposeHash]; //remove authorization
-
-        // remove keys by purpose array key element
-        uint256 removedKeyIndex = indexes[saltedKeyPurposeHash]; // read old key element index
-        delete indexes[saltedKeyPurposeHash]; // delete key index
-        
-        uint256 replacerKeyIndex = keysByPurpose[purposeSaltedHash].length - 1; // replacer is last element
-        if (removedKeyIndex != replacerKeyIndex) {  // deleted not the last element, replace deleted by last element
-            bytes32 replacerKey = keysByPurpose[purposeSaltedHash][replacerKeyIndex]; // get replacer key 
-            keysByPurpose[purposeSaltedHash][removedKeyIndex] = replacerKey; // overwrite removed index by replacer
-            indexes[keccak256(abi.encodePacked(keccak256(abi.encodePacked(replacerKey, _salt)), _purpose))] = removedKeyIndex; // update saltedKeyPurposeHash index of replacer
-        }
-        keysByPurpose[purposeSaltedHash].length--; // remove last element
-    }
-    
-    /**
-     * @notice Replaces one `_oldKey` with other `_newKey`
-     * @param _oldKey key to remove
-     * @param _newKey key to add
-     * @param _newType inform type of `_newKey`
-     * @param _salt current salt
-     */
-    function _replaceKey(
-        bytes32 _oldKey,
-        bytes32 _newKey,
-        uint256 _newType,
-        uint256 _salt
-    )
-        private
-        returns (bool success)
-    {   
-        bytes32 newKeySaltedHash = keccak256(abi.encodePacked(_newKey, _salt)); // key storage pointer     
-        if (_oldKey == _newKey) { //not replacing key, just keyType
-            keys[newKeySaltedHash].keyType == _newType; 
-            return true;
-        }
-        bytes32 oldKeySaltedHash = keccak256(abi.encodePacked(_oldKey, _salt)); // key storage pointer     
-        Key memory oldKey = keys[oldKeySaltedHash];
-        delete keys[oldKeySaltedHash];
-        uint256 len = oldKey.purposes.length;
-        for (uint i = 0; i < len; i++) {
-            _replaceKeyPurpose(oldKeySaltedHash, oldKeySaltedHash, _oldKey, _newKey, oldKey.purposes[i], _salt);
-        }
-        keys[newKeySaltedHash] = Key(oldKey.purposes, _newType, _newKey); //add new key
-        return true;
-    } 
-
-    function _replaceKeyPurpose(
-        bytes32 newKeySaltedHash,
-        bytes32 oldKeySaltedHash,
-        bytes32 _oldKey,
-        bytes32 _newKey,
-        Purpose _purpose,
-        uint256 _salt
-    ) private
-    {
-        bytes32 purposeSaltedHash = keccak256(abi.encodePacked(_purpose, _salt)); // salted accounts by purpose array index pointer   
-        bytes32 saltedOldKeyPurposeHash = keccak256(abi.encodePacked(oldKeySaltedHash, _purpose)); // accounts by purpose hash element index pointer
-        bytes32 saltedNewKeyPurposeHash = keccak256(abi.encodePacked(newKeySaltedHash, _purpose)); // accounts by purpose hash element index pointer
-        bytes32 oldKeyPurposeSaltedHash = keccak256(abi.encodePacked(_oldKey, _purpose, _salt)); //account purpose array element index
-        bytes32 newKeyPurposeSaltedHash = keccak256(abi.encodePacked(_newKey, _purpose, _salt)); //account purpose array element index
-
-        delete isKeyPurpose[saltedOldKeyPurposeHash]; //clear oldKey auth
-        isKeyPurpose[saltedNewKeyPurposeHash] = true; //set newKey auth
-        
-        uint256 replacedKeyElementIndex = indexes[saltedOldKeyPurposeHash];
-        delete indexes[saltedOldKeyPurposeHash];
-        keysByPurpose[purposeSaltedHash][replacedKeyElementIndex] = _newKey; //replace key at list by purpose
-        indexes[saltedNewKeyPurposeHash] = replacedKeyElementIndex; // save index
-        
-        indexes[newKeyPurposeSaltedHash] = indexes[oldKeyPurposeSaltedHash]; //transfer key purposes list index
-        delete indexes[oldKeyPurposeSaltedHash];
-    }
-
-    function _includeClaim(
-        bytes32 _claimHash,
-        uint256 _topic,
-        uint256 _scheme,
-        address _issuer,
-        bytes memory _signature,
-        bytes memory _data,
-        string memory _uri
-    ) 
-        private
-    {
-        claims[_claimHash] = Claim(
-            {
-            topic: _topic,
-            scheme: _scheme,
-            issuer: _issuer,
-            signature: _signature,
-            data: _data,
-            uri: _uri
-            }
-        );
-        indexes[_claimHash] = claimsByType[_topic].length;
-        claimsByType[_topic].push(_claimHash);
-        emit ClaimAdded(
-            _claimHash,
-            _topic,
-            _scheme,
-            _issuer,
-            _signature,
-            _data,
-            _uri
-        );
-    }
-
-    function _modifyClaim(
-        bytes32 _claimHash,
-        uint256 _topic,
-        uint256 _scheme,
-        address _issuer,
-        bytes memory _signature,
-        bytes memory _data,
-        string memory _uri
-    ) 
-        private
-    {
-        require(msg.sender == _issuer, "Unauthorized");
-        claims[_claimHash] = Claim({
-            topic: _topic,
-            scheme: _scheme,
-            issuer: _issuer,
-            signature: _signature,
-            data: _data,
-            uri: _uri
-        });
-        emit ClaimChanged(
-            _claimHash,
-            _topic,
-            _scheme,
-            _issuer,
-            _signature,
-            _data,
-            _uri
-        );
-    }
-
    
 }
 

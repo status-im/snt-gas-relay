@@ -11,7 +11,12 @@ import "../common/MessageSigned.sol";
  */
 contract IdentityGasRelay is IdentityExtension, GasRelay, MessageSigned {
     
-    function enableExtension(IdentityGasRelay _extension, bool _enable) 
+    /**
+     * @notice install gas relay extension
+     * @param _extension address of the extension itself
+     * @param _enable If 'true' installs extension, if false, uninstall.
+     */
+    function installExtension(IdentityExtension _extension, bool _enable) 
         external 
         managementOnly 
     {
@@ -34,7 +39,8 @@ contract IdentityGasRelay is IdentityExtension, GasRelay, MessageSigned {
             delete extensions[approveAndCallSig];
         }
     }
-
+    
+    
     /**
      * @notice include ethereum signed callHash in return of gas proportional amount multiplied by `_gasPrice` of `_gasToken`
      *         allows identity of being controlled without requiring ether in key balace
