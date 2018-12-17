@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-import "./IdentityExtension.sol";
+import "./IdentityEmpty.sol";
 
 /**
  * @title Initializer Extension
@@ -9,7 +9,7 @@ import "./IdentityExtension.sol";
  * @notice Cannot be used stand-alone, use IdentityFactory.createIdentity
  */
   
-contract IdentityInit is IdentityExtension {
+contract IdentityInit is IdentityEmpty {
     
     constructor() 
         public
@@ -17,8 +17,10 @@ contract IdentityInit is IdentityExtension {
         purposeThreshold[uint256(Purpose.ManagementKey)] = 1;
     }
     
-    function () external {
-        require(purposeThreshold[uint256(Purpose.ManagementKey)] == 0, "Already Initialized");
+    function () 
+        external 
+        initialized
+    {
         bytes32 _ownerKey = keccak256(abi.encodePacked(msg.sender));
         purposeThreshold[uint256(Purpose.ManagementKey)] = 1;
         purposeThreshold[uint256(Purpose.ActionKey)] = 1;
@@ -30,9 +32,9 @@ contract IdentityInit is IdentityExtension {
         bytes32 _ownerKey
     ) 
         external 
+        initialized
         returns (IdentityAbstract)
     {
-        require(purposeThreshold[uint256(Purpose.ManagementKey)] == 0, "Already Initialized");
         purposeThreshold[uint256(Purpose.ManagementKey)] = 1;
         purposeThreshold[uint256(Purpose.ActionKey)] = 1;
         _addKey(_ownerKey, Purpose.ManagementKey, 0, 0);
@@ -47,9 +49,9 @@ contract IdentityInit is IdentityExtension {
         uint256 _actorThreshold
     ) 
         external 
+        initialized
         returns (IdentityAbstract)
     {
-        require(purposeThreshold[uint256(Purpose.ManagementKey)] == 0, "Already Initialized");
         uint len = _keys.length;
         require(len > 0, "Bad argument");
         require(len == _purposes.length, "Wrong purposes lenght");
@@ -68,35 +70,4 @@ contract IdentityInit is IdentityExtension {
         purposeThreshold[uint256(Purpose.ActionKey)] = _actorThreshold;
     }
 
-    function _addKey(
-        bytes32 _key,
-        Purpose _purpose,
-        uint256 _type,
-        uint256 _salt
-    ) 
-        private
-    {
-        
-        require(_key != 0, "Bad argument");
-        require(_purpose != Purpose.DisabledKey, "Bad argument");
-        bytes32 purposeSaltedHash = keccak256(abi.encodePacked(_purpose, _salt));
-        bytes32 keySaltedHash = keccak256(abi.encodePacked(_key, _salt)); //key storage pointer
-        bytes32 saltedKeyPurposeHash = keccak256(abi.encodePacked(keySaltedHash, _purpose)); // accounts by purpose hash element index pointer
-
-        require(!isKeyPurpose[saltedKeyPurposeHash],"Bad call"); //cannot add a key already added
-        isKeyPurpose[saltedKeyPurposeHash] = true; //set authorization
-        uint256 keyElementIndex = keysByPurpose[purposeSaltedHash].push(_key) - 1; //add key to list by purpose 
-        indexes[saltedKeyPurposeHash] = keyElementIndex; //save index of key in list by purpose
-        if (keys[keySaltedHash].key == 0) { //is a new key
-            Purpose[] memory purposes = new Purpose[](1);  //create new array with first purpose
-            purposes[0] = _purpose;
-            keys[keySaltedHash] = Key(purposes,_type,_key); //add new key
-        } else {
-            uint256 addedPurposeElementIndex = keys[keySaltedHash].purposes.push(_purpose) - 1; //add purpose to key
-            bytes32 keyPurposeSaltedHash = keccak256(abi.encodePacked(_key, _purpose, _salt)); //index of purpose in key pointer
-            indexes[keyPurposeSaltedHash] = addedPurposeElementIndex; //save index
-        }
-        
-        emit KeyAdded(_key, _purpose, _type);
-    }
 }
