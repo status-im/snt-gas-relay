@@ -1,6 +1,7 @@
 pragma solidity >=0.5.0 <0.6.0;
 
 import "../deploy/InstanceAbstract.sol";
+import "../deploy/PrototypeRegistry.sol";
 import "../common/Account.sol";
 import "./ERC725.sol";
 import "./ERC735.sol";
@@ -19,6 +20,7 @@ contract IdentityAbstract is InstanceAbstract, Account, ERC725, ERC735 {
         mapping(bytes32 => bool) approvals;
     }
 
+    PrototypeRegistry prototypeRegistry;
     mapping(bytes4 => IdentityAbstract) extensions;
     address public recoveryContract;
     uint256 salt;

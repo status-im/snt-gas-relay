@@ -1,7 +1,7 @@
 pragma solidity >=0.5.0 <0.6.0;
 
 import "./IdentityView.sol";
-import "../status/LibraryCuration.sol";
+import "../deploy/PrototypeRegistry.sol";
 
 /**
  * @title Identity Emergency Base
@@ -35,28 +35,28 @@ contract IdentityEmergency is IdentityView {
         external
         managementOnly
     {
-        require(getLibraryCuration().isUpgradable(address(base),address(_newBase)));
+        require(getPrototypeRegistry().isUpgradable(base,_newBase));
         bool success;
         (success, ) = address(_newBase).delegatecall(_installMsg);
     }
 
-    function getLibraryCuration() public view returns(LibraryCuration c) {
+    function getPrototypeRegistry() public view returns(PrototypeRegistry c) {
 
         address check = address(1);
         if (getCodeSize(check)>0){ //mainnet
-            return LibraryCuration(check);
+            return PrototypeRegistry(check);
         }
         check = address(2);
         if (getCodeSize(check)>0){ //ropsten
-            return LibraryCuration(check);
+            return PrototypeRegistry(check);
         }
         check = address(3);
         if (getCodeSize(check)>0){ //rinkeby
-            return LibraryCuration(check);
+            return PrototypeRegistry(check);
         }
         check = address(4);
         if (getCodeSize(check)>0){ //kovan
-            return LibraryCuration(check);
+            return PrototypeRegistry(check);
         }
         revert("library curation not found");
     }

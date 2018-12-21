@@ -41,8 +41,19 @@ contract NonceChannelFactory {
         payable
         returns (NonceChannelETH instance)
     {
-        instance = NonceChannelETH(address(new Instance(address(modelETH)))); 
-        instance.init.value(msg.value)(msg.sender, _signer, _recipient, _duration);
+        instance = NonceChannelETH(address(
+            (new Instance).value(msg.value)(
+                modelETH,
+                modelETH, 
+                abi.encodeWithSignature(
+                    "init(address,address,address,uint256)",
+                    msg.sender,
+                    _signer,
+                    _recipient,
+                    _duration
+                )
+            )
+        )); 
     }
 
     /**
@@ -64,8 +75,20 @@ contract NonceChannelFactory {
         external 
         returns (NonceChannelERC20 instance)
     {
-        instance = NonceChannelERC20(address(new Instance(address(modelERC20)))); 
-        instance.init(msg.sender, _signer, _recipient, _duration, _token);
+        instance = NonceChannelERC20(address(
+            new Instance(
+                modelERC20,
+                modelERC20,
+                abi.encodeWithSignature(
+                    "init(address,address,address,uint256,address)",
+                    msg.sender,
+                    _signer,
+                    _recipient,
+                    _duration,
+                    _token
+                )
+            )
+        )); 
         if (_amount > 0) {
             _token.transferFrom(msg.sender, _recipient, _amount);
         }

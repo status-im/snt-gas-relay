@@ -9,5 +9,5 @@ import "./IdentityEmpty.sol";
  */
 contract IdentityExtension is IdentityEmpty {  
     constructor() internal {} 
-    function installExtension(IdentityExtension _extension, bool _enable) external;
+    function installExtension(IdentityAbstract _extension, bool _enable) external;
 }

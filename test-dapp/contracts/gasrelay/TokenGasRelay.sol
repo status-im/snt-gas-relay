@@ -32,6 +32,7 @@ contract TokenGasRelay {
         uint256 _amount,
         uint256 _nonce,
         uint256 _gasPrice,
+        uint256 _gasLimit,        
         bytes calldata _signature
     ) 
         external;
@@ -49,6 +50,7 @@ contract TokenGasRelay {
         uint256 _amount,
         uint256 _nonce,
         uint256 _gasPrice,
+        uint256 _gasLimit,
         bytes calldata _signature
     )
         external;
@@ -114,6 +116,7 @@ contract TokenGasRelay {
      * @param _amount total being transfered
      * @param _nonce current signNonce of message signer
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
+     * @param _gasLimit maximum gas of this transacton
      * @param _gasRelayer beneficiary of gas, if address(0), msg.sender
      */
     function getTransferHash(
@@ -121,6 +124,7 @@ contract TokenGasRelay {
         uint256 _amount,
         uint256 _nonce,
         uint256 _gasPrice,
+        uint256 _gasLimit,
         address _gasRelayer
     ) 
         public 
@@ -135,6 +139,7 @@ contract TokenGasRelay {
                 _amount,
                 _nonce,
                 _gasPrice,
+                _gasLimit,
                 _gasRelayer
             )
         );
@@ -145,12 +150,14 @@ contract TokenGasRelay {
      * @param _amount total being transfered
      * @param _nonce current signNonce of message signer
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
+     * @param _gasLimit maximum gas of this transacton
      * @param _gasRelayer beneficiary of gas, if address(0), msg.sender
      */
     function getConvertHash(
         uint256 _amount,
         uint256 _nonce,
         uint256 _gasPrice,
+        uint256 _gasLimit,
         address _gasRelayer
     ) 
         public 
@@ -164,6 +171,7 @@ contract TokenGasRelay {
                 _amount,
                 _nonce,
                 _gasPrice,
+                _gasLimit,
                 _gasRelayer
             )
         );

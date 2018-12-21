@@ -9,7 +9,7 @@ contract PrototypeRegistry is Controlled {
         InstanceAbstract emergency;
     }
     mapping(address => Prototype) public prototypes;
-    mapping(bytes32 => bool) private bases;
+    mapping(address => bool) private bases;
     mapping(bytes32 => bool) private upgradable;
     mapping(bytes32 => bool) private extensions;
 
@@ -17,8 +17,8 @@ contract PrototypeRegistry is Controlled {
         prototypes[address(base)] = Prototype(init, emergency);
     }
 
-    function approveBase(bytes4 _class, InstanceAbstract _base, bool _approve) external onlyController {
-        bases[keccak256(abi.encodePacked(_class, _base))] = _approve;
+    function approveBase(InstanceAbstract _base, bool _approve) external onlyController {
+        bases[address(_base)] = _approve;
     }   
 
     function approveUpgrade(InstanceAbstract _baseFrom, InstanceAbstract _baseTo, bool _approve) external onlyController {
@@ -29,8 +29,8 @@ contract PrototypeRegistry is Controlled {
         extensions[keccak256(abi.encodePacked(_base, _extension))] = _approve;
     }
 
-    function isBase(bytes4 _class, InstanceAbstract _base) external view returns(bool){
-        return bases[keccak256(abi.encodePacked(_class, _base))];
+    function isBase(InstanceAbstract _base) external view returns(bool){
+        return bases[address(_base)];
     }
 
     function isUpgradable(InstanceAbstract _baseFrom, InstanceAbstract _baseTo) external view returns(bool){

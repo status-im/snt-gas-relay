@@ -11,34 +11,29 @@ import "./IdentityEmpty.sol";
   
 contract IdentityInit is IdentityEmpty {
     
+    modifier notInitialized {
+        require(purposeThreshold[uint256(Purpose.ManagementKey)] == 0, "Unauthorized");
+        _;
+    }
+
     constructor() 
         public
     {
         purposeThreshold[uint256(Purpose.ManagementKey)] = 1;
     }
     
-    function () 
-        external 
-        initialized
-    {
-        bytes32 _ownerKey = keccak256(abi.encodePacked(msg.sender));
-        purposeThreshold[uint256(Purpose.ManagementKey)] = 1;
-        purposeThreshold[uint256(Purpose.ActionKey)] = 1;
-        _addKey(_ownerKey, Purpose.ManagementKey, 0, 0);
-        _addKey(_ownerKey, Purpose.ActionKey, 0, 0);
-    }
-    
     function createIdentity(
         bytes32 _ownerKey
     ) 
         external 
-        initialized
+        notInitialized
         returns (IdentityAbstract)
     {
         purposeThreshold[uint256(Purpose.ManagementKey)] = 1;
         purposeThreshold[uint256(Purpose.ActionKey)] = 1;
         _addKey(_ownerKey, Purpose.ManagementKey, 0, 0);
         _addKey(_ownerKey, Purpose.ActionKey, 0, 0);
+        prototypeRegistry = PrototypeRegistry(msg.sender);
     }
 
     function createIdentity(   
@@ -49,7 +44,7 @@ contract IdentityInit is IdentityEmpty {
         uint256 _actorThreshold
     ) 
         external 
-        initialized
+        notInitialized
         returns (IdentityAbstract)
     {
         uint len = _keys.length;
@@ -68,6 +63,7 @@ contract IdentityInit is IdentityEmpty {
         require(_managerThreshold <= managersAdded, "Managers added is less then required");
         purposeThreshold[uint256(Purpose.ManagementKey)] = _managerThreshold;
         purposeThreshold[uint256(Purpose.ActionKey)] = _actorThreshold;
+        prototypeRegistry = PrototypeRegistry(msg.sender);        
     }
 
 }

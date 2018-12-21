@@ -22,6 +22,7 @@ contract Instance is InstanceAbstract, DelegatedCall {
         bytes memory _initMsg
     ) 
         public 
+        payable
         DelegatedCall(address(_init), _initMsg)
     {
         base = _base;

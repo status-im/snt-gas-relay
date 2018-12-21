@@ -16,7 +16,7 @@ contract IdentityGasRelay is IdentityExtension, GasRelay, MessageSigned {
      * @param _extension address of the extension itself
      * @param _enable If 'true' installs extension, if false, uninstall.
      */
-    function installExtension(IdentityExtension _extension, bool _enable) 
+    function installExtension(IdentityAbstract _extension, bool _enable) 
         external 
         managementOnly 
     {

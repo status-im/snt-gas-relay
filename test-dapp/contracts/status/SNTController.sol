@@ -17,8 +17,11 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
     MiniMeToken public snt;
     mapping (address => uint256) public signNonce;
     mapping (address => bool) public allowPublicExecution;
-    IdentityFactory identityFactory;
+    IdentityFactory public identityFactory;
 
+    event ConvertedAccount(address indexed _signer, IdentityAbstract _identity, uint256 _transferAmount);
+    event GasRelayedExecution(address indexed _signer, bytes32 _callHash, bool _success, bytes _returndata);
+    event FactoryChanged(IdentityFactory identityFactory);
     event PublicExecutionEnabled(address indexed contractAddress, bool enabled);
     event ClaimedTokens(address indexed _token, address indexed _controller, uint256 _amount);
     event ControllerChanged(address indexed _newController);
@@ -28,9 +31,9 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
      * @param _owner Authority address
      * @param _snt SNT token
      */
-    constructor(address payable _owner, address _snt, IdentityFactory _identityFactory) public {
+    constructor(address payable _owner, MiniMeToken _snt, IdentityFactory _identityFactory) public {
         owner = _owner;
-        snt = MiniMeToken(uint160(_snt));
+        snt = _snt;
         identityFactory = _identityFactory;
     }
     
@@ -41,6 +44,7 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
         uint256 _amount,
         uint256 _nonce,
         uint256 _gasPrice,
+        uint256 _gasLimit,        
         bytes calldata _signature
     ) 
         external
@@ -54,6 +58,7 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
                     _amount,
                     _nonce,
                     _gasPrice,
+                    _gasLimit,
                     msg.sender
                 )
             ),
@@ -62,23 +67,15 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
         
         require(signNonce[msgSigner] == _nonce, "Bad nonce");
         signNonce[msgSigner]++;
-        address userIdentity = address(
-            identityFactory.createIdentity(
-                keccak256(abi.encodePacked(msgSigner))
-            )
+        IdentityAbstract userIdentity = identityFactory.createIdentity(
+            keccak256(abi.encodePacked(msgSigner))
         );
         require(
-            snt.transferFrom(msgSigner, userIdentity, _amount),
+            snt.transferFrom(msgSigner, address(userIdentity), _amount),
             "Transfer fail"
         );
-        require(
-            snt.transferFrom(
-                msgSigner,
-                msg.sender,
-                (21000 + startGas - gasleft()) * _gasPrice
-            ),
-            "Gas transfer fail"
-        );
+        emit ConvertedAccount(msgSigner, userIdentity, _amount);
+        payGasRelayer(startGas, _gasPrice, _gasLimit, msgSigner, msg.sender); 
     }
 
     /** 
@@ -94,6 +91,7 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
         uint256 _amount,
         uint256 _nonce,
         uint256 _gasPrice,
+        uint256 _gasLimit,        
         bytes calldata _signature
     )
         external 
@@ -107,6 +105,7 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
                     _amount,
                     _nonce,
                     _gasPrice,
+                    _gasLimit,
                     msg.sender
                 )
             ),
@@ -119,14 +118,48 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
             snt.transferFrom(msgSigner, _to, _amount),
             "Transfer fail"
         );
-        require(
-            snt.transferFrom(
-                msgSigner,
-                msg.sender,
-                (21000 + startGas - gasleft()) * _gasPrice
-            ),
-            "Gas transfer fail"
+        payGasRelayer(startGas, _gasPrice, _gasLimit, msgSigner, msg.sender); 
+    }
+
+    /**
+     * @notice allows externally owned address sign a message to offer SNT for a execution 
+     * @param _allowedContract address of a contracts in execution trust list;
+     * @param _data msg.data to be sent to `_allowedContract`
+     * @param _nonce current signNonce of message signer
+     * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
+     * @param _gasLimit maximum gas of this transacton
+     * @param _signature concatenated rsv of message
+     */
+    function executeGasRelay(
+        address _allowedContract,
+        bytes calldata _data,
+        uint256 _nonce,
+        uint256 _gasPrice,
+        uint256 _gasLimit,
+        bytes calldata _signature
+    )
+        external
+    {
+        uint256 startGas = gasleft();
+        require(allowPublicExecution[_allowedContract], "Unallowed call");
+        bytes32 msgSigned = getSignHash(
+            getExecuteGasRelayHash(
+                _allowedContract,
+                _data,
+                _nonce,
+                _gasPrice,
+                _gasLimit,
+                msg.sender
+            )
         );
+        address msgSigner = recoverAddress(msgSigned, _signature);
+        require(signNonce[msgSigner] == _nonce, "Bad nonce");
+        signNonce[msgSigner]++;
+        bool success; 
+        bytes memory returndata;
+        (success, returndata) = _allowedContract.call(_data);
+        emit GasRelayedExecution(msgSigner, msgSigned, success, returndata);
+        payGasRelayer(startGas, _gasPrice, _gasLimit, msgSigner, msg.sender); 
     }
 
     /** 
@@ -142,6 +175,11 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
     function enablePublicExecution(address _contract, bool _enable) public onlyOwner {
         allowPublicExecution[_contract] = _enable;
         emit PublicExecutionEnabled(_contract, _enable);
+    }
+
+    function changeIdentityFactory(IdentityFactory _identityFactory) public onlyOwner {
+        identityFactory = _identityFactory;
+        emit FactoryChanged(_identityFactory);
     }
 
     //////////
@@ -187,6 +225,29 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
         return true;
     }
 
-
+    /**
+     * @notice check gas limit and pays gas to relayer
+     * @param _startGas gasleft on call start
+     * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
+     * @param _gasLimit maximum gas of this transacton
+     * @param _signer gas payer
+     * @param _gasRelayer beneficiary gas payout
+     */
+    function payGasRelayer(
+        uint256 _startGas,
+        uint _gasPrice,
+        uint _gasLimit,
+        address _signer,
+        address _gasRelayer
+    )
+        internal
+    {
+        uint256 _amount = 21000 + (_startGas - gasleft());
+        require(_amount <= _gasLimit, ERR_GAS_LIMIT_EXCEEDED);
+        if (_gasPrice > 0) {
+            _amount = _amount * _gasPrice;
+            snt.transferFrom(_signer, _gasRelayer, _amount); 
+        }
+    }
     
 }

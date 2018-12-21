@@ -217,7 +217,7 @@ contract GasRelay {
     }
 
     /**
-     * @notice pays gas to relayer
+     * @notice check gas limit and pays gas to relayer
      * @param _startGas gasleft on call start
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasLimit maximum gas of this transacton
@@ -233,9 +233,9 @@ contract GasRelay {
     )
         internal
     {
+        uint256 _amount = 21000 + (_startGas - gasleft());
+        require(_amount <= _gasLimit, ERR_GAS_LIMIT_EXCEEDED);
         if (_gasPrice > 0) {
-            uint256 _amount = 21000 + (_startGas - gasleft());
-            require(_amount <= _gasLimit, ERR_GAS_LIMIT_EXCEEDED);
             _amount = _amount * _gasPrice;
             if (_gasToken == address(0)) {
                 _gasRelayer.transfer(_amount);

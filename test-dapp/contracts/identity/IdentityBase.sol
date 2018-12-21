@@ -11,8 +11,8 @@ import "../deploy/PrototypeRegistry.sol";
  */
 contract IdentityBase is IdentityView, DelegatedCall {
     
-    modifier curatedExtension(address _extension) {
-        require(getPrototypeRegistry().isExtension(address(base),_extension));
+    modifier curatedExtension(IdentityAbstract _extension) {
+        require(getPrototypeRegistry().isExtension(base,_extension));
         _;
     }
 
@@ -162,14 +162,14 @@ contract IdentityBase is IdentityView, DelegatedCall {
         external
         managementOnly
     {
-        require(getPrototypeRegistry().isUpgradable(address(base),address(_newBase)));
+        require(getPrototypeRegistry().isUpgradable(base,_newBase));
         base = _newBase;
     }
 
-    function enableExtension(IdentityAbstract _extension, bool _enable) 
-        external 
+    function installExtension(IdentityAbstract _extension, bool _enable) 
+        external
         managementOnly
-        curatedExtension(address(_extension))
+        curatedExtension(_extension)
         delegateAndReturn(address(_extension))
     {
         assert(false);

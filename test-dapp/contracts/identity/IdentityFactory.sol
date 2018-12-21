@@ -1,6 +1,7 @@
 pragma solidity >=0.5.0 <0.6.0;
 
 import "../deploy/Instance.sol";
+import "../deploy/PrototypeRegistry.sol";
 import "./IdentityBase.sol";
 import "./IdentityInit.sol";
 
@@ -8,7 +9,7 @@ import "./IdentityInit.sol";
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
  * @notice creates Instance as Identity 
  */
-contract IdentityFactory {
+contract IdentityFactory is PrototypeRegistry {
     IdentityBase public base;
     IdentityInit public init;
 
