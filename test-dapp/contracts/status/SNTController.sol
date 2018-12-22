@@ -30,17 +30,25 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
      * @notice Constructor
      * @param _owner Authority address
      * @param _snt SNT token
+     * @param _identityFactory used for converting accounts
      */
     constructor(address payable _owner, MiniMeToken _snt, IdentityFactory _identityFactory) public {
-        owner = _owner;
+        if(_owner != address(0)){
+            owner = _owner;
+        }
         snt = _snt;
         identityFactory = _identityFactory;
     }
     
     /**
-     * @notice creates an identity and transfer _amount to the newly generated identity.
+     * @notice creates an identity and transfer _amount to the newly generated account.
+     * @param _amount total being transfered to new account
+     * @param _nonce current signNonce of message signer
+     * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
+     * @param _gasLimit maximum gas of this transacton
+     * @param _signature concatenated rsv of message    
      */
-    function convertAccount(
+    function convertGasRelay(
         uint256 _amount,
         uint256 _nonce,
         uint256 _gasPrice,
@@ -65,7 +73,7 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
             _signature
         );
         
-        require(signNonce[msgSigner] == _nonce, "Bad nonce");
+        require(signNonce[msgSigner] == _nonce, ERR_BAD_NONCE);
         signNonce[msgSigner]++;
         IdentityAbstract userIdentity = identityFactory.createIdentity(
             keccak256(abi.encodePacked(msgSigner))
@@ -84,17 +92,18 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
      * @param _amount total being transfered
      * @param _nonce current signNonce of message signer
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
+     * @param _gasLimit maximum gas of this transacton
      * @param _signature concatenated rsv of message
      */
-    function transfer(
+    function transferGasRelay(
         address _to,
         uint256 _amount,
         uint256 _nonce,
         uint256 _gasPrice,
-        uint256 _gasLimit,        
+        uint256 _gasLimit,
         bytes calldata _signature
     )
-        external 
+        external
     {
         uint256 startGas = gasleft();
 
@@ -112,7 +121,7 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
              _signature
         );
 
-        require(signNonce[msgSigner] == _nonce, "Bad nonce");
+        require(signNonce[msgSigner] == _nonce, ERR_BAD_NONCE);
         signNonce[msgSigner]++;
         require(
             snt.transferFrom(msgSigner, _to, _amount),
@@ -141,7 +150,7 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
         external
     {
         uint256 startGas = gasleft();
-        require(allowPublicExecution[_allowedContract], "Unallowed call");
+        require(allowPublicExecution[_allowedContract], ERR_BAD_DESTINATION);
         bytes32 msgSigned = getSignHash(
             getExecuteGasRelayHash(
                 _allowedContract,
@@ -153,7 +162,7 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
             )
         );
         address msgSigner = recoverAddress(msgSigned, _signature);
-        require(signNonce[msgSigner] == _nonce, "Bad nonce");
+        require(signNonce[msgSigner] == _nonce, ERR_BAD_NONCE);
         signNonce[msgSigner]++;
         bool success; 
         bytes memory returndata;

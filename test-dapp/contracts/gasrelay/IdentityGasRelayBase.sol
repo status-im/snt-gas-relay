@@ -1,218 +1,185 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-import "../identity/IdentityExtension.sol";
-import "./GasChannel.sol";
+import "../identity/IdentityBase.sol";
+import "./GasRelay.sol";
 import "../common/MessageSigned.sol";
 
 /**
- * @title IdentityGasChannel
+ * @title IdentityGasRelayExt
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
- * @notice enables economic abstraction through gas channel for Identity
+ * @notice enables economic abstraction for Identity via Base
  */
-contract IdentityGasChannel is IdentityExtension, GasChannel, MessageSigned {
+contract IdentityGasRelayBase is IdentityBase, GasRelay, MessageSigned {
     
-    function installExtension(IdentityAbstract _extension, bool _enable) 
-        external 
-        managementOnly 
-    {
-        bytes4 createSig = bytes4(
-            keccak256("newChannel(address,address,address,address,uint256,uint256,uint256,bytes)")
-        );
-        bytes4 callSig = bytes4(
-            keccak256("callGasChannel(address,uint256,bytes32,uint256,address,bytes)")
-        );
-        bytes4 deploySig = bytes4(
-            keccak256("deployGasChannel(uint256,bytes32,uint256,address,bytes)")
-        );
-        bytes4 approveAndCallSig = bytes4(
-            keccak256("approveAndCallGasChannel(address,address,uint256,bytes32,uint256,address,bytes)")
-        );
-        if (_enable) {
-            extensions[createSig] = _extension;
-            extensions[callSig] = _extension;
-            extensions[deploySig] = _extension;
-            extensions[approveAndCallSig] = _extension;
-        } else {
-            delete extensions[createSig];
-            delete extensions[callSig];
-            delete extensions[deploySig];
-            delete extensions[approveAndCallSig];
-        }
-    }
-
     /**
-     * @notice creates a new channel and pay gas in the newly created channel 
-     * @param _channelFactory address of trusted factory
-     * @param _signer address signing the gas agreement
-     * @param _gasRelayer beneficiary of channel
-     * @param _duration duration of channel to account be able to withdraw
-     * @param _amountToReserve amount of token to reserve in channel for gas paying
-     * @param _token ERC20Token used, if `address(0)` then is ETH
-     * @param _signatures rsv concatenated ethereum signed message signature required
-     */
-    function newChannel(
-        NonceChannelFactory _channelFactory,
-        address _signer,
-        address _gasRelayer,
-        uint256 _duration,
-        uint256 _amountToReserve,
-        ERC20Token _token,
-        bytes calldata _signatures
-    ) 
-        external 
-        returns(NonceChannel gasChannel)
-    {
-
-        //verify if signatures are valid and came from correct actor;
-        verifySignatures(
-            Purpose.ManagementKey,
-            newChannelHash(
-                nonce,
-                _channelFactory,
-                _signer,
-                _gasRelayer,
-                _duration,
-                _amountToReserve,
-                _token
-            ),
-            _signatures
-        );
-  
-        nonce++;
-
-        gasChannel = newChannel(
-            _channelFactory,
-            _signer,
-            _gasRelayer,
-            _duration,
-            _amountToReserve,
-            _token
-        );
-
-        authorizeChannel(gasChannel);
-    }
-
-    /**
-     * @notice include ethereum signed callHash in return of authorizing channel payout in an offchain agreement 
+     * @notice include ethereum signed callHash in return of gas proportional amount multiplied by `_gasPrice` of `_gasToken`
+     *         allows identity of being controlled without requiring ether in key balace
      * @param _to destination of call
      * @param _value call value (ether)
      * @param _data call data
+     * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasLimit maximum gas of this transacton
-     * @param _gasChannel kicked NonceChannel which will charge for the execution
+     * @param _gasToken token being used for paying `msg.sender`
      * @param _signatures rsv concatenated ethereum signed message signatures required
      */
-    function callGasChannel(
+    function callGasRelay(
         address _to,
         uint256 _value,
         bytes calldata _data,
-        uint256 _gasLimit,
-        NonceChannel _gasChannel, 
+        uint _gasPrice,
+        uint _gasLimit,
+        address _gasToken, 
         bytes calldata _signatures
     ) 
         external 
     {
-        require(gasleft() >= _gasLimit, ERR_BAD_START_GAS);
-
+        
+        //query current gas available
+        uint startGas = gasleft(); 
+        
+        //verify transaction parameters
+        require(startGas >= _gasLimit, ERR_BAD_START_GAS); 
+        
+        //verify if signatures are valid and came from correct actors;
         verifySignatures(
             _to == address(this) ? Purpose.ManagementKey : Purpose.ActionKey,
-            callGasChannelHash(
+            callGasRelayHash(
                 _to,
                 _value,
                 keccak256(_data),
                 nonce,
+                _gasPrice,
                 _gasLimit,
-                _gasChannel                
-            ),
+                _gasToken,
+                msg.sender                
+            ), 
             _signatures
         );
 
         _execute(_to, _value, _data);
 
-        authorizeChannel(_gasChannel);
-    }
-
-    /**
-     * @notice deploys contract in return of authorizing channel payout in an offchain agreement 
-     * @param _value call value (ether) to be sent to newly created contract
-     * @param _data contract code data
-     * @param _gasLimit maximum gas of this transacton
-     * @param _gasChannel kicked NonceChannel which will charge for the execution
-     * @param _signatures rsv concatenated ethereum signed message signatures required
-     */
-    function deployGasChannel(
-        uint256 _value, 
-        bytes calldata _data,
-        uint256 _gasLimit,
-        NonceChannel _gasChannel, 
-        bytes calldata _signatures
-    ) 
-        external
-    {
-        require(gasleft() >= _gasLimit, ERR_BAD_START_GAS);
-
-        verifySignatures(
-            Purpose.ActionKey,
-            deployGasChannelHash(
-                _value,
-                keccak256(_data),
-                nonce,
-                _gasLimit,
-                _gasChannel              
-            ), 
-            _signatures
+        //refund gas used using contract held ERC20 tokens or ETH
+        payGasRelayer(
+            startGas,
+            _gasPrice,
+            _gasLimit,
+            _gasToken,
+            msg.sender
         );
-
-        _deploy(_value, _data);
-
-        authorizeChannel(_gasChannel);
         
     }
 
     /**
+     * @notice deploys contract in return of gas proportional amount multiplied by `_gasPrice` of `_gasToken`
+     *         allows identity of being controlled without requiring ether in key balace
+     * @param _value call value (ether) to be sent to newly created contract
+     * @param _data contract code data
+     * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
+     * @param _gasLimit maximum gas of this transacton
+     * @param _gasToken token being used for paying `msg.sender`
+     * @param _signatures rsv concatenated ethereum signed message signatures required
+     */
+    function deployGasRelay(
+        uint256 _value, 
+        bytes calldata _data,
+        uint _gasPrice,
+        uint _gasLimit,
+        address _gasToken, 
+        bytes calldata _signatures
+    ) 
+        external
+    {
+        //query current gas available
+        uint startGas = gasleft(); 
+        
+        //verify transaction parameters
+        require(startGas >= _gasLimit, ERR_BAD_START_GAS); 
+        
+        //verify if signatures are valid and came from correct actors;
+        verifySignatures(
+            Purpose.ActionKey,
+            deployGasRelayHash(
+                _value,
+                keccak256(_data),
+                nonce,
+                _gasPrice,
+                _gasLimit,
+                _gasToken,
+                msg.sender                
+            ), 
+            _signatures
+        );
+        
+        _deploy(_value, _data);
+
+        //refund gas used using contract held ERC20 tokens or ETH
+        payGasRelayer(
+            startGas,
+            _gasPrice,
+            _gasLimit,
+            _gasToken,
+            msg.sender
+        );
+    }
+
+
+    /**
      * @notice include ethereum signed approve ERC20 and call hash 
      *         (`ERC20Token(baseToken).approve(_to, _value)` + `_to.call(_data)`).
-     *         in return of authorizing channel payout in an offchain agreement 
+     *         in return of gas proportional amount multiplied by `_gasPrice` of `_baseToken`
      *         fixes race condition in double transaction for ERC20.
      * @param _baseToken token approved for `_to` and token being used for paying `msg.sender`
      * @param _to destination of call
      * @param _value call value (in `_baseToken`)
      * @param _data call data
+     * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasLimit maximum gas of this transacton
-     * @param _gasChannel kicked NonceChannel which will charge for the execution
      * @param _signatures rsv concatenated ethereum signed message signatures required
      */
-    function approveAndCallGasChannel(
+    function approveAndCallGasRelay(
         address _baseToken, 
         address _to,
         uint256 _value,
         bytes calldata _data,
-        uint256 _gasLimit,
-        NonceChannel _gasChannel,
-        bytes calldata _signatures
+        uint _gasPrice,
+        uint _gasLimit,
+        bytes calldata _signatures        
     ) 
         external 
     {
-        require(gasleft() >= _gasLimit, ERR_BAD_START_GAS);
-
+                        
+        //query current gas available
+        uint startGas = gasleft(); 
+        
+        //verify transaction parameters
+        require(startGas >= _gasLimit, ERR_BAD_START_GAS); 
+        //verify if signatures are valid and came from correct actors;
         verifySignatures(
             Purpose.ActionKey,
-            approveAndCallGasChannelHash(
+            approveAndCallGasRelayHash(
                 _baseToken,
                 _to,
                 _value,
                 keccak256(_data),
                 nonce,
+                _gasPrice,
                 _gasLimit,
-                _gasChannel
-            ),
+                msg.sender
+            ), 
             _signatures
         );
-        _approveAndCall(_baseToken, _to, _value, _data);
-
-        authorizeChannel(_gasChannel);
         
-    }
+        _approveAndCall(_baseToken, _to, _value, _data); 
 
+        //refund gas used using contract held _baseToken
+        payGasRelayer(
+            startGas,
+            _gasPrice,
+            _gasLimit,
+            _baseToken,
+            msg.sender
+        );
+    }
 
     /**
      * @notice reverts if signatures are not valid for the signed hash and required key type. 

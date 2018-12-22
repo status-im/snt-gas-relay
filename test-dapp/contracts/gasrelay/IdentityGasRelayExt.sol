@@ -5,11 +5,11 @@ import "./GasRelay.sol";
 import "../common/MessageSigned.sol";
 
 /**
- * @title IdentityGasRelay
+ * @title IdentityGasRelayExt
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
- * @notice enables economic abstraction for Identity
+ * @notice enables economic abstraction for Identity via Extension
  */
-contract IdentityGasRelay is IdentityExtension, GasRelay, MessageSigned {
+contract IdentityGasRelayExt is IdentityExtension, GasRelay, MessageSigned {
     
     /**
      * @notice install gas relay extension

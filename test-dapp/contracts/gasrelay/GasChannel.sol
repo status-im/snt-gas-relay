@@ -11,19 +11,19 @@ import "../payment/NonceChannelFactory.sol";
  */
 contract GasChannel {
 
-    bytes4 public constant MSG_NEWCHANNEL_PREFIX = bytes4(
+    bytes4 internal constant MSG_NEWCHANNEL_PREFIX = bytes4(
         keccak256("newChannel(address,address,address,address,uint256,uint256,uint256)")
     );
 
-    bytes4 public constant MSG_CALL_GASCHANNEL_PREFIX = bytes4(
+    bytes4 internal constant MSG_CALL_GASCHANNEL_PREFIX = bytes4(
         keccak256("callGasChannel(address,uint256,bytes32,uint256,address)")
     );
 
-    bytes4 public constant MSG_DEPLOY_GASCHANNEL_PREFIX = bytes4(
+    bytes4 internal constant MSG_DEPLOY_GASCHANNEL_PREFIX = bytes4(
         keccak256("deployGasChannel(uint256,bytes32,uint256,address)")
     );
 
-    bytes4 public constant MSG_APPROVEANDCALL_GASCHANNEL_PREFIX = bytes4(
+    bytes4 internal constant MSG_APPROVEANDCALL_GASCHANNEL_PREFIX = bytes4(
         keccak256("approveAndCallGasChannel(address,address,uint256,bytes32,uint256,address)")
     );
 

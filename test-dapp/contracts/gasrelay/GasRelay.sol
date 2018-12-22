@@ -9,13 +9,13 @@ import "../token/ERC20Token.sol";
  */
 contract GasRelay {
     
-    bytes4 public constant MSG_CALL_GASRELAY_PREFIX = bytes4(
+    bytes4 internal constant MSG_CALL_GASRELAY_PREFIX = bytes4(
         keccak256("callGasRelay(address,uint256,bytes32,uint256,uint256,address,address)")
     );
-    bytes4 public constant MSG_DEPLOY_GASRELAY_PREFIX = bytes4(
+    bytes4 internal constant MSG_DEPLOY_GASRELAY_PREFIX = bytes4(
         keccak256("deployGasRelay(uint256,bytes32,uint256,uint256,address,address)")
     );
-    bytes4 public constant MSG_APPROVEANDCALL_GASRELAY_PREFIX = bytes4(
+    bytes4 internal constant MSG_APPROVEANDCALL_GASRELAY_PREFIX = bytes4(
         keccak256("approveAndCallGasRelay(address,address,uint256,bytes32,uint256,uint256,address)")
     );
     

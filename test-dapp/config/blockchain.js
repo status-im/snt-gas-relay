@@ -35,28 +35,29 @@ module.exports = {
     rpcPort: 8545,
     rpcCorsDomain: "http://localhost:8000",
     account: {
-      password: "config/testnet/password"
+      password: "config/testnet/.password"
     }
   },
   livenet: {
-    enabled: true,
+    enabled: false,
     networkType: "livenet",
     syncMode: "light",
     rpcHost: "localhost",
     rpcPort: 8545,
     rpcCorsDomain: "http://localhost:8000",
     account: {
-      password: "config/livenet/password"
+      password: "config/livenet/.password"
     }
-  },
-  privatenet: {
+  },  
+  rinkeby: {
     enabled: true,
-    networkType: "custom",
+    networkType: "rinkeby",
+    syncMode: "light",
     rpcHost: "localhost",
     rpcPort: 8545,
     rpcCorsDomain: "http://localhost:8000",
-    datadir: "yourdatadir",
-    networkId: "123",
-    bootnodes: ""
+    account: {
+      password: "config/rinkeby/.password"
+    }
   }
 };

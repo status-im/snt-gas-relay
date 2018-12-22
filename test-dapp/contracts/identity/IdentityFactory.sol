@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-import "../deploy/Instance.sol";
+import "../deploy/InstanceFactory.sol";
 import "../deploy/PrototypeRegistry.sol";
 import "./IdentityBase.sol";
 import "./IdentityInit.sol";
@@ -9,52 +9,56 @@ import "./IdentityInit.sol";
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
  * @notice creates Instance as Identity 
  */
-contract IdentityFactory is PrototypeRegistry {
-    IdentityBase public base;
-    IdentityInit public init;
+contract IdentityFactory is InstanceFactory {
 
-    event IdentityCreated(IdentityBase instance);
-
-    constructor() 
+    constructor(InstanceAbstract _base, InstanceAbstract _init, InstanceAbstract _emergency) 
+        InstanceFactory(_base, _init, _emergency)
         public
-    {
-        base = new IdentityBase();
-        init = new IdentityInit();
-    }
+    { }
 
-    /** @dev should be the same method signature of `init` function */
     function createIdentity() 
         external 
         returns (IdentityBase instance)
     {
-        instance = IdentityBase(address(new Instance(base, init, msg.data)));
-        emit IdentityCreated(instance);
+        instance = IdentityBase(
+            address(
+                new Instance(
+                    base,
+                    prototypes[address(base)].init,
+                    abi.encodeWithSignature(
+                        "createIdentity(bytes32)",
+                        keccak256(abi.encodePacked(msg.sender))
+                    )
+                )
+            )
+        );
+        emit InstanceCreated(instance);
     }
 
     /** @dev should be the same method signature of `init` function */
     function createIdentity(
-        bytes32 _owner
+        bytes32
     ) 
         external 
         returns (IdentityBase instance)
     {
-        instance = IdentityBase(address(new Instance(base, init, msg.data)));
-        emit IdentityCreated(instance);
+        instance = IdentityBase(address(new Instance(base, prototypes[address(base)].init, msg.data)));
+        emit InstanceCreated(instance);
     }
 
     /** @dev should be the same method signature of `init` function */
     function createIdentity(   
-        bytes32[] calldata _keys,
-        uint256[] calldata _purposes,
-        uint256[] calldata _types,
-        uint256 _managerThreshold,
-        uint256 _actorThreshold
+        bytes32[] calldata,
+        uint256[] calldata,
+        uint256[] calldata,
+        uint256,
+        uint256
     ) 
         external 
         returns (IdentityBase instance)
     {
-        instance = IdentityBase(address(new Instance(base, init, msg.data)));
-        emit IdentityCreated(instance);
+        instance = IdentityBase(address(new Instance(base, prototypes[address(base)].init, msg.data)));
+        emit InstanceCreated(instance);
     }
 
 }

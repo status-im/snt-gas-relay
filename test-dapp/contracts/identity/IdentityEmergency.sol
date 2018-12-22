@@ -35,37 +35,9 @@ contract IdentityEmergency is IdentityView {
         external
         managementOnly
     {
-        require(getPrototypeRegistry().isUpgradable(base,_newBase));
+        require(prototypeRegistry.isUpgradable(base,_newBase));
         bool success;
         (success, ) = address(_newBase).delegatecall(_installMsg);
-    }
-
-    function getPrototypeRegistry() public view returns(PrototypeRegistry c) {
-
-        address check = address(1);
-        if (getCodeSize(check)>0){ //mainnet
-            return PrototypeRegistry(check);
-        }
-        check = address(2);
-        if (getCodeSize(check)>0){ //ropsten
-            return PrototypeRegistry(check);
-        }
-        check = address(3);
-        if (getCodeSize(check)>0){ //rinkeby
-            return PrototypeRegistry(check);
-        }
-        check = address(4);
-        if (getCodeSize(check)>0){ //kovan
-            return PrototypeRegistry(check);
-        }
-        revert("library curation not found");
-    }
-
-    
-    function getCodeSize(address _addr) internal view returns(uint _size) {
-        assembly {
-            _size := extcodesize(_addr)
-        }   
     }
 
 }

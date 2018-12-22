@@ -6,24 +6,6 @@ module.exports = {
       host: "localhost", // Host of the blockchain node
       port: 8545, // Port of the blockchain node
       type: "rpc" // Type of connection (ws or rpc),
-
-      // Accounts to use instead of the default account to populate your wallet
-       /*,accounts: [
-        {
-          privateKey: "your_private_key",
-          balance: "5 ether"  // You can set the balance of the account in the dev environment
-                              // Balances are in Wei, but you can specify the unit with its name
-        },
-        {
-          privateKeyFile: "path/to/file" // You can put more than one key, separated by , or ;
-        },
-        {
-          mnemonic: "12 word mnemonic",
-          addressIndex: "0", // Optionnal. The index to start getting the address
-          numAddresses: "1", // Optionnal. The number of addresses to get
-          hdpath: "m/44'/60'/0'/0/" // Optionnal. HD derivation path
-        }
-      ]*/
     },
     // order of connections the dapp should connect to
     dappConnection: [
@@ -33,108 +15,113 @@ module.exports = {
     ],
     gas: "auto",
     contracts: {      
-      "IdentityInit": {"deploy": false},
-      "IdentityBase": {"deploy": false},
-      "IdentityEmergency": {"deploy": false},
-      "IdentityGasRelay": {"deploy": false},
-      "IdentityGasChannel": {"deploy": false},
       "ERC20Receiver": {"deploy": false},
       "TestToken": {"deploy": false},
+      "TestContract": {"deploy": false},
       "SafeMath": {"deploy": false},
       "Instance": {"deploy": false},
       "InstanceAbstract": {"deploy": false},
-      "MiniMeToken": {"deploy": false},
       "TestMiniMeToken": {"deploy": false},
       "UpdatedIdentityKernel": {"deploy": false},
       "NonceChannelETH": {"deploy": false},
       "NonceChannelERC20": {"deploy": false},
-      "PrototypeRegistry": {"deploy": true},
+      "PrototypeRegistry": {"deploy": false},
+      "InstanceFactory": {"deploy": false},
+      "SNTController": {"deploy": false},
+      "TestSNTController": {"deploy": false},
+      "AccountGasAbstract": {"deploy": false},
+      "AccountGasChannel": {"deploy": false},
+      "SimpleGasRelay": {"deploy": false},
+      
+      "IdentityBase": {"deploy": true},
+      "IdentityGasRelayBase": {"deploy": true},
+      "IdentityInit": {"deploy": true},
+      "IdentityEmergency": {"deploy": true},
+      "IdentityGasRelayExt": {"deploy": true},
+      "IdentityGasChannelExt": {"deploy": true},
       "NonceChannelFactory": {"deploy": true},
-      "MiniMeTokenFactory": {"args":[]},
-      "STT": {
-        "instanceOf": "TestMiniMeToken",
-        "args":["$MiniMeTokenFactory", "0x0", "0x0", "Status Gas Relayer Test Token", 18, "STT", true],
-        "gasLimit": 4000000
-      },
+
       "IdentityFactory": {
-        "args":[], 
-        "gasLimit": 5000000
+        "args":["$IdentityBase", "$IdentityInit", "$IdentityEmergency"], 
+        "onDeploy": [
+          "IdentityFactory.methods.approveExtension(IdentityBase.address, IdentityGasRelayExt.address, true).send()",
+          "IdentityFactory.methods.approveExtension(IdentityBase.address, IdentityGasChannelExt.address, true).send()",
+          "IdentityFactory.methods.updateBase(IdentityGasRelayBase.address, IdentityInit.address, IdentityEmergency.address, true, true).send()",
+          "IdentityFactory.methods.approveExtension(IdentityGasRelayBase.address, IdentityGasChannelExt.address, true).send()",
+        ]
       },
-      "SNTController": {
-        "args": ["0x5f803F54679577fC974813E48abF012A243dD439", "$STT", "$IdentityFactory"]
-       },
-      "TestContract": {
-        "args": ["$STT"]
+
+      "MiniMeTokenFactory": {
+        "args":[]
+      },
+
+      "MiniMeToken": {
+        "args":["$MiniMeTokenFactory", "0x0", "0x0", "Status Test Token", 18, "STT", true],
+      },
+      "StatusNetwork": {
+        "instanceOf": "TestSNTController",
+        "deploy": true,
+        "args": ["0x0", "$MiniMeToken", "$IdentityFactory"],
+        "onDeploy": [
+          "MiniMeToken.methods.changeController(StatusNetwork.address).send()"
+        ]
       }
     }
   },
 
   development: {
     deployment: {
-    accounts: [
-      {
-        privateKey: "b2ab40d549e67ba67f278781fec03b3a90515ad4d0c898a6326dd958de1e46fa",
-        balance: "5 ether"  // You can set the balance of the account in the dev environment
-                            // Balances are in Wei, but you can specify the unit with its name
-      }
-    ]
+      accounts: [
+        {
+          privateKey: "b2ab40d549e67ba67f278781fec03b3a90515ad4d0c898a6326dd958de1e46fa",
+          balance: "5 ether"  // You can set the balance of the account in the dev environment
+                              // Balances are in Wei, but you can specify the unit with its name
+        }
+      ]
     }
   },
-
   testnet: {
+    deployment: {
+      accounts: [
+        {
+          nodeAccounts: true,
+          password: "config/testnet/secretpass" // Password to unlock the account
+        }
+      ]
+    },
     contracts: {
       "MiniMeTokenFactory": {
-        "address": "0xb59E2Dc49a5F03CC25606F24934eA2CEE04f70dE"
+        "deploy": false,
+        "address": "0x6bFa86A71A7DBc68566d5C741F416e3009804279"
       },
-      "STT": {
-        "instanceOf": "TestMiniMeToken",
-        "address": "0x91a3473a3e1e3D61C29fa2fAcDf17fa0Db922a08"
+      "MiniMeToken": {
+        "deploy": false,
+        "address": "0xc55cF4B03948D7EBc8b9E8BAD92643703811d162"
       },
-      "SNTController": {
-        "address": "0x39bFD424c2A83ca56FD557b373C01A27475bB314"
+      "SNTPlaceHolder": {
+        "deploy": false,
+        "instanceOf": "TestSNTController",
+        "address": "0x34358C45FbA99ef9b78cB501584E8cBFa6f85Cef"
       },
-      "IdentityGasRelay": {
-        "address": "0x8FB13e0f38038C446d6d253C57BEb518512dB56E" 
-      },
-      "IdentityFactory": {
-        "address": "0xC83a746c3B73457FF51eCE216bfBFb524aa4fDD0"
-      },
-      "TestContract": {
-        "address": "0xf5F9B20b48C13FDb77ceB6bDa52D9664c27c84dd"
-      }
-      
-      // If needed to deploy contracts again, uncomment the following lines
-      /*
-      "MiniMeTokenFactory": {
-        "args":[],
-        "gasPrice": 20000000000
-      },
-      "STT": {
-        "instanceOf": "TestMiniMeToken",
-        "args":["$MiniMeTokenFactory", "0x0", "0x0", "Status Gas Relayer Test Token", 18, "STT", true],
-        "gasLimit": 4000000,
-        "gasPrice": 20000000000
-      },
-      "SNTController": {
-        "args": ["0x26C3f244D0CfD5Bde38fC9A4eb212fA1556eDfA2", "$STT"],
-        "gasPrice": 20000000000
-      },
-      "IdentityGasRelay": {
+      "StatusNetwork": {
+        "instanceOf": "TestSNTController",
         "deploy": true,
-        "args": [[], [], [], 1, 1, "0x0000000000000000000000000000000000000000"] ,
-        "gasPrice": 20000000000
-      },
-      "IdentityFactory": {
-        "args":[], 
-        "gasLimit": 5000000,
-        "onDeploy": ["IdentityFactory.methods.setKernel('$IdentityGasRelay').send({gasLimit: 6000000})"],
-        "gasPrice": 20000000000
-      },
-      "TestContract": {
-        "args": ["$STT"],
-        "gasPrice": 20000000000
+        "args": ["0x0", "$MiniMeToken", "$IdentityFactory"],
+        "onDeploy": [
+          "SNTPlaceHolder.methods.changeController(StatusNetwork.address).send()"
+        ]
       }
-      */
     }
-   }
-};
+  },
+  rinkeby: {
+    deployment: {
+      accounts: [
+        {
+          nodeAccounts: true,
+          password: "config/rinkeby/secretpass" // Password to unlock the account
+        }
+      ]
+    }
+
+  }
+}

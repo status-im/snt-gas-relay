@@ -12,7 +12,7 @@ import "../deploy/PrototypeRegistry.sol";
 contract IdentityBase is IdentityView, DelegatedCall {
     
     modifier curatedExtension(IdentityAbstract _extension) {
-        require(getPrototypeRegistry().isExtension(base,_extension));
+        require(prototypeRegistry.isExtension(base,_extension));
         _;
     }
 
@@ -162,11 +162,11 @@ contract IdentityBase is IdentityView, DelegatedCall {
         external
         managementOnly
     {
-        require(getPrototypeRegistry().isUpgradable(base,_newBase));
+        require(prototypeRegistry.isUpgradable(base, _newBase));
         base = _newBase;
     }
 
-    function installExtension(IdentityAbstract _extension, bool _enable) 
+    function installExtension(IdentityAbstract _extension, bool) 
         external
         managementOnly
         curatedExtension(_extension)
@@ -175,32 +175,6 @@ contract IdentityBase is IdentityView, DelegatedCall {
         assert(false);
     }
     
-    function getPrototypeRegistry() public view returns(PrototypeRegistry c) {
-        address check = address(1);
-        if (getCodeSize(check)>0){ //mainnet
-            return PrototypeRegistry(check);
-        }
-        check = address(2);
-        if (getCodeSize(check)>0){ //ropsten
-            return PrototypeRegistry(check);
-        }
-        check = address(3);
-        if (getCodeSize(check)>0){ //rinkeby
-            return PrototypeRegistry(check);
-        }
-        check = address(4);
-        if (getCodeSize(check)>0){ //kovan
-            return PrototypeRegistry(check);
-        }
-        revert("prototype registry not found");
-    }
-
-    
-    function getCodeSize(address _addr) internal view returns(uint _size) {
-        assembly {
-            _size := extcodesize(_addr)
-        }   
-    }
     ////////////////
     // Claim related
     ////////////////

@@ -4,31 +4,34 @@ import "../token/ERC20Token.sol";
 
 contract TokenGasRelay {
     
-    bytes4 public constant TRANSFER_PREFIX = bytes4(
-        keccak256("transferGasRelay(address,uint256,uint256,uint256)")
+    bytes4 internal constant TRANSFER_PREFIX = bytes4(
+        keccak256("transferGasRelay(address,uint256,uint256,uint256,uint256)")
     );
 
-    bytes4 public constant EXECUTE_PREFIX = bytes4(
+    bytes4 internal constant EXECUTE_PREFIX = bytes4(
         keccak256("executeGasRelay(address,bytes,uint256,uint256,uint256)")
     );
 
-    bytes4 public constant CONVERT_PREFIX = bytes4(
-        keccak256("convertGasRelay(uint256,uint256,uint256)")
+    bytes4 internal constant CONVERT_PREFIX = bytes4(
+        keccak256("convertGasRelay(uint256,uint256,uint256,uint256)")
     );
 
-    string public constant ERR_BAD_START_GAS = "Bad start gas";
-    string public constant ERR_BAD_NONCE = "Bad nonce";
-    string public constant ERR_BAD_SIGNER = "Bad signer";
-    string public constant ERR_GAS_LIMIT_EXCEEDED = "Gas limit exceeded";
-    string public constant ERR_BAD_TOKEN_ADDRESS = "Bad token address";
-    string public constant ERR_BAD_DESTINATION = "Bad destination";
+    string internal constant ERR_BAD_NONCE = "Bad nonce";
+    string internal constant ERR_BAD_SIGNER = "Bad signer";
+    string internal constant ERR_GAS_LIMIT_EXCEEDED = "Gas limit exceeded";
+    string internal constant ERR_BAD_DESTINATION = "Bad destination";
 
     constructor() internal {}
     
     /**
-     * @notice creates an identity and transfer _amount to the newly generated identity.
+     * @notice creates an identity and transfer _amount to the newly generated account.
+     * @param _amount total being transfered to new account
+     * @param _nonce current signNonce of message signer
+     * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
+     * @param _gasLimit maximum gas of this transacton
+     * @param _signature concatenated rsv of message    
      */
-    function convertAccount(
+    function convertGasRelay(
         uint256 _amount,
         uint256 _nonce,
         uint256 _gasPrice,
@@ -43,9 +46,10 @@ contract TokenGasRelay {
      * @param _amount total being transfered
      * @param _nonce current signNonce of message signer
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
+     * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _signature concatenated rsv of message
      */
-    function transfer(
+    function transferGasRelay(
         address _to,
         uint256 _amount,
         uint256 _nonce,
