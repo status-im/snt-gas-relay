@@ -236,7 +236,7 @@ contract GasRelay {
         internal
     {
         uint256 _amount = 21000 + (_startGas - gasleft());
-        require(_amount <= _gasLimit, ERR_GAS_LIMIT_EXCEEDED);
+        require(_gasLimit == 0 ||_amount <= _gasLimit, ERR_GAS_LIMIT_EXCEEDED);
         if (_gasPrice > 0) {
             _amount = _amount * _gasPrice;
             if (_gasToken == address(0)) {
