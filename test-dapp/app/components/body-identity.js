@@ -5,7 +5,7 @@ import CallGasRelayed from './callgasrelayed';
 import Divider from '@material-ui/core/Divider';
 import EmbarkJS from 'Embark/EmbarkJS';
 import IdentityFactory from 'Embark/contracts/IdentityFactory';
-import IdentityGasRelay from 'Embark/contracts/IdentityGasRelay';
+import IdentityGasRelayBase from 'Embark/contracts/IdentityGasRelayBase';
 import PropTypes from 'prop-types';
 import Status from './status-identity';
 import Tab from '@material-ui/core/Tab';
