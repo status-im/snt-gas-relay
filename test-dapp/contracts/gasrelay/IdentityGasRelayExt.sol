@@ -210,6 +210,10 @@ contract IdentityGasRelayExt is IdentityExtension, GasRelay, MessageSigned {
             msg.sender
         );
     }
+    
+    function getNonce() external view returns(uint256){
+        return nonce;
+    }
 
     /**
      * @notice reverts if signatures are not valid for the signed hash and required key type. 

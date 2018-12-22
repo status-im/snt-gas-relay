@@ -8,8 +8,8 @@ import CardHeader from '@material-ui/core/CardHeader';
 import Grid from '@material-ui/core/Grid';
 import MySnackbarContentWrapper from './snackbar';
 import PropTypes from 'prop-types';
-import SNTController from 'Embark/contracts/SNTController';
-import STT from 'Embark/contracts/STT';
+import StatusNetwork from 'Embark/contracts/StatusNetwork';
+import MiniMeToken from 'Embark/contracts/MiniMeToken';
 import TestContract from 'Embark/contracts/TestContract';
 import TextField from '@material-ui/core/TextField';
 import config from '../config';
@@ -73,7 +73,7 @@ class Execute extends Component {
         try {
             const accounts = await web3.eth.getAccounts();
             
-            const s = new StatusGasRelayer.SNTController(SNTController.options.address,web3.eth.defaultAccount)
+            const s = new StatusGasRelayer.TokenGasRelay(StatusNetwork.options.address,web3.eth.defaultAccount)
                                           .execute(this.state.allowedContract, this.state.data)
                                           .setGas(this.state.gasPrice, this.state.gasMinimal);
                                           
@@ -108,10 +108,10 @@ class Execute extends Component {
         this.props.clearMessages();
 
         try {
-            const s = new StatusGasRelayer.AvailableRelayers(Contracts.SNT, SNTController.options.address, this.state.account)
+            const s = new StatusGasRelayer.AvailableRelayers(Contracts.TokenGasRelay, StatusNetwork.options.address, this.state.account)
                                           .setRelayersSymKeyID(skid)
                                           .setAsymmetricKeyID(kid)
-                                          .setGas(STT.options.address, this.state.gasPrice);
+                                          .setGas(MiniMeToken.options.address, this.state.gasPrice);
             await s.post(web3);
             
             console.log("Message sent");
@@ -146,7 +146,7 @@ class Execute extends Component {
         this.props.clearMessages();
         
         try {
-            const s = new StatusGasRelayer.SNTController(SNTController.options.address, this.state.account)
+            const s = new StatusGasRelayer.TokenGasRelay(StatusNetwork.options.address, this.state.account)
                                           .execute(this.state.allowedContract, this.state.data)
                                           .setGas(this.state.gasPrice, this.state.gasMinimal)
                                           .setRelayer(relayer)
@@ -173,7 +173,7 @@ class Execute extends Component {
         return <div>
         <Card className={classes.card}>
             <CardContent>
-                <b>This functionality is used for simple wallets executing transactions and paying fees in SNT</b>
+                <b>This functionality is used for simple wallets executing transactions and paying fees in TokenGasRelay</b>
             </CardContent>
         </Card>
         { this.state.transactionError && <MySnackbarContentWrapper variant="error" message={this.state.transactionError} /> }

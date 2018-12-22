@@ -40,7 +40,7 @@ module.exports = {
             "minAcceptedRate": 1,
             "refreshPricePeriod": 60000
         },
-        "%STTAddress%": {
+        "%MiniMeTokenAddress%": {
             "name": "Status Test Token",
             "symbol": "SNT",
             "minAcceptedRate": 150000000000000,
@@ -50,33 +50,40 @@ module.exports = {
     },
 
     "contracts":{
-        "IdentityGasRelay": {
-            "abiFile": "../abi/IdentityGasRelay.json",
+        "GasRelay": {
+            "abiFile": "../abi/GasRelay.json",
             "isIdentity": true,
+            "baseVerification": "isBase(address)",
             "factoryAddress": "%IdentityFactoryAddress%",
-            "kernelVerification": "isKernel(bytes32)",
             "allowedFunctions": [
                 { 
-                    "function": "approveAndCallGasRelayed(address,address,uint256,bytes,uint256,uint256,uint256,address,bytes)", 
+                    "function": "approveAndCallGasRelay(address,address,uint256,bytes,uint256,uint256,bytes)", 
                     "isToken": true
                 },
                 {
-                    "function": "callGasRelayed(address,uint256,bytes,uint256,uint256,uint256,address,bytes)",
+                    "function": "callGasRelay(address,uint256,bytes,uint256,uint256,address,bytes)",
+                    "isToken": false
+                },
+                {
+                    "function": "deployGasRelay(uint256,bytes,uint256,uint256,address,bytes)",
                     "isToken": false
                 }
             ],
             "strategy": "../src/strategy/IdentityStrategy.js"
         },
-        "SNTController": {
-            "abiFile": "../abi/SNTController.json",
+        "TokenGasRelay": {
+            "abiFile": "../abi/TokenGasRelay.json",
             "isIdentity": false,
-            "address": "%SNTController%",
+            "address": "%StatusNetworkAddress%",
             "allowedFunctions": [
                 {
-                    "function":"transferSNT(address,uint256,uint256,uint256,bytes)"
+                    "function":"transferGasRelay(address,uint256,uint256,uint256,uint256,bytes)"
                 },
                 {
-                    "function":"executeGasRelayed(address,bytes,uint256,uint256,uint256,bytes)"
+                    "function":"convertGasRelay(uint256,uint256,uint256,uint256,bytes)"
+                }
+                {
+                    "function":"executeGasRelay(address,bytes,uint256,uint256,uint256,bytes)"
                 }
             ],
             "strategy": "../src/strategy/SNTStrategy.js"

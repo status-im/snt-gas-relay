@@ -104,14 +104,14 @@ try {
 }
 ```
 
-#### Using SNTController `transferSNT` function
+#### Using SNTController `transferGasRelay` function
 This functionality is used for simple wallets to perform SNT transfers without paying ETH fees
 ```
 try {
     const accounts = await web3.eth.getAccounts();
 
     const s = new StatusGasRelayer.SNTController(SNTController.options.address, accounts[2])
-                                    .transferSNT(to, amount)
+                                    .transferGasRelay(to, amount)
                                     .setGas(gasPrice)
                                     .setRelayer(relayer)
                                     .setAsymmetricKeyID(kid);

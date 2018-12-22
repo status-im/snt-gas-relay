@@ -1,53 +1,50 @@
-pragma solidity ^0.4.21;
+pragma solidity >=0.5.0 <0.6.0;
 
 contract TestIdentityGasRelay {
     event Debug();
     
-    function approveAndCallGasRelayed(
+    function approveAndCallGasRelay(
         address _baseToken, 
         address _to,
         uint256 _value,
-        bytes _data,
-        uint _nonce,
+        bytes calldata _data,
         uint _gasPrice,
         uint _gasLimit,
-        address _gasToken,
-        bytes _messageSignatures
+        bytes calldata _messageSignatures
     ) external {
         emit Debug();
     }
 
-    function callGasRelayed(
+    function callGasRelay(
         address _to,
         uint256 _value,
-        bytes _data,
-        uint _nonce,
+        bytes calldata _data,
         uint _gasPrice,
         uint _gasLimit,
         address _gasToken, 
-        bytes _messageSignatures
+        bytes calldata _messageSignatures
     ) external { 
         emit Debug();
     }
 
-    function() payable {
+    function() external payable {
         
     }
 }
 
 contract TestIdentityFactory {
     address public latestKernel;
-    function TestIdentityFactory(){
+    constructor() public {
         latestKernel = address(new TestIdentityGasRelay());
     }
 }
 
 contract TestSNTController {
     event Debug();
-    function transferSNT(address a,uint256 b,uint256 c,uint256 d, bytes f){
+    function transferGasRelay(address a,uint256 b,uint256 c,uint256 d, bytes f) external {
         emit Debug();
     } 
-    function executeGasRelayed(address a,bytes b,uint256 c,uint256 d,uint256 e,bytes f){
+    function executeGasRelay(address a,bytes b,uint256 c,uint256 d,uint256 e,bytes f) external {
         emit Debug();
     }
 }

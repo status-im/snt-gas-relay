@@ -21,7 +21,6 @@ module.exports = {
       "SafeMath": {"deploy": false},
       "Instance": {"deploy": false},
       "InstanceAbstract": {"deploy": false},
-      "TestMiniMeToken": {"deploy": false},
       "UpdatedIdentityKernel": {"deploy": false},
       "NonceChannelETH": {"deploy": false},
       "NonceChannelERC20": {"deploy": false},

@@ -1,0 +1,518 @@
+{
+    "contract_name": {
+        "className": "TokenGasRelay",
+        "args": [],
+        "code": "",
+        "runtimeBytecode": "",
+        "realRuntimeBytecode": "",
+        "swarmHash": "",
+        "gasEstimates": null,
+        "functionHashes": {
+            "convertGasRelay(uint256,uint256,uint256,uint256,bytes)": "c1861c6d",
+            "executeGasRelay(address,bytes,uint256,uint256,uint256,bytes)": "160583d4",
+            "getConvertGasRelayHash(uint256,uint256,uint256,uint256,address)": "bf09a3bf",
+            "getExecuteGasRelayHash(address,bytes,uint256,uint256,uint256,address)": "bdad380f",
+            "getNonce(address)": "2d0335ab",
+            "getTransferGasRelayHash(address,uint256,uint256,uint256,uint256,address)": "4f070c6f",
+            "transferGasRelay(address,uint256,uint256,uint256,uint256,bytes)": "3d9e6cf4"
+        },
+        "abiDefinition": [
+            {
+                "constant": false,
+                "inputs": [
+                    {
+                        "name": "_allowedContract",
+                        "type": "address"
+                    },
+                    {
+                        "name": "_data",
+                        "type": "bytes"
+                    },
+                    {
+                        "name": "_nonce",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_gasPrice",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_gasLimit",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_signature",
+                        "type": "bytes"
+                    }
+                ],
+                "name": "executeGasRelay",
+                "outputs": [],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [
+                    {
+                        "name": "account",
+                        "type": "address"
+                    }
+                ],
+                "name": "getNonce",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": false,
+                "inputs": [
+                    {
+                        "name": "_to",
+                        "type": "address"
+                    },
+                    {
+                        "name": "_amount",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_nonce",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_gasPrice",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_gasLimit",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_signature",
+                        "type": "bytes"
+                    }
+                ],
+                "name": "transferGasRelay",
+                "outputs": [],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [
+                    {
+                        "name": "_to",
+                        "type": "address"
+                    },
+                    {
+                        "name": "_amount",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_nonce",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_gasPrice",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_gasLimit",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_gasRelayer",
+                        "type": "address"
+                    }
+                ],
+                "name": "getTransferGasRelayHash",
+                "outputs": [
+                    {
+                        "name": "txHash",
+                        "type": "bytes32"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [
+                    {
+                        "name": "_allowedContract",
+                        "type": "address"
+                    },
+                    {
+                        "name": "_data",
+                        "type": "bytes"
+                    },
+                    {
+                        "name": "_nonce",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_gasPrice",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_gasLimit",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_gasRelayer",
+                        "type": "address"
+                    }
+                ],
+                "name": "getExecuteGasRelayHash",
+                "outputs": [
+                    {
+                        "name": "execHash",
+                        "type": "bytes32"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [
+                    {
+                        "name": "_amount",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_nonce",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_gasPrice",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_gasLimit",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_gasRelayer",
+                        "type": "address"
+                    }
+                ],
+                "name": "getConvertGasRelayHash",
+                "outputs": [
+                    {
+                        "name": "txHash",
+                        "type": "bytes32"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": false,
+                "inputs": [
+                    {
+                        "name": "_amount",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_nonce",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_gasPrice",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_gasLimit",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "_signature",
+                        "type": "bytes"
+                    }
+                ],
+                "name": "convertGasRelay",
+                "outputs": [],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            }
+        ],
+        "filename": "gasrelay/TokenGasRelay.sol",
+        "originalFilename": "contracts/gasrelay/TokenGasRelay.sol",
+        "path": "/home/ricardo/Documentos/GitHub/snt-gas-relay/test-dapp/contracts/gasrelay/TokenGasRelay.sol",
+        "gas": "auto",
+        "type": "file",
+        "deploy": false,
+        "_gasLimit": 6000000,
+        "error": false
+    },
+    "code": "",
+    "runtime_bytecode": "",
+    "real_runtime_bytecode": "",
+    "swarm_hash": "",
+    "gas_estimates": null,
+    "function_hashes": {
+        "convertGasRelay(uint256,uint256,uint256,uint256,bytes)": "c1861c6d",
+        "executeGasRelay(address,bytes,uint256,uint256,uint256,bytes)": "160583d4",
+        "getConvertGasRelayHash(uint256,uint256,uint256,uint256,address)": "bf09a3bf",
+        "getExecuteGasRelayHash(address,bytes,uint256,uint256,uint256,address)": "bdad380f",
+        "getNonce(address)": "2d0335ab",
+        "getTransferGasRelayHash(address,uint256,uint256,uint256,uint256,address)": "4f070c6f",
+        "transferGasRelay(address,uint256,uint256,uint256,uint256,bytes)": "3d9e6cf4"
+    },
+    "abi": [
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "_allowedContract",
+                    "type": "address"
+                },
+                {
+                    "name": "_data",
+                    "type": "bytes"
+                },
+                {
+                    "name": "_nonce",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_gasPrice",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_gasLimit",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_signature",
+                    "type": "bytes"
+                }
+            ],
+            "name": "executeGasRelay",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "account",
+                    "type": "address"
+                }
+            ],
+            "name": "getNonce",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "_to",
+                    "type": "address"
+                },
+                {
+                    "name": "_amount",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_nonce",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_gasPrice",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_gasLimit",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_signature",
+                    "type": "bytes"
+                }
+            ],
+            "name": "transferGasRelay",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "_to",
+                    "type": "address"
+                },
+                {
+                    "name": "_amount",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_nonce",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_gasPrice",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_gasLimit",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_gasRelayer",
+                    "type": "address"
+                }
+            ],
+            "name": "getTransferGasRelayHash",
+            "outputs": [
+                {
+                    "name": "txHash",
+                    "type": "bytes32"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "_allowedContract",
+                    "type": "address"
+                },
+                {
+                    "name": "_data",
+                    "type": "bytes"
+                },
+                {
+                    "name": "_nonce",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_gasPrice",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_gasLimit",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_gasRelayer",
+                    "type": "address"
+                }
+            ],
+            "name": "getExecuteGasRelayHash",
+            "outputs": [
+                {
+                    "name": "execHash",
+                    "type": "bytes32"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "_amount",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_nonce",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_gasPrice",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_gasLimit",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_gasRelayer",
+                    "type": "address"
+                }
+            ],
+            "name": "getConvertGasRelayHash",
+            "outputs": [
+                {
+                    "name": "txHash",
+                    "type": "bytes32"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "_amount",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_nonce",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_gasPrice",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_gasLimit",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_signature",
+                    "type": "bytes"
+                }
+            ],
+            "name": "convertGasRelay",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "constructor"
+        }
+    ]
+}

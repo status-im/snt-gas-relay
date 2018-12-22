@@ -194,5 +194,9 @@ contract SimpleGasRelay is Account, Controlled, GasRelay, MessageSigned {
             msg.sender
         );
     }
+
+    function getNonce() external view returns(uint256){
+        return nonce;
+    }
     
 }

@@ -15,7 +15,7 @@ import "../identity/IdentityFactory.sol";
 contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
 
     MiniMeToken public snt;
-    mapping (address => uint256) public signNonce;
+    mapping (address => uint256) public nonce;
     mapping (address => bool) public allowPublicExecution;
     IdentityFactory public identityFactory;
 
@@ -43,7 +43,7 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
     /**
      * @notice creates an identity and transfer _amount to the newly generated account.
      * @param _amount total being transfered to new account
-     * @param _nonce current signNonce of message signer
+     * @param _nonce current nonce of message signer
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasLimit maximum gas of this transacton
      * @param _signature concatenated rsv of message    
@@ -62,7 +62,7 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
 
         address msgSigner = recoverAddress(
             getSignHash(
-                getConvertHash(
+                getConvertGasRelayHash(
                     _amount,
                     _nonce,
                     _gasPrice,
@@ -73,8 +73,8 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
             _signature
         );
         
-        require(signNonce[msgSigner] == _nonce, ERR_BAD_NONCE);
-        signNonce[msgSigner]++;
+        require(nonce[msgSigner] == _nonce, ERR_BAD_NONCE);
+        nonce[msgSigner]++;
         IdentityAbstract userIdentity = identityFactory.createIdentity(
             keccak256(abi.encodePacked(msgSigner))
         );
@@ -90,7 +90,7 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
      * @notice allows externally owned address sign a message to transfer SNT and pay  
      * @param _to address receving the tokens from message signer
      * @param _amount total being transfered
-     * @param _nonce current signNonce of message signer
+     * @param _nonce current nonce of message signer
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasLimit maximum gas of this transacton
      * @param _signature concatenated rsv of message
@@ -109,7 +109,7 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
 
         address msgSigner = recoverAddress(
             getSignHash(
-                getTransferHash(
+                getTransferGasRelayHash(
                     _to,
                     _amount,
                     _nonce,
@@ -121,8 +121,8 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
              _signature
         );
 
-        require(signNonce[msgSigner] == _nonce, ERR_BAD_NONCE);
-        signNonce[msgSigner]++;
+        require(nonce[msgSigner] == _nonce, ERR_BAD_NONCE);
+        nonce[msgSigner]++;
         require(
             snt.transferFrom(msgSigner, _to, _amount),
             "Transfer fail"
@@ -134,7 +134,7 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
      * @notice allows externally owned address sign a message to offer SNT for a execution 
      * @param _allowedContract address of a contracts in execution trust list;
      * @param _data msg.data to be sent to `_allowedContract`
-     * @param _nonce current signNonce of message signer
+     * @param _nonce current nonce of message signer
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasLimit maximum gas of this transacton
      * @param _signature concatenated rsv of message
@@ -162,8 +162,8 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
             )
         );
         address msgSigner = recoverAddress(msgSigned, _signature);
-        require(signNonce[msgSigner] == _nonce, ERR_BAD_NONCE);
-        signNonce[msgSigner]++;
+        require(nonce[msgSigner] == _nonce, ERR_BAD_NONCE);
+        nonce[msgSigner]++;
         bool success; 
         bytes memory returndata;
         (success, returndata) = _allowedContract.call(_data);
@@ -232,6 +232,10 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
 
     function onApprove(address, address, uint256) external returns (bool) {
         return true;
+    }
+    
+    function getNonce(address account) external view returns(uint256){
+        return nonce[account];
     }
 
     /**

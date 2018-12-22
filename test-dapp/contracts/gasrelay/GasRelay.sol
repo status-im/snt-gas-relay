@@ -136,7 +136,9 @@ contract GasRelay {
         );
     }
 
-     /**
+    function getNonce() external view returns(uint256);
+
+    /**
      * @notice get callHash
      * @param _value call value (ether)
      * @param _dataHash call data hash

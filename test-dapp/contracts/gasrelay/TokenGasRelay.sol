@@ -26,7 +26,7 @@ contract TokenGasRelay {
     /**
      * @notice creates an identity and transfer _amount to the newly generated account.
      * @param _amount total being transfered to new account
-     * @param _nonce current signNonce of message signer
+     * @param _nonce current getNonce of message signer
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasLimit maximum gas of this transacton
      * @param _signature concatenated rsv of message    
@@ -44,7 +44,7 @@ contract TokenGasRelay {
      * @notice allows externally owned address sign a message to transfer SNT and pay  
      * @param _to address receving the tokens from message signer
      * @param _amount total being transfered
-     * @param _nonce current signNonce of message signer
+     * @param _nonce current getNonce of message signer
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _signature concatenated rsv of message
@@ -63,7 +63,7 @@ contract TokenGasRelay {
      * @notice allows externally owned address sign a message to offer SNT for a execution 
      * @param _allowedContract address of a contracts in execution trust list;
      * @param _data msg.data to be sent to `_allowedContract`
-     * @param _nonce current signNonce of message signer
+     * @param _nonce current  of message signer
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasLimit maximum gas of this transacton
      * @param _signature concatenated rsv of message
@@ -78,12 +78,13 @@ contract TokenGasRelay {
     )
         external;
 
+    function getNonce(address account) external view returns(uint256);
 
-        /**
+    /**
      * @notice get execution hash
      * @param _allowedContract address of a contracts in execution trust list;
      * @param _data msg.data to be sent to `_allowedContract`
-     * @param _nonce current signNonce of message signer
+     * @param _nonce current  of message signer
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasLimit maximum gas of this transacton
      * @param _gasRelayer beneficiary of gas, if address(0), msg.sender
@@ -118,12 +119,12 @@ contract TokenGasRelay {
      * @notice get transfer hash
      * @param _to address receving the tokens from message signer
      * @param _amount total being transfered
-     * @param _nonce current signNonce of message signer
+     * @param _nonce current  of message signer
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasLimit maximum gas of this transacton
      * @param _gasRelayer beneficiary of gas, if address(0), msg.sender
      */
-    function getTransferHash(
+    function getTransferGasRelayHash(
         address _to,
         uint256 _amount,
         uint256 _nonce,
@@ -152,12 +153,12 @@ contract TokenGasRelay {
     /**
      * @notice get transfer hash
      * @param _amount total being transfered
-     * @param _nonce current signNonce of message signer
+     * @param _nonce current  of message signer
      * @param _gasPrice price in SNT paid back to msg.sender for each gas unit used
      * @param _gasLimit maximum gas of this transacton
      * @param _gasRelayer beneficiary of gas, if address(0), msg.sender
      */
-    function getConvertHash(
+    function getConvertGasRelayHash(
         uint256 _amount,
         uint256 _nonce,
         uint256 _gasPrice,

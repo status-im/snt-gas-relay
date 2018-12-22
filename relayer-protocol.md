@@ -82,7 +82,7 @@ From the list of relayers received via whisper messages, you need to extract the
 
 `encodedFunCall` is the hex data used obtained from `web3.eth.abi.encodeFunctionCall` for the specific function we want to invoke.
 
-If we were to execute `callGasRelayed(address,uint256,bytes,uint256,uint256,uint256,address,bytes)` (part of the IdentityGasRelay) in contract `0x692a70d2e424a56d2c6c27aa97d1a86395877b3a`, with these values: `"0x11223344556677889900998877665544332211",100,"0x00",1,10,20,"0x1122334455112233445511223344551122334455"`, "0x1122334455", `PAYLOAD_BYTES` can be prepared as follows: 
+If we were to execute `callGasRelay(address,uint256,bytes,uint256,uint256,uint256,address,bytes)` (part of the IdentityGasRelay) in contract `0x692a70d2e424a56d2c6c27aa97d1a86395877b3a`, with these values: `"0x11223344556677889900998877665544332211",100,"0x00",1,10,20,"0x1122334455112233445511223344551122334455"`, "0x1122334455", `PAYLOAD_BYTES` can be prepared as follows: 
 
 ```
 // The following values are created obtained when polling for relayers
@@ -90,7 +90,7 @@ const whisperKeyPairID = await web3W.shh.newKeyPair();
 const relayerPubKey = "0xRELAYER_PUBLIC_KEY_HERE";
 // ...
 // ...
-const jsonAbi = ABIOfIdentityGasRelay.find(x => x.name == "callGasRelayed");
+const jsonAbi = ABIOfIdentityGasRelay.find(x => x.name == "callGasRelay");
 
 const funCall = web3.eth.abi.encodeFunctionCall(jsonAbi,
                 [

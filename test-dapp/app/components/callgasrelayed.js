@@ -9,7 +9,7 @@ import EmbarkJS from 'Embark/EmbarkJS';
 import Grid from '@material-ui/core/Grid';
 import MySnackbarContentWrapper from './snackbar';
 import PropTypes from 'prop-types';
-import STT from 'Embark/contracts/STT';
+import MiniMeToken from 'Embark/contracts/MiniMeToken';
 import TestContract from 'Embark/contracts/TestContract';
 import TextField from '@material-ui/core/TextField';
 import config from '../config';
@@ -56,7 +56,7 @@ class CallGasRelayed extends Component {
     componentDidMount(){
         EmbarkJS.onReady(() => {
             this.setState({
-                gasToken: STT.options.address
+                gasToken: MiniMeToken.options.address
             });
         });
     }
@@ -80,8 +80,8 @@ class CallGasRelayed extends Component {
   
         try {
 
-            const s = new StatusGasRelayer.Identity(this.props.identityAddress, web3.eth.defaultAccount)
-                                          .setContractFunction(Functions.Identity.call)
+            const s = new StatusGasRelayer.GasRelay(this.props.identityAddress, web3.eth.defaultAccount)
+                                          .setContractFunction(Functions.GasRelay.call)
                                           .setTransaction(this.state.to, this.state.value, this.state.data)
                                           .setGas(this.state.gasToken, this.state.gasPrice, this.state.gasLimit);
                                           
@@ -105,7 +105,7 @@ class CallGasRelayed extends Component {
         this.props.clearMessages();
         
         try {
-            const s = new StatusGasRelayer.AvailableRelayers(Contracts.Identity, this.props.identityAddress, web3.eth.defaultAccount)
+            const s = new StatusGasRelayer.AvailableRelayers(Contracts.GasRelay, this.props.identityAddress, web3.eth.defaultAccount)
                                           .setRelayersSymKeyID(skid)
                                           .setAsymmetricKeyID(kid)
                                           .setGas(this.state.gasToken, this.state.gasPrice);
@@ -143,8 +143,8 @@ class CallGasRelayed extends Component {
         this.props.clearMessages();
         
         try {
-            const s = new StatusGasRelayer.Identity(this.props.identityAddress, web3.eth.defaultAccount)
-                                          .setContractFunction(Functions.Identity.call)
+            const s = new StatusGasRelayer.GasRelay(this.props.identityAddress, web3.eth.defaultAccount)
+                                          .setContractFunction(Functions.GasRelay.call)
                                           .setTransaction(this.state.to, this.state.value, this.state.data)
                                           .setGas(this.state.gasToken, this.state.gasPrice, this.state.gasLimit)
                                           .setRelayer(relayer)
@@ -180,7 +180,7 @@ class CallGasRelayed extends Component {
         return <div>
         <Card className={classes.card}>
             <CardContent>
-                <b>This functionality is used when a Identity will invoke a contract function or transfer ether without paying fees </b>
+                <b>This functionality is used when a GasRelay will invoke a contract function or transfer ether without paying fees </b>
             </CardContent>
         </Card>
         { this.state.transactionError && <MySnackbarContentWrapper variant="error" message={this.state.transactionError} /> }
@@ -244,8 +244,8 @@ class CallGasRelayed extends Component {
                                 native: true
                             }}
                             >
-                            <option key={STT.options.address} value={STT.options.address}>
-                            {STT.options.address} (STT)
+                            <option key={MiniMeToken.options.address} value={MiniMeToken.options.address}>
+                            {MiniMeToken.options.address} (MiniMeToken)
                             </option>
                             <option key="0x0000000000000000000000000000000000000000" value="0x0000000000000000000000000000000000000000">
                             0x0000000000000000000000000000000000000000 (ETH)

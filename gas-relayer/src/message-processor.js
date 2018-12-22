@@ -37,10 +37,10 @@ class MessageProcessor {
             
         // Get code from contract and compare it against the contract code
         if(!contract.isIdentity){
-            const code = this.web3.utils.soliditySha3(await this.web3.eth.getCode(input.contract));
+            /*const code = this.web3.utils.soliditySha3(await this.web3.eth.getCode(input.contract));
             if(code != contract.code){
                 return {success: false, message: 'Invalid contract code'};
-            }
+            }*/
         } else {
             if(!(/^0x[0-9a-f]{40}$/i).test(input.contract)){
                 return {success: false, message: 'Invalid contract address'};

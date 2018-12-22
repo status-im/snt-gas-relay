@@ -10,7 +10,7 @@ import "../common/MessageSigned.sol";
  * @notice enables economic abstraction through gas channel for Identity
  */
 contract IdentityGasChannelExt is IdentityExtension, GasChannel, MessageSigned {
-    
+
     function installExtension(IdentityAbstract _extension, bool _enable) 
         external 
         managementOnly 
@@ -213,6 +213,9 @@ contract IdentityGasChannelExt is IdentityExtension, GasChannel, MessageSigned {
         
     }
 
+    function getNonce() external view returns(uint256){
+        return nonce;
+    }
 
     /**
      * @notice reverts if signatures are not valid for the signed hash and required key type. 

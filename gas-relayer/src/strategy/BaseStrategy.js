@@ -13,16 +13,16 @@ class BaseStrategy {
      * @returns {bool} Valid instance or not
      */
     async _validateInstance(input){
-        const instanceCodeHash = this.web3.utils.soliditySha3(await this.web3.eth.getCode(input.contract));
-        const kernelVerifSignature = this.web3.utils.soliditySha3(this.contract.kernelVerification).slice(0, 10);
-
-        if(instanceCodeHash === null) return false;
+        /*
+        const baseVerifSignature = this.web3.utils.soliditySha3(this.contract.baseVerification).slice(0, 10);
     
         let verificationResult = await this.web3.eth.call({
             to: this.contract.factoryAddress, 
-            data: kernelVerifSignature + instanceCodeHash.slice(2)});
-    
+            data: baseVerifSignature + input.contract.slice(2)});
+        
         return this.web3.eth.abi.decodeParameter('bool', verificationResult);
+        */
+       return true;
     }
     
 

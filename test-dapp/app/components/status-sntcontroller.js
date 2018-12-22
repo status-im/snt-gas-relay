@@ -14,8 +14,8 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import NumberIcon from '@material-ui/icons/ConfirmationNumber';
 import PropTypes from 'prop-types';
-import SNTController from 'Embark/contracts/SNTController';
-import STT from 'Embark/contracts/STT';
+import StatusNetwork from 'Embark/contracts/StatusNetwork';
+import MiniMeToken from 'Embark/contracts/MiniMeToken';
 import Typography from '@material-ui/core/Typography';
 import config from '../config';
 import web3 from 'Embark/web3';
@@ -103,7 +103,7 @@ class Status extends Component {
                 this.setState({addressETHBalance});
             });
 
-            STT.methods.balanceOf(this.props.walletAddress)
+            MiniMeToken.methods.balanceOf(this.props.walletAddress)
             .call()
             .then(addressSTTBalance => {
                 this.setState({addressSTTBalance: web3.utils.fromWei(addressSTTBalance, 'ether')});
@@ -111,7 +111,7 @@ class Status extends Component {
 
             web3.eth.getAccounts()
             .then(accounts => {
-                SNTController.methods.signNonce(this.props.walletAddress)
+                StatusNetwork.methods.getNonce(this.props.walletAddress)
                 .call()
                 .then((nonce) => {
                     this.props.nonceUpdateFunction(nonce);
@@ -129,7 +129,7 @@ class Status extends Component {
             this.setState({relayerEthBalance});
         });
 
-        STT.methods.balanceOf(this.props.relayerAddress)
+        MiniMeToken.methods.balanceOf(this.props.relayerAddress)
         .call()
         .then(relayerSTTBalance => {
             this.setState({relayerSTTBalance: web3.utils.fromWei(relayerSTTBalance, 'ether')});
@@ -143,7 +143,7 @@ class Status extends Component {
         submitState.generateSTT = true;
         this.setState({submitState});
 
-        let toSend = STT.methods.generateTokens(this.props.walletAddress, web3.utils.toWei('5000', 'ether'));
+        let toSend = MiniMeToken.methods.generateTokens(this.props.walletAddress, web3.utils.toWei('5000', 'ether'));
         toSend.estimateGas()
         .then(estimatedGas => {
             return toSend.send({gas: estimatedGas + 10000});
@@ -165,7 +165,7 @@ class Status extends Component {
         this.setState({submitState});
 
 
-        const toSend = STT.methods.changeController(SNTController.options.address);
+        const toSend = MiniMeToken.methods.changeController(StatusNetwork.options.address);
 
         toSend.estimateGas()
         .then(estimatedGas => {
@@ -216,11 +216,11 @@ class Status extends Component {
                     <Typography variant="display1">
                         Address
                     </Typography>
-                    { isDev && <Button className={classes.button} color="primary" aria-label="Generate STT" onClick={this.generateSTT} disabled={submitState.generateSTT}>
+                    { isDev && <Button className={classes.button} color="primary" aria-label="Generate MiniMeToken" onClick={this.generateSTT} disabled={submitState.generateSTT}>
                         <AddIcon className={classes.icon} />
-                        1. Generate 5K STT (only on dev)
+                        1. Generate 5K MiniMeToken (only on dev)
                     </Button> }
-                    { isDev && <Button className={classes.button} color="primary" aria-label="Generate STT" onClick={this.changeSNTController}>
+                    { isDev && <Button className={classes.button} color="primary" aria-label="Change SN Controller" onClick={this.changeSNTController}>
                         <AddIcon className={classes.icon} />
                         2. Change SNT Controller
                     </Button> }
@@ -253,7 +253,7 @@ class Status extends Component {
                     />
                     <ListItemText
                     primary={addressSTTBalance}
-                    secondary="STT Balance"
+                    secondary="MiniMeToken Balance"
                     />
                 </ListItem>
             </List>
@@ -287,7 +287,7 @@ class Status extends Component {
                     />
                     <ListItemText
                     primary={relayerSTTBalance}
-                    secondary="STT Balance (wei)"
+                    secondary="MiniMeToken Balance (wei)"
                     />
                 </ListItem>
             </List>

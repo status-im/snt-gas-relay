@@ -11,7 +11,7 @@ import "../common/MessageSigned.sol";
  * @notice enables economic abstraction for Controlled
  */
 contract AccountGasChannel is Account, Controlled, GasChannel, MessageSigned {
-        
+    
     /**
      * @notice creates a new channel and pay gas in the newly created channel 
      * @param _channelFactory address of trusted factory
@@ -200,4 +200,9 @@ contract AccountGasChannel is Account, Controlled, GasChannel, MessageSigned {
         authorizeChannel(_gasChannel);
         
     }
+    
+    function getNonce() external view returns(uint256){
+        return nonce;
+    }
+
 }

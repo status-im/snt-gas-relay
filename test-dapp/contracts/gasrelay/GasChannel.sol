@@ -120,6 +120,8 @@ contract GasChannel {
     ) 
         external;
 
+    function getNonce() external view returns(uint256);
+
     /**
      * @notice get callHash
      * @param _to destination of call

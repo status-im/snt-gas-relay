@@ -8,8 +8,8 @@ import CardHeader from '@material-ui/core/CardHeader';
 import Grid from '@material-ui/core/Grid';
 import MySnackbarContentWrapper from './snackbar';
 import PropTypes from 'prop-types';
-import SNTController from 'Embark/contracts/SNTController';
-import STT from 'Embark/contracts/STT';
+import StatusNetwork from 'Embark/contracts/StatusNetwork';
+import MiniMeToken from 'Embark/contracts/MiniMeToken';
 import TestContract from 'Embark/contracts/TestContract';
 import TextField from '@material-ui/core/TextField';
 import config from '../config';
@@ -27,7 +27,7 @@ const styles = theme => ({
   });
 
 window.TestContract = TestContract;
-window.SNTController = SNTController;
+window.StatusNetwork = StatusNetwork;
 
 class TransferSNT extends Component {
 
@@ -64,10 +64,10 @@ class TransferSNT extends Component {
 
     getBalance = (event) => {
         event.preventDefault();
-        STT.methods.balanceOf(this.state.to)
+        MiniMeToken.methods.balanceOf(this.state.to)
         .call()
         .then(balance => {
-            console.log("Balance of " + this.state.to + ": " + balance + " STT");
+            console.log("Balance of " + this.state.to + ": " + balance + " MiniMeToken");
         });
     }
 
@@ -83,8 +83,8 @@ class TransferSNT extends Component {
         try {
             this.setState({account: web3.eth.defaultAccount});
 
-            const s = new StatusGasRelayer.SNTController(SNTController.options.address, web3.eth.defaultAccount)
-                                          .transferSNT(this.state.to, this.state.amount)
+            const s = new StatusGasRelayer.TokenGasRelay(StatusNetwork.options.address, web3.eth.defaultAccount)
+                                          .transferGasRelay(this.state.to, this.state.amount)
                                           .setGas(this.state.gasPrice);
                                           
             const signature = await s.sign(web3);
@@ -109,10 +109,10 @@ class TransferSNT extends Component {
 
 
         try {
-            const s = new StatusGasRelayer.AvailableRelayers(Contracts.SNT, SNTController.options.address, this.state.account)
+            const s = new StatusGasRelayer.AvailableRelayers(Contracts.TokenGasRelay, StatusNetwork.options.address, this.state.account)
                                           .setRelayersSymKeyID(skid)
                                           .setAsymmetricKeyID(kid)
-                                          .setGas(STT.options.address, this.state.gasPrice);
+                                          .setGas(MiniMeToken.options.address, this.state.gasPrice);
             await s.post(web3);
             
             console.log("Message sent");
@@ -147,8 +147,8 @@ class TransferSNT extends Component {
         this.props.clearMessages();
         
         try {
-            const s = new StatusGasRelayer.SNTController(SNTController.options.address, this.state.account)
-                                          .transferSNT(this.state.to, this.state.amount)
+            const s = new StatusGasRelayer.TokenGasRelay(StatusNetwork.options.address, this.state.account)
+                                          .transferGasRelay(this.state.to, this.state.amount)
                                           .setGas(this.state.gasPrice)
                                           .setRelayer(relayer)
                                           .setAsymmetricKeyID(kid);
@@ -174,7 +174,7 @@ class TransferSNT extends Component {
         return <div>
         <Card className={classes.card}>
             <CardContent>
-                <b>This functionality is used for simple wallets to perform SNT transfers without paying eth fees</b>
+                <b>This functionality is used for simple wallets to perform TokenGasRelay transfers without paying eth fees</b>
             </CardContent>
         </Card>
         { this.state.transactionError && <MySnackbarContentWrapper variant="error" message={this.state.transactionError} /> }
@@ -232,7 +232,7 @@ class TransferSNT extends Component {
                 <Button color="primary" onClick={this.sign}>
                     Sign Message
                 </Button>
-                <Button size="small" onClick={this.getBalance}>STT.methods.balanceOf(to).call()</Button>
+                <Button size="small" onClick={this.getBalance}>MiniMeToken.methods.balanceOf(to).call()</Button>
 
             </CardActions>
         </Card>

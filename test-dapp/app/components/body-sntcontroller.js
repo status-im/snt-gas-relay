@@ -4,7 +4,7 @@ import Divider from '@material-ui/core/Divider';
 import EmbarkJS from 'Embark/EmbarkJS';
 import Execute from './execute';
 import PropTypes from 'prop-types';
-import STT from 'Embark/contracts/STT';
+import MiniMeToken from 'Embark/contracts/MiniMeToken';
 import Status from './status-sntcontroller';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
@@ -15,7 +15,7 @@ import config from '../config';
 import web3 from 'Embark/web3';
 import {withStyles} from '@material-ui/core/styles';
 
-window.STT = STT;
+window.MiniMeToken = MiniMeToken;
 
 const styles = {};
 

@@ -6,7 +6,7 @@ import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import EmbarkJS from 'Embark/EmbarkJS';
-import Identity from 'Embark/contracts/Identity';
+import IdentityGasRelayBase from 'Embark/contracts/IdentityGasRelayBase';
 import KeyIcon from '@material-ui/icons/VpnKey';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import List from '@material-ui/core/List';
@@ -16,12 +16,12 @@ import ListItemText from '@material-ui/core/ListItemText';
 import NumberIcon from '@material-ui/icons/ConfirmationNumber';
 import PropTypes from 'prop-types';
 import RefreshIcon from '@material-ui/icons/Refresh';
-import STT from 'Embark/contracts/STT';
+import MiniMeToken from 'Embark/contracts/MiniMeToken';
 import Typography from '@material-ui/core/Typography';
 import config from '../config';
 import web3 from 'Embark/web3';
 import {withStyles} from '@material-ui/core/styles';
-window.Id = Identity;
+window.Id = IdentityGasRelayBase;
 const styles = theme => ({
     button: {
         marginRight: theme.spacing.unit * 2
@@ -105,14 +105,14 @@ class Status extends Component {
                 this.setState({identityEthBalance});
             });
 
-            STT.methods.balanceOf(this.props.identityAddress)
+            MiniMeToken.methods.balanceOf(this.props.identityAddress)
             .call()
             .then(identitySTTBalance => {
                 this.setState({identitySTTBalance: web3.utils.fromWei(identitySTTBalance, 'ether')});
             });
 
-            Identity.options.address = this.props.identityAddress;
-            Identity.methods.nonce()
+            IdentityGasRelayBase.options.address = this.props.identityAddress;
+            IdentityGasRelayBase.methods.getNonce()
             .call()
             .then((nonce) => {
                 this.props.nonceUpdateFunction(nonce);
@@ -127,7 +127,7 @@ class Status extends Component {
             this.setState({relayerEthBalance});
         });
 
-        STT.methods.balanceOf(this.props.relayerAddress)
+        MiniMeToken.methods.balanceOf(this.props.relayerAddress)
         .call()
         .then(relayerSTTBalance => {
             this.setState({relayerSTTBalance: web3.utils.fromWei(relayerSTTBalance, 'ether')});
@@ -141,7 +141,7 @@ class Status extends Component {
         submitState.generateSTT = true;
         this.setState({submitState});
 
-        let toSend = STT.methods.generateTokens(this.props.identityAddress, web3.utils.toWei('5000', 'ether'));
+        let toSend = MiniMeToken.methods.generateTokens(this.props.identityAddress, web3.utils.toWei('5000', 'ether'));
         toSend.estimateGas()
         .then(estimatedGas => {
             return toSend.send({gas: estimatedGas + 10000});
@@ -207,13 +207,13 @@ class Status extends Component {
                         Identity
                     </Typography>
 
-                    { isDev && <Button className={classes.button} color="primary" aria-label="New Identity" onClick={this.createIdentity} disabled={submitState.createIdentity}>
+                    { isDev && <Button className={classes.button} color="primary" aria-label="New IdentityGasRelayBase" onClick={this.createIdentity} disabled={submitState.createIdentity}>
                         <RefreshIcon className={classes.icon} />
                         Create new identity
                     </Button> }
-                    { isDev && <Button className={classes.button} color="primary" aria-label="Generate STT" onClick={this.generateSTT} disabled={submitState.generateSTT}>
+                    { isDev && <Button className={classes.button} color="primary" aria-label="Generate MiniMeToken" onClick={this.generateSTT} disabled={submitState.generateSTT}>
                         <AddIcon className={classes.icon} />
-                        Generate 5K STT (only on dev)
+                        Generate 5K MiniMeToken (only on dev)
                     </Button>  }
                 </ListItem>
                 <ListItem className={classes.root}>
@@ -244,7 +244,7 @@ class Status extends Component {
                     />
                     <ListItemText
                     primary={identitySTTBalance}
-                    secondary="STT Balance"
+                    secondary="MiniMeToken Balance"
                     />
                 </ListItem>
             </List>
@@ -278,7 +278,7 @@ class Status extends Component {
                     />
                     <ListItemText
                     primary={relayerSTTBalance}
-                    secondary="STT Balance (wei)"
+                    secondary="MiniMeToken Balance (wei)"
                     />
                 </ListItem>
             </List>

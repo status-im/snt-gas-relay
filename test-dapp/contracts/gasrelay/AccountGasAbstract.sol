@@ -384,4 +384,8 @@ contract AccountGasAbstract is Account, Controlled, GasRelay, GasChannel, Messag
         authorizeChannel(_gasChannel);
         
     }
+
+    function getNonce() external view returns(uint256){
+        return nonce;
+    }
 }
