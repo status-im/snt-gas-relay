@@ -238,7 +238,7 @@ class GasRelayAction extends Action {
                     this.gasPrice,
                     this.gasLimit,
                     this.gasToken,
-                    this.gasRelayer
+                    this.relayer
                 ).call();
                 break;
                 case Functions.GasRelay.approveAndCall:
@@ -250,7 +250,7 @@ class GasRelayAction extends Action {
                     nonce,
                     this.gasPrice,
                     this.gasLimit,
-                    this.gasRelayer
+                    this.relayer
                 ).call(); 
                 break;
                 case Functions.GasRelay.deploy:
@@ -261,7 +261,7 @@ class GasRelayAction extends Action {
                     this.gasPrice,
                     this.gasLimit,
                     this.gasToken,
-                    this.gasRelayer
+                    this.relayer
                 ).call(); 
                 break;
             default:
@@ -364,12 +364,6 @@ class TokenGasRelayAction extends Action {
         const contract = new web3.eth.Contract(TokenGasRelay.options.jsonInterface, this.contractAddress);
         const nonce = await this._nonce(contract);
         return nonce;
-    }
-
-    setGas(price, minimal){
-        this.gasPrice = price;
-        this.gasMinimal = minimal;
-        return this;
     }
 
     sign = async web3 => {

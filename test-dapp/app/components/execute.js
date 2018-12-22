@@ -31,12 +31,12 @@ class Execute extends Component {
     constructor(props){
         super(props);
         this.state = {
-            topic: '0x534e5443',
+            topic: '0x546f6b65',
             account: '',
             allowedContract: '0x0000000000000000000000000000000000000000',
             data: '0x00',
             gasPrice: 0,
-            gasMinimal: 0,
+            gasLimit: 0,
             signature: '',
             kid: null,
             skid: null,
@@ -75,7 +75,7 @@ class Execute extends Component {
             
             const s = new StatusGasRelayer.TokenGasRelay(StatusNetwork.options.address,web3.eth.defaultAccount)
                                           .execute(this.state.allowedContract, this.state.data)
-                                          .setGas(this.state.gasPrice, this.state.gasMinimal);
+                                          .setGas(await StatusNetwork.methods.snt(), this.state.gasPrice, this.state.gasLimit);
                                           
             const signature = await s.sign(web3);
 
@@ -111,7 +111,7 @@ class Execute extends Component {
             const s = new StatusGasRelayer.AvailableRelayers(Contracts.TokenGasRelay, StatusNetwork.options.address, this.state.account)
                                           .setRelayersSymKeyID(skid)
                                           .setAsymmetricKeyID(kid)
-                                          .setGas(MiniMeToken.options.address, this.state.gasPrice);
+                                          .setGas(await StatusNetwork.methods.snt(), this.state.gasPrice);
             await s.post(web3);
             
             console.log("Message sent");
@@ -148,7 +148,7 @@ class Execute extends Component {
         try {
             const s = new StatusGasRelayer.TokenGasRelay(StatusNetwork.options.address, this.state.account)
                                           .execute(this.state.allowedContract, this.state.data)
-                                          .setGas(this.state.gasPrice, this.state.gasMinimal)
+                                          .setGas(await StatusNetwork.methods.snt(), this.state.gasPrice, this.state.gasLimit)
                                           .setRelayer(relayer)
                                           .setAsymmetricKeyID(kid);
 
@@ -226,10 +226,10 @@ class Execute extends Component {
                     </Grid>
                     <Grid item xs={2}>
                         <TextField
-                            id="gasMinimal"
-                            label="Gas Minimal"
-                            value={this.state.gasMinimal}
-                            onChange={this.handleChange('gasMinimal')}
+                            id="gasLimit"
+                            label="Gas Limit"
+                            value={this.state.gasLimit}
+                            onChange={this.handleChange('gasLimit')}
                             margin="normal"
                             fullWidth
                             />

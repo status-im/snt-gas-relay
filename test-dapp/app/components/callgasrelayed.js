@@ -32,7 +32,7 @@ class CallGasRelayed extends Component {
     constructor(props){
         super(props);
         this.state = {
-            topic: '0x4964656e',
+            topic: '0x47617352',
             to: '0x0000000000000000000000000000000000000000',
             value: 0,
             data: '0x00',

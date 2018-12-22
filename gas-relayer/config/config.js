@@ -81,7 +81,7 @@ module.exports = {
                 },
                 {
                     "function":"convertGasRelay(uint256,uint256,uint256,uint256,bytes)"
-                }
+                },
                 {
                     "function":"executeGasRelay(address,bytes,uint256,uint256,uint256,bytes)"
                 }

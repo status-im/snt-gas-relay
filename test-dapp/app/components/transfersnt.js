@@ -34,11 +34,12 @@ class TransferSNT extends Component {
     constructor(props){
         super(props);
         this.state = {
-            topic: '0x534e5443',
+            topic: '0x546f6b65',
             account: '',
             to: '0x0000000000000000000000000000000000000000',
             amount: 0,
             gasPrice: 0,
+            gasLimit: 0,
             signature: '',
             kid: null,
             skid: null,
@@ -73,7 +74,7 @@ class TransferSNT extends Component {
 
     sign = async (event) => {
         if(event) event.preventDefault();
-  
+        console.log(this.state.gasPrice);
         this.setState({
           msgSent: false,
           transactionError: ''
@@ -85,7 +86,8 @@ class TransferSNT extends Component {
 
             const s = new StatusGasRelayer.TokenGasRelay(StatusNetwork.options.address, web3.eth.defaultAccount)
                                           .transferGasRelay(this.state.to, this.state.amount)
-                                          .setGas(this.state.gasPrice);
+                                          .setGas(await StatusNetwork.methods.snt(), this.state.gasPrice, this.state.gasLimit)
+                                          .setRelayer(relayer);
                                           
             const signature = await s.sign(web3);
 
@@ -112,7 +114,7 @@ class TransferSNT extends Component {
             const s = new StatusGasRelayer.AvailableRelayers(Contracts.TokenGasRelay, StatusNetwork.options.address, this.state.account)
                                           .setRelayersSymKeyID(skid)
                                           .setAsymmetricKeyID(kid)
-                                          .setGas(MiniMeToken.options.address, this.state.gasPrice);
+                                          .setGas(await StatusNetwork.methods.snt(), this.state.gasPrice);
             await s.post(web3);
             
             console.log("Message sent");
@@ -149,7 +151,7 @@ class TransferSNT extends Component {
         try {
             const s = new StatusGasRelayer.TokenGasRelay(StatusNetwork.options.address, this.state.account)
                                           .transferGasRelay(this.state.to, this.state.amount)
-                                          .setGas(this.state.gasPrice)
+                                          .setGas(await StatusNetwork.methods.snt(), this.state.gasPrice, this.state.gasLimit)
                                           .setRelayer(relayer)
                                           .setAsymmetricKeyID(kid);
 
@@ -221,6 +223,16 @@ class TransferSNT extends Component {
                             label="Gas Price"
                             value={this.state.gasPrice}
                             onChange={this.handleChange('gasPrice')}
+                            margin="normal"
+                            fullWidth
+                            />
+                    </Grid>
+                    <Grid item xs={2}>
+                        <TextField
+                            id="gasLimit"
+                            label="Gas Limit"
+                            value={this.state.gasLimit}
+                            onChange={this.handleChange('gasLimit')}
                             margin="normal"
                             fullWidth
                             />

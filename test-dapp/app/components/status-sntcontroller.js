@@ -143,7 +143,7 @@ class Status extends Component {
         submitState.generateSTT = true;
         this.setState({submitState});
 
-        let toSend = MiniMeToken.methods.generateTokens(this.props.walletAddress, web3.utils.toWei('5000', 'ether'));
+        let toSend = StatusNetwork.methods.generateTokens(this.props.walletAddress, web3.utils.toWei('5000', 'ether'));
         toSend.estimateGas()
         .then(estimatedGas => {
             return toSend.send({gas: estimatedGas + 10000});
@@ -165,7 +165,7 @@ class Status extends Component {
         this.setState({submitState});
 
 
-        const toSend = MiniMeToken.methods.changeController(StatusNetwork.options.address);
+        const toSend = StatusNetwork.methods.changeController(StatusNetwork.options.address);
 
         toSend.estimateGas()
         .then(estimatedGas => {

@@ -62,7 +62,8 @@ module.exports = {
         "deploy": true,
         "args": ["0x0", "$MiniMeToken", "$IdentityFactory"],
         "onDeploy": [
-          "MiniMeToken.methods.changeController(StatusNetwork.address).send()"
+          "MiniMeToken.methods.changeController(StatusNetwork.address).send()",
+          "StatusNetwork.methods.setOpen(true).send()",
         ]
       }
     }
@@ -107,7 +108,8 @@ module.exports = {
         "deploy": true,
         "args": ["0x0", "$MiniMeToken", "$IdentityFactory"],
         "onDeploy": [
-          "SNTPlaceHolder.methods.changeController(StatusNetwork.address).send()"
+          "SNTPlaceHolder.methods.changeController(StatusNetwork.address).send()",
+          "StatusNetwork.methods.setOpen(true).send()",
         ]
       }
     }
