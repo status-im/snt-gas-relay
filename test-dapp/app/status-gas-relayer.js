@@ -2,8 +2,8 @@ import GasRelay from 'Embark/contracts/GasRelay';
 import TokenGasRelay from 'Embark/contracts/TokenGasRelay';
 
 export const Contracts = {
-    'GasRelay': 'IdentityGasRelayBase',
-    'TokenGasRelay': 'StatusNetwork'
+    'GasRelay': 'GasRelay',
+    'TokenGasRelay': 'TokenGasRelay'
 };
 
 export const Functions = {

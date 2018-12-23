@@ -75,7 +75,7 @@ class Execute extends Component {
             
             const s = new StatusGasRelayer.TokenGasRelay(StatusNetwork.options.address,web3.eth.defaultAccount)
                                           .execute(this.state.allowedContract, this.state.data)
-                                          .setGas(await StatusNetwork.methods.snt(), this.state.gasPrice, this.state.gasLimit);
+                                          .setGas(MiniMeToken.options.address, this.state.gasPrice, this.state.gasLimit);
                                           
             const signature = await s.sign(web3);
 
@@ -111,7 +111,7 @@ class Execute extends Component {
             const s = new StatusGasRelayer.AvailableRelayers(Contracts.TokenGasRelay, StatusNetwork.options.address, this.state.account)
                                           .setRelayersSymKeyID(skid)
                                           .setAsymmetricKeyID(kid)
-                                          .setGas(await StatusNetwork.methods.snt(), this.state.gasPrice);
+                                          .setGas(MiniMeToken.options.address, this.state.gasPrice);
             await s.post(web3);
             
             console.log("Message sent");
@@ -148,7 +148,7 @@ class Execute extends Component {
         try {
             const s = new StatusGasRelayer.TokenGasRelay(StatusNetwork.options.address, this.state.account)
                                           .execute(this.state.allowedContract, this.state.data)
-                                          .setGas(await StatusNetwork.methods.snt(), this.state.gasPrice, this.state.gasLimit)
+                                          .setGas(MiniMeToken.options.address, this.state.gasPrice, this.state.gasLimit)
                                           .setRelayer(relayer)
                                           .setAsymmetricKeyID(kid);
 

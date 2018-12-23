@@ -76,7 +76,7 @@ class BaseStrategy {
         const {toBN} = this.web3.utils;
         const Token = new this.web3.eth.Contract(erc20ABI.abi);
         Token.options.address = token.address;
-        const tokenDecimals = await Token.methods.decimals().call();
+        const tokenDecimals = 18;
         const multiplier = toBN(Math.pow(10, tokenDecimals));
         const currentGasPrice = toBN(await this.web3.eth.getGasPrice());
         const currentGasConvertedToTokens = currentGasPrice.mul(multiplier).div(tokenRate);

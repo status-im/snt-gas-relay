@@ -17,7 +17,7 @@ contract('IdentityFactory', function () {
       let result = await IdentityFactory.createIdentity();
       createdIdentity = new web3.eth.Contract(
           IdentityGasRelay.options.jsonInterface,
-          result.events.IdentityCreated.returnValues.instance
+          result.events.InstanceCreated.returnValues.instance
       );
       
       assert(await createdIdentity.methods.nonce().call(), 0);

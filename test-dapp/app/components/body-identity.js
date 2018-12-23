@@ -110,15 +110,16 @@ class Body extends Component {
     }
 
     newIdentity = (cb) => {
-        let toSend = IdentityFactory.methods['createIdentity()']();
+        let toSend = IdentityFactory.methods.createIdentity();
         toSend.estimateGas()
         .then(estimatedGas => {
             console.log("Estimated Gas: " + estimatedGas);
-            return toSend.send({gas: estimatedGas + 1000000});
+            return toSend.send();
         })
         .then((receipt) => {
             console.log(receipt);
-            const instance = receipt.events.IdentityCreated.returnValues.instance;
+            console.log(receipt.events);
+            const instance = receipt.events.InstanceCreated.returnValues.instance;
             this.setState({identityAddress: instance});
             cb();
         });

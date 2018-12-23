@@ -83,11 +83,11 @@ class TransferSNT extends Component {
         
         try {
             this.setState({account: web3.eth.defaultAccount});
-
+            console.log("Relayer: " + this.state.relayer + ".")
             const s = new StatusGasRelayer.TokenGasRelay(StatusNetwork.options.address, web3.eth.defaultAccount)
                                           .transferGasRelay(this.state.to, this.state.amount)
-                                          .setGas(await StatusNetwork.methods.snt(), this.state.gasPrice, this.state.gasLimit)
-                                          .setRelayer(relayer);
+                                          .setGas(MiniMeToken.options.address, this.state.gasPrice, this.state.gasLimit)
+                                          .setRelayer(this.state.relayer);
                                           
             const signature = await s.sign(web3);
 
@@ -109,14 +109,15 @@ class TransferSNT extends Component {
         });
         this.props.clearMessages();
 
-
+        console.log(MiniMeToken.options.address);
+        console.log(this.state.gasPrice);
         try {
             const s = new StatusGasRelayer.AvailableRelayers(Contracts.TokenGasRelay, StatusNetwork.options.address, this.state.account)
                                           .setRelayersSymKeyID(skid)
                                           .setAsymmetricKeyID(kid)
-                                          .setGas(await StatusNetwork.methods.snt(), this.state.gasPrice);
+                                          .setGas(MiniMeToken.options.address, this.state.gasPrice);
             await s.post(web3);
-            
+
             console.log("Message sent");
             this.setState({submitting: false});
 
@@ -151,7 +152,7 @@ class TransferSNT extends Component {
         try {
             const s = new StatusGasRelayer.TokenGasRelay(StatusNetwork.options.address, this.state.account)
                                           .transferGasRelay(this.state.to, this.state.amount)
-                                          .setGas(await StatusNetwork.methods.snt(), this.state.gasPrice, this.state.gasLimit)
+                                          .setGas(MiniMeToken.options.address, this.state.gasPrice, this.state.gasLimit)
                                           .setRelayer(relayer)
                                           .setAsymmetricKeyID(kid);
 

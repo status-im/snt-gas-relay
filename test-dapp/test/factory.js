@@ -31,9 +31,9 @@ describe('IdentityFactory', function(accounts) {
     it("Creates a new identity", async () => {
         let tx = await IdentityFactory.methods.createIdentity().send({from: accounts[0]});
 
-        const logEntry = tx.events.IdentityCreated;
+        const logEntry = tx.events.InstanceCreated;
 
-        assert(logEntry !== undefined, "IdentityCreated was not triggered");
+        assert(logEntry !== undefined, "InstanceCreated was not triggered");
 
         let identity = new web3.eth.Contract(identityJson.abi, logEntry.returnValues.instance, {from: accounts[0]});
         
@@ -56,9 +56,9 @@ describe('IdentityFactory', function(accounts) {
     it("Creates a new identity using latest version", async() => {
         let tx = await IdentityFactory.methods.createIdentity().send({from: accounts[0]});
 
-        assert.notEqual(tx.events.IdentityCreated, undefined, "IdentityCreated wasn't triggered");
+        assert.notEqual(tx.events.InstanceCreated, undefined, "InstanceCreated wasn't triggered");
 
-        const contractAddress = tx.events.IdentityCreated.returnValues.instance;
+        const contractAddress = tx.events.InstanceCreated.returnValues.instance;
 
         
         let updatedIdentity = new web3.eth.Contract(updatedIdentityKernelJson.abi, contractAddress, {from: accounts[0]});
