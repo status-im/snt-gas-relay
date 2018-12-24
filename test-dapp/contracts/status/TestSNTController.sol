@@ -43,7 +43,13 @@ contract TestSNTController is SNTController {
 
     function _generateTokens(address _who, uint _amount) private {
         require(msg.sender == owner || open, "Test Mint Disabled");
-        snt.generateTokens(_who, _amount);
+        address sntController = snt.controller();
+        if(sntController == address(this)){
+            snt.generateTokens(_who, _amount);
+        } else {
+            TestSNTController(sntController).generateTokens(_who, _amount);
+        }
+        
     }
     
     
