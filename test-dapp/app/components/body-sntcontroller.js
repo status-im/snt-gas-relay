@@ -64,7 +64,7 @@ class Body extends Component {
                             return;
                         }
 
-                        if(msgObj.message == Messages.available){
+                        if(msgObj.message == Messages.available){ 
                             // found a relayer
                             console.log("Relayer available: " + msgObj.sig);
 
@@ -123,8 +123,8 @@ class Body extends Component {
                 <Tab label="Transfer SNT" />
                 <Tab label="Execute" />
             </Tabs>
-            {tab === 0 && <Container><TransferSNT clearMessages={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} relayers={relayers} updateRelayer={this.updateRelayer} /></Container>}
-            {tab === 1 && <Container><Execute clearMessages={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} relayers={relayers} updateRelayer={this.updateRelayer} /></Container>}
+            {tab === 0 && <Container><TransferSNT clearMessages={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} relayers={relayers} updateRelayer={this.updateRelayer} relayerAddress={relayerAddress} /></Container>}
+            {tab === 1 && <Container><Execute clearMessages={this.clearMessages} web3={web3js} kid={kid} skid={skid} nonce={nonce} relayers={relayers} updateRelayer={this.updateRelayer} relayerAddress={relayerAddress} /></Container>}
             <Divider />
             <Container>
                 <Status relayerAddress={relayerAddress} message={message} nonceUpdateFunction={this.updateNonce} nonce={nonce} walletAddress={walletAddress} />

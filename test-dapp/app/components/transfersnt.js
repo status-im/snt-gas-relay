@@ -79,15 +79,13 @@ class TransferSNT extends Component {
           msgSent: false,
           transactionError: ''
         });
-  
-        
         try {
             this.setState({account: web3.eth.defaultAccount});
-            console.log("Relayer: " + this.state.relayer + ".")
+            console.log("Relayer: " + this.props.relayerAddress + ".")
             const s = new StatusGasRelayer.TokenGasRelay(StatusNetwork.options.address, web3.eth.defaultAccount)
                                           .transferGasRelay(this.state.to, this.state.amount)
                                           .setGas(MiniMeToken.options.address, this.state.gasPrice, this.state.gasLimit)
-                                          .setRelayer(this.state.relayer);
+                                          .setRelayer(this.props.relayerAddress);
                                           
             const signature = await s.sign(web3);
 
@@ -108,9 +106,6 @@ class TransferSNT extends Component {
           submitting: true
         });
         this.props.clearMessages();
-
-        console.log(MiniMeToken.options.address);
-        console.log(this.state.gasPrice);
         try {
             const s = new StatusGasRelayer.AvailableRelayers(Contracts.TokenGasRelay, StatusNetwork.options.address, this.state.account)
                                           .setRelayersSymKeyID(skid)
@@ -153,7 +148,7 @@ class TransferSNT extends Component {
             const s = new StatusGasRelayer.TokenGasRelay(StatusNetwork.options.address, this.state.account)
                                           .transferGasRelay(this.state.to, this.state.amount)
                                           .setGas(MiniMeToken.options.address, this.state.gasPrice, this.state.gasLimit)
-                                          .setRelayer(relayer)
+                                          .setRelayer(this.props.relayerAddress)
                                           .setAsymmetricKeyID(kid);
 
             await s.post(this.state.signature, web3);
