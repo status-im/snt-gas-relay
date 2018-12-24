@@ -1,10 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
 import "../deploy/InstanceFactory.sol";
-import "../deploy/PrototypeRegistry.sol";
-import "./IdentityBase.sol";
-import "./IdentityInit.sol";
-
 /**
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
  * @notice creates Instance as Identity 
@@ -18,18 +14,14 @@ contract IdentityFactory is InstanceFactory {
 
     function createIdentity() 
         external 
-        returns (IdentityBase instance)
+        returns (InstanceAbstract instance)
     {
-        instance = IdentityBase(
-            address(
-                new Instance(
-                    base,
-                    prototypes[address(base)].init,
-                    abi.encodeWithSignature(
-                        "createIdentity(bytes32)",
-                        keccak256(abi.encodePacked(msg.sender))
-                    )
-                )
+        instance = new Instance(
+            base,
+            prototypes[address(base)].init,
+            abi.encodeWithSignature(
+                "createIdentity(bytes32)",
+                keccak256(abi.encodePacked(msg.sender))
             )
         );
         emit InstanceCreated(instance);
@@ -40,9 +32,9 @@ contract IdentityFactory is InstanceFactory {
         bytes32
     ) 
         external 
-        returns (IdentityBase instance)
+        returns (InstanceAbstract instance)
     {
-        instance = IdentityBase(address(new Instance(base, prototypes[address(base)].init, msg.data)));
+        instance = new Instance(base, prototypes[address(base)].init, msg.data);
         emit InstanceCreated(instance);
     }
 
@@ -55,9 +47,9 @@ contract IdentityFactory is InstanceFactory {
         uint256
     ) 
         external 
-        returns (IdentityBase instance)
+        returns (InstanceAbstract instance)
     {
-        instance = IdentityBase(address(new Instance(base, prototypes[address(base)].init, msg.data)));
+        instance = new Instance(base, prototypes[address(base)].init, msg.data);
         emit InstanceCreated(instance);
     }
 

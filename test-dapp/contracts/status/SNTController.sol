@@ -19,7 +19,7 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
     mapping (address => bool) public allowPublicExecution;
     IdentityFactory public identityFactory;
 
-    event ConvertedAccount(address indexed _signer, IdentityAbstract _identity, uint256 _transferAmount);
+    event ConvertedAccount(address indexed _signer, InstanceAbstract _identity, uint256 _transferAmount);
     event GasRelayedExecution(address indexed _signer, bytes32 _callHash, bool _success, bytes _returndata);
     event FactoryChanged(IdentityFactory identityFactory);
     event PublicExecutionEnabled(address indexed contractAddress, bool enabled);
@@ -75,7 +75,7 @@ contract SNTController is TokenController, Owned, TokenGasRelay, MessageSigned {
         
         require(nonce[msgSigner] == _nonce, ERR_BAD_NONCE);
         nonce[msgSigner]++;
-        IdentityAbstract userIdentity = identityFactory.createIdentity(
+        InstanceAbstract userIdentity = identityFactory.createIdentity(
             keccak256(abi.encodePacked(msgSigner))
         );
         require(
