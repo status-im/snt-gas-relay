@@ -1,12 +1,12 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-import "./SNTController.sol";
+import "./StatusNetwork.sol";
 /**
  * @title SNTController
  * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
  * @notice Test net version of SNTController which allow public mint
  */
-contract TestSNTController is SNTController {
+contract TestStatusNetwork is StatusNetwork {
 
     bool public open = false;
 
@@ -18,7 +18,7 @@ contract TestSNTController is SNTController {
      */
     constructor(address payable _owner, MiniMeToken _snt, IdentityFactory _identityFactory) 
         public 
-        SNTController(_owner, _snt, _identityFactory)
+        StatusNetwork(_owner, _snt, _identityFactory)
     { }
 
     function () external {
@@ -43,11 +43,11 @@ contract TestSNTController is SNTController {
 
     function _generateTokens(address _who, uint _amount) private {
         require(msg.sender == owner || open, "Test Mint Disabled");
-        address sntController = snt.controller();
-        if(sntController == address(this)){
+        address statusNetwork = snt.controller();
+        if(statusNetwork == address(this)){
             snt.generateTokens(_who, _amount);
         } else {
-            TestSNTController(sntController).generateTokens(_who, _amount);
+            TestStatusNetwork(statusNetwork).generateTokens(_who, _amount);
         }
         
     }

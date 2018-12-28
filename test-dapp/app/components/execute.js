@@ -8,7 +8,7 @@ import CardHeader from '@material-ui/core/CardHeader';
 import Grid from '@material-ui/core/Grid';
 import MySnackbarContentWrapper from './snackbar';
 import PropTypes from 'prop-types';
-import StatusNetwork from 'Embark/contracts/StatusNetwork';
+import StatusRoot from 'Embark/contracts/StatusRoot';
 import MiniMeToken from 'Embark/contracts/MiniMeToken';
 import TestContract from 'Embark/contracts/TestContract';
 import TextField from '@material-ui/core/TextField';
@@ -73,7 +73,7 @@ class Execute extends Component {
         try {
             const accounts = await web3.eth.getAccounts();
             
-            const s = new StatusGasRelayer.TokenGasRelay(StatusNetwork.options.address,web3.eth.defaultAccount)
+            const s = new StatusGasRelayer.TokenGasRelay(StatusRoot.options.address,web3.eth.defaultAccount)
                                           .execute(this.state.allowedContract, this.state.data)
                                           .setGas(MiniMeToken.options.address, this.state.gasPrice, this.state.gasLimit);
                                           
@@ -108,7 +108,7 @@ class Execute extends Component {
         this.props.clearMessages();
 
         try {
-            const s = new StatusGasRelayer.AvailableRelayers(Contracts.TokenGasRelay, StatusNetwork.options.address, this.state.account)
+            const s = new StatusGasRelayer.AvailableRelayers(Contracts.TokenGasRelay, StatusRoot.options.address, this.state.account)
                                           .setRelayersSymKeyID(skid)
                                           .setAsymmetricKeyID(kid)
                                           .setGas(MiniMeToken.options.address, this.state.gasPrice);
@@ -146,7 +146,7 @@ class Execute extends Component {
         this.props.clearMessages();
         
         try {
-            const s = new StatusGasRelayer.TokenGasRelay(StatusNetwork.options.address, this.state.account)
+            const s = new StatusGasRelayer.TokenGasRelay(StatusRoot.options.address, this.state.account)
                                           .execute(this.state.allowedContract, this.state.data)
                                           .setGas(MiniMeToken.options.address, this.state.gasPrice, this.state.gasLimit)
                                           .setRelayer(relayer)

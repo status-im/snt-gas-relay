@@ -14,7 +14,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import NumberIcon from '@material-ui/icons/ConfirmationNumber';
 import PropTypes from 'prop-types';
-import StatusNetwork from 'Embark/contracts/StatusNetwork';
+import StatusRoot from 'Embark/contracts/StatusRoot';
 import MiniMeToken from 'Embark/contracts/MiniMeToken';
 import Typography from '@material-ui/core/Typography';
 import config from '../config';
@@ -111,7 +111,7 @@ class Status extends Component {
 
             web3.eth.getAccounts()
             .then(accounts => {
-                StatusNetwork.methods.getNonce(this.props.walletAddress)
+                StatusRoot.methods.getNonce(this.props.walletAddress)
                 .call()
                 .then((nonce) => {
                     this.props.nonceUpdateFunction(nonce);
@@ -143,7 +143,7 @@ class Status extends Component {
         submitState.generateSTT = true;
         this.setState({submitState});
 
-        let toSend = StatusNetwork.methods.generateTokens(this.props.walletAddress, web3.utils.toWei('5000', 'ether'));
+        let toSend = StatusRoot.methods.generateTokens(this.props.walletAddress, web3.utils.toWei('5000', 'ether'));
         toSend.estimateGas()
         .then(estimatedGas => {
             return toSend.send({gas: estimatedGas + 10000});
@@ -165,7 +165,7 @@ class Status extends Component {
         this.setState({submitState});
 
 
-        const toSend = StatusNetwork.methods.changeController(StatusNetwork.options.address);
+        const toSend = StatusRoot.methods.changeController(StatusRoot.options.address);
 
         toSend.estimateGas()
         .then(estimatedGas => {

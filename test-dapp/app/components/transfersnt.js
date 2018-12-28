@@ -8,7 +8,7 @@ import CardHeader from '@material-ui/core/CardHeader';
 import Grid from '@material-ui/core/Grid';
 import MySnackbarContentWrapper from './snackbar';
 import PropTypes from 'prop-types';
-import StatusNetwork from 'Embark/contracts/StatusNetwork';
+import StatusRoot from 'Embark/contracts/StatusRoot';
 import MiniMeToken from 'Embark/contracts/MiniMeToken';
 import TestContract from 'Embark/contracts/TestContract';
 import TextField from '@material-ui/core/TextField';
@@ -27,7 +27,7 @@ const styles = theme => ({
   });
 
 window.TestContract = TestContract;
-window.StatusNetwork = StatusNetwork;
+window.StatusRoot = StatusRoot;
 
 class TransferSNT extends Component {
 
@@ -82,7 +82,7 @@ class TransferSNT extends Component {
         try {
             this.setState({account: web3.eth.defaultAccount});
             console.log("Relayer: " + this.props.relayerAddress + ".")
-            const s = new StatusGasRelayer.TokenGasRelay(StatusNetwork.options.address, web3.eth.defaultAccount)
+            const s = new StatusGasRelayer.TokenGasRelay(StatusRoot.options.address, web3.eth.defaultAccount)
                                           .transferGasRelay(this.state.to, this.state.amount)
                                           .setGas(MiniMeToken.options.address, this.state.gasPrice, this.state.gasLimit)
                                           .setRelayer(this.props.relayerAddress);
@@ -107,7 +107,7 @@ class TransferSNT extends Component {
         });
         this.props.clearMessages();
         try {
-            const s = new StatusGasRelayer.AvailableRelayers(Contracts.TokenGasRelay, StatusNetwork.options.address, this.state.account)
+            const s = new StatusGasRelayer.AvailableRelayers(Contracts.TokenGasRelay, StatusRoot.options.address, this.state.account)
                                           .setRelayersSymKeyID(skid)
                                           .setAsymmetricKeyID(kid)
                                           .setGas(MiniMeToken.options.address, this.state.gasPrice);
@@ -145,7 +145,7 @@ class TransferSNT extends Component {
         this.props.clearMessages();
         
         try {
-            const s = new StatusGasRelayer.TokenGasRelay(StatusNetwork.options.address, this.state.account)
+            const s = new StatusGasRelayer.TokenGasRelay(StatusRoot.options.address, this.state.account)
                                           .transferGasRelay(this.state.to, this.state.amount)
                                           .setGas(MiniMeToken.options.address, this.state.gasPrice, this.state.gasLimit)
                                           .setRelayer(this.props.relayerAddress)
