@@ -44,13 +44,13 @@ module.exports = {
           "await IdentityFactory.methods.approveExtension(IdentityBase.address, IdentityGasRelayExt.address, true).send()",
           "await IdentityFactory.methods.approveExtension(IdentityBase.address, IdentityGasChannelExt.address, true).send()",
           "await IdentityFactory.methods.updateBase(IdentityGasRelayBase.address, IdentityInit.address, IdentityEmergency.address, true, true).send()",
-          "await IdentityFactory.methods.approveExtension(IdentityGasRelayBase.address, IdentityGasChannelExt.address, true).send()",
+          "await IdentityFactory.methods.approveExtension(IdentityGasRelayBase.address, IdentityGasChannelExt.address, true).send()"
         ]
       },
 
       "MiniMeTokenFactory": {},
       "MiniMeToken": {
-        "args":["$MiniMeTokenFactory", "0x0", "0x0", "Status Test Token", 18, "STT", true],
+        "args":["$MiniMeTokenFactory", "0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000", "Status Test Token", 18, "STT", true]
       },
 
       "StatusNetwork": {"deploy": false},
@@ -58,13 +58,12 @@ module.exports = {
       "StatusRoot": {
         "instanceOf": "TestStatusNetwork",
         "deploy": true,
-        "args": ["0x0", "$MiniMeToken", "$IdentityFactory"],
+        "args": ["0x0000000000000000000000000000000000000000", "$MiniMeToken", "$IdentityFactory"],
         "onDeploy": [
           "await MiniMeToken.methods.changeController(StatusRoot.address).send()",
-          "await StatusRoot.methods.setOpen(true).send()",
+          "await StatusRoot.methods.setOpen(true).send()"
         ]
-      },  
-
+      }
     }
   },
 
