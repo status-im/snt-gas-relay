@@ -4,8 +4,30 @@ module.exports = {
     // Blockchain node to deploy the contracts
     deployment: {
       host: "localhost", // Host of the blockchain node
-      port: 8545, // Port of the blockchain node
-      type: "rpc" // Type of connection (ws or rpc),
+      port: 8546, // Port of the blockchain node
+      type: "ws" // Type of connection (ws or rpc),
+      // Accounts to use instead of the default account to populate your wallet
+      // The order here corresponds to the order of `web3.eth.getAccounts`, so the first one is the `defaultAccount`
+      /*,accounts: [
+        {
+          privateKey: "your_private_key",
+          balance: "5 ether"  // You can set the balance of the account in the dev environment
+                              // Balances are in Wei, but you can specify the unit with its name
+        },
+        {
+          privateKeyFile: "path/to/file", // Either a keystore or a list of keys, separated by , or ;
+          password: "passwordForTheKeystore" // Needed to decrypt the keystore file
+        },
+        {
+          mnemonic: "12 word mnemonic",
+          addressIndex: "0", // Optionnal. The index to start getting the address
+          numAddresses: "1", // Optionnal. The number of addresses to get
+          hdpath: "m/44'/60'/0'/0/" // Optionnal. HD derivation path
+        },
+        {
+          "nodeAccounts": true // Uses the Ethereum node's accounts
+        }
+      ]*/
     },
     // order of connections the dapp should connect to
     dappConnection: [
@@ -13,23 +35,23 @@ module.exports = {
       "ws://localhost:8546",
       "http://localhost:8545"
     ],
+
+    // Automatically call `ethereum.enable` if true.
+    // If false, the following code must run before sending any transaction: `await EmbarkJS.enableEthereum();`
+    // Default value is true.
+    // dappAutoEnable: true,
+
     gas: "auto",
-    contracts: {      
-      "ERC20Receiver": {"deploy": false},
-      "TestToken": {"deploy": false},
-      "TestContract": {"deploy": false},
-      "SafeMath": {"deploy": false},
-      "Instance": {"deploy": false},
-      "InstanceAbstract": {"deploy": false},
-      "UpdatedIdentityKernel": {"deploy": false},
-      "NonceChannelETH": {"deploy": false},
-      "NonceChannelERC20": {"deploy": false},
-      "PrototypeRegistry": {"deploy": false},
-      "InstanceFactory": {"deploy": false},
-      "AccountGasAbstract": {"deploy": false},
-      "AccountGasChannel": {"deploy": false},
-      "SimpleGasRelay": {"deploy": false},
-      
+
+    // Strategy for the deployment of the contracts:
+    // - implicit will try to deploy all the contracts located inside the contracts directory
+    //            or the directory configured for the location of the contracts. This is default one
+    //            when not specified
+    // - explicit will only attempt to deploy the contracts that are explicity specified inside the
+    //            contracts section.
+    strategy: 'explicit',
+
+    contracts: {
       "IdentityBase": {"deploy": true},
       "IdentityGasRelayBase": {"deploy": true},
       "IdentityInit": {"deploy": true},
@@ -37,7 +59,6 @@ module.exports = {
       "IdentityGasRelayExt": {"deploy": true},
       "IdentityGasChannelExt": {"deploy": true},
       "NonceChannelFactory": {"deploy": true},
-
       "IdentityFactory": {
         "args":["$IdentityBase", "$IdentityInit", "$IdentityEmergency"], 
         "onDeploy": [
@@ -47,12 +68,10 @@ module.exports = {
           "await IdentityFactory.methods.approveExtension(IdentityGasRelayBase.address, IdentityGasChannelExt.address, true).send()"
         ]
       },
-
       "MiniMeTokenFactory": {},
       "MiniMeToken": {
         "args":["$MiniMeTokenFactory", "0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000", "Status Test Token", 18, "STT", true]
       },
-
       "StatusNetwork": {"deploy": false},
       "TestStatusNetwork": {"deploy": false},
       "StatusRoot": {
@@ -67,66 +86,40 @@ module.exports = {
     }
   },
 
+  // default environment, merges with the settings in default
+  // assumed to be the intended environment by `embark run`
   development: {
+    dappConnection: [
+      "ws://localhost:8546",
+      "http://localhost:8545",
+      "$WEB3"  // uses pre existing web3 object if available (e.g in Mist)
+    ],
     deployment: {
       accounts: [
         {
-          privateKey: "b2ab40d549e67ba67f278781fec03b3a90515ad4d0c898a6326dd958de1e46fa",
-          balance: "5 ether"  // You can set the balance of the account in the dev environment
-                              // Balances are in Wei, but you can specify the unit with its name
+          nodeAccounts: true
         }
       ]
     }
   },
+
+  // merges with the settings in default
+  // used with "embark run privatenet"
+  privatenet: {
+  },
+
+  // merges with the settings in default
+  // used with "embark run testnet"
   testnet: {
-    deployment: {
-      accounts: [
-        {
-          nodeAccounts: true,
-          password: "config/testnet/secretpass" // Password to unlock the account
-        }
-      ]
-    },
-    contracts: {
-      "MiniMeTokenFactory": {
-        "deploy": false,
-        "address": "0x6bFa86A71A7DBc68566d5C741F416e3009804279"
-      },
-      "MiniMeToken": {
-        "deploy": false,
-        "address": "0xc55cF4B03948D7EBc8b9E8BAD92643703811d162"
-      },
-      "StatusRoot": {
-        "deploy": false,
-        "instanceOf": "TestStatusNetwork",
-        "address": "0x34358C45FbA99ef9b78cB501584E8cBFa6f85Cef"
-      },
-      "StatusUpdate": {
-        "instanceOf": "TestStatusNetwork",
-        "deploy": false,
-        "args": ["0x0", "$MiniMeToken", "$IdentityFactory"],
-        "onDeploy": [
-          "await StatusRoot.methods.changeController(StatusUpdate.address).send()",
-          "await StatusUpdate.methods.setOpen(true).send()",
-        ]
-      }
-    }
   },
-  rinkeby: {
-    contracts: {
-      "MiniMeTokenFactory": {
-        "deploy": false,
-        "address": "0x5bA5C786845CaacD45f5952E1135F4bFB8855469"
-      },
-      "MiniMeToken": {
-        "deploy": false,
-        "address": "0x43d5adC3B49130A575ae6e4b00dFa4BC55C71621"
-      },
-      "StatusRoot": {
-        "instanceOf": "TestStatusNetwork",
-        "deploy": false,
-        "address": "0xEdEB948dE35C6ac414359f97329fc0b4be70d3f1"
-      }
-    }
-  }
-}
+
+  // merges with the settings in default
+  // used with "embark run livenet"
+  livenet: {
+  },
+
+  // you can name an environment with specific settings and then specify with
+  // "embark run custom_name" or "embark blockchain custom_name"
+  //custom_name: {
+  //}
+};

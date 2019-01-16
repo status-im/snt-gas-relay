@@ -250,11 +250,7 @@
             "error",
             "last"
         ],
-        "sort-imports": [2, {
-            "ignoreCase": false,
-            "ignoreMemberSort": false,
-            "memberSyntaxSortOrder": ["none", "all", "multiple", "single"]
-        }],
+        "sort-imports": "off",
         "sort-keys": "off",
         "sort-vars": "off",
         "space-before-blocks": "off",

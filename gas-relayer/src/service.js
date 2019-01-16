@@ -96,6 +96,8 @@ events.on('setup:complete', async (settings) => {
   const symKeyID = await web3.shh.addSymKey(config.node.whisper.symKey);
   pubKey = await web3.shh.getPublicKey(shhOptions.kId);
 
+  await web3.shh.setMinPoW(shhOptions.minPow);
+
   // Listening to whisper
   // Individual subscriptions due to https://github.com/ethereum/web3.js/issues/1361
   // once this is fixed, we'll be able to use an array of topics and a single subs for symkey and a single subs for privKey

@@ -15,7 +15,7 @@ export const Functions = {
     'TokenGasRelay': {
         'transfer': 'transferGasRelay',
         'execute': 'executeGasRelay',
-        'convert': 'convertGasRelay',
+        'convert': 'convertGasRelay'
     }
 };
 
@@ -111,10 +111,10 @@ class StatusGasRelayer {
         }
 
         const sendOptions = {
-            ttl: options.ttl || 1000, 
+            ttl: options.ttl || 10, 
             sig: kid,
-            powTarget: options.powTarget || 1, 
-            powTime: options.powTime || 20, 
+            powTarget: options.powTarget || 0.002, 
+            powTime: options.powTime || 1, 
             topic: this.topic,
             payload: this.web3.utils.toHex(this.message)
         };
@@ -164,6 +164,11 @@ class Action {
 
     setOperation(operation){
         this.operation = operation;
+        return this;
+    }
+
+    setRelayerAddress(relayerAddress){
+        this.gasRelayer = relayerAddress;
         return this;
     }
 
@@ -341,11 +346,16 @@ class TokenGasRelayAction extends Action {
         return this;
     }
 
-    transferGasRelay = (to, value) => {
+    transfer = (to, value) => {
         this.to = to;
         this.value = value;
         this.contractFunction = Functions.TokenGasRelay.transfer;
         return this;
+    }
+
+    convert = (value) => {
+        this.value = value;
+        this.contractFunction = Function.TokenGasRelay.convert;
     }
 
     execute = (contract, data) => {
@@ -370,7 +380,6 @@ class TokenGasRelayAction extends Action {
         const contract = new web3.eth.Contract(TokenGasRelay.options.jsonInterface, this.contractAddress);
         const nonce = await this._nonce(contract);
         let hashedMessage;
-
         switch(this.contractFunction){
             case Functions.TokenGasRelay.execute:
                 hashedMessage = await contract.methods.getExecuteGasRelayHash(
@@ -379,7 +388,7 @@ class TokenGasRelayAction extends Action {
                     nonce,
                     this.gasPrice,
                     this.gasLimit,
-                    this.gasRelayer
+                    this.relayer
                 ).call();
                 break;
             case Functions.TokenGasRelay.transfer:

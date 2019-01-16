@@ -27,9 +27,9 @@ module.exports = {
         },
         "whisper": {
             "symKey": "0xd0d905c1c62b810b787141430417caf2b3f54cffadb395b7bb39fdeb8f17266b",
-            "ttl": 1000,
-            "minPow": 0.2,
-            "powTime": 1000
+            "ttl": 10,
+            "minPow": 0.002,
+            "powTime": 1
         }
     },
     

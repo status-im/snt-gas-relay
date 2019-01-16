@@ -7,11 +7,16 @@ module.exports = {
     rpcCorsDomain: "auto",  // Comma separated list of domains from which to accept cross origin requests (browser enforced)
                             // When set to "auto", Embark will automatically set the cors to the address of the webserver
     wsRPC: true, // Enable the WS-RPC server
-    wsOrigins: "auto",  // Origins from which to accept websockets requests
+    wsOrigins: "gas-relayer,http://localhost:8000,http://embark",  // Origins from which to accept websockets requests
                         // When set to "auto", Embark will automatically set the cors to the address of the webserver
     wsHost: "localhost", // WS-RPC server listening interface (default: "localhost")
-    wsPort: 8546 // WS-RPC server listening port (default: 8546)
+    wsPort: 8546, // WS-RPC server listening port (default: 8546)
 
+    accounts: [
+      {
+        nodeAccounts: true
+      }
+    ]
     // Accounts to use as node accounts
     // The order here corresponds to the order of `web3.eth.getAccounts`, so the first one is the `defaultAccount`
     /*,accounts: [
@@ -70,11 +75,11 @@ module.exports = {
     // in the `account > password` setting below.
     // NOTE: once `mineWhenNeeded` is enabled, you must run an `embark reset` on your dApp before running
     // `embark blockchain` or `embark run` for the first time.
-    mineWhenNeeded: true,
+    mineWhenNeeded: true, 
     // -- genesisBlock --
     // This option is only valid when mineWhenNeeded is true (which is only valid if isDev is false).
     // When enabled, geth uses POW to mine transactions as it would normally, instead of using POA as it does in --dev mode.
-    // On the first `embark blockchain or embark run` after this option is enabled, geth will create a new chain with a
+    // On the first `embark blockchain or embark run` after this option is enabled, geth will create a new chain with a 
     // genesis block, which can be configured using the `genesisBlock` configuration option below.
     genesisBlock: "config/privatenet/genesis.json", // Genesis block to initiate on first creation of a development node
     nodiscover: true,
