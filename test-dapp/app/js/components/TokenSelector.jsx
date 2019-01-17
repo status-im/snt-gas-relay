@@ -1,11 +1,11 @@
 import React, {Component} from 'react';
 import { FormGroup, Label, Input } from 'reactstrap';
 import PropTypes from 'prop-types';
-import SNT from 'Embark/contracts/MiniMeToken';
+import MiniMeToken from 'Embark/contracts/MiniMeToken';
 
 class TokenSelector extends Component {
   state = {
-    token: SNT.options.address,
+    token: MiniMeToken.options.address,
     tokenList: []
   }
 
@@ -37,7 +37,7 @@ class TokenSelector extends Component {
       <FormGroup>
         <Label for="token">Token</Label>
         <Input type="select" name="select" id="token" value={token} onChange={this.handleChange}>
-          <option value={SNT.options.address}>Status Network Token (SNT)</option>
+          <option value={MiniMeToken.options.address}>Status Network Token (SNT)</option>
           {mode !== "CONVERT" && tokenList.map((t, i) => <option key={i} value={t.address}>{t.name} ({t.symbol})</option>)}
         </Input>
     </FormGroup>);

@@ -6,12 +6,12 @@ import EmbarkJS from 'Embark/EmbarkJS';
 import {Form, Button} from 'reactstrap';
 import {IdentitySelector, ModeSelector, TokenSelector, RelayerSelector, StandardField, RelayResponse} from "./components";
 import StatusGasRelayer, {Messages} from "./status-gas-relayer";
-import SNT from 'Embark/contracts/MiniMeToken';
+import MiniMeToken from 'Embark/contracts/MiniMeToken';
 import StatusRoot from 'Embark/contracts/StatusRoot';
 import {directTransfer, convert, execute, queryRelayers} from "./relay-utils";
 import {RELAY_SYMKEY, DIRECT_TRANSFER, CONVERT, EXECUTE_CONTRACT} from "./constants";
 
-window.SNT = SNT;
+window.MiniMeToken = MiniMeToken;
 window.StatusRoot = StatusRoot;
 
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -28,7 +28,7 @@ class App extends Component {
     gasPrice: '10000',
     gasLimit: '0',
     amount: '123',
-    token: SNT.options.address,
+    token: MiniMeToken.options.address,
     isContract: false,
     symmetricKeyID: null,
     asymmetricKeyID: null,
