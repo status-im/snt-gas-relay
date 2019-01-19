@@ -87,6 +87,18 @@ class App extends Component {
     this.setState({isContract: codeSize !== "0x"});
   }
 
+  handleRelayerChange = (event) => {
+    const {availableRelayers, gasPrice, error} = this.state;
+    const relayer = event.target.value;
+    this.setState({relayer});
+
+    if(!relayer) return;
+    const relayerData = availableRelayers.find(x => x.address === relayer);
+    if(web3.utils.toBN(gasPrice).lt(web3.utils.toBN(relayerData.minGasPrice))){
+      if(confirm("Gas Price is less than Relayer's min price. Update?")) this.setState({gasPrice: relayerData.minGasPrice});
+    }
+  }
+
   handleChange = name => event => {
     const state = this.state;
     state[name] = event.target.value;
@@ -142,7 +154,8 @@ class App extends Component {
   }
 
   render(){
-    const {loading, to, contract, isContract, data, gasPrice, gasLimit, amount, relayer, availableRelayers, mode, busy, response} = this.state;
+    const {loading, to, contract, isContract, data, gasPrice, gasLimit, amount, relayer, availableRelayers, mode, busy, response, error} = this.state;
+
     return <Fragment>
       {!loading && <Fragment>
         <Form>
@@ -183,7 +196,7 @@ class App extends Component {
           </div>
           <div className="row">
             <div className="col">
-              <RelayerSelector disabled={busy} onChange={this.handleChange('relayer')} onClick={this.obtainRelayers} relayer={relayer} relayers={availableRelayers} />
+              <RelayerSelector disabled={busy} onChange={this.handleRelayerChange} onClick={this.obtainRelayers} relayer={relayer} relayers={availableRelayers} />
             </div>
           </div>
           <div className="row">
