@@ -65,6 +65,7 @@ class App extends Component {
         if(!availableRelayers.find(x => x.sig != result.sig)) availableRelayers.push(result);
         this.setState({availableRelayers});
     } else {
+      console.log(result);
       this.setState({response: result});
     }
   }
@@ -80,7 +81,7 @@ class App extends Component {
   selectAccount = async (account) => {
     this.setState({account});
     const codeSize = await web3.eth.getCode(account);
-    this.setState({isContract: codeSize === "0x"});
+    this.setState({isContract: codeSize !== "0x"});
   }
 
   handleChange = name => event => {
@@ -113,7 +114,7 @@ class App extends Component {
   }
 
   render(){
-    const {loading, to, contract, data, gasPrice, gasLimit, amount, relayer, availableRelayers, mode, busy, response} = this.state;
+    const {loading, to, contract, isContract, data, gasPrice, gasLimit, amount, relayer, availableRelayers, mode, busy, response} = this.state;
     return <Fragment>
       {!loading && <Fragment>
         <Form>
@@ -122,7 +123,7 @@ class App extends Component {
               <IdentitySelector onChange={this.selectAccount} />
             </div>
             <div className="col">
-              <ModeSelector onChange={this.handleChange('mode')} />
+              <ModeSelector onChange={this.handleChange('mode')} isContract={isContract} />
             </div>
           </div>
           <div className="row">
@@ -132,17 +133,17 @@ class App extends Component {
           </div>
           <div className="row">
             {mode !== EXECUTE_CONTRACT && mode !== CONVERT && <div className="col-6">
-                <StandardField name="to" label="To" value={to} onChange={this.handleChange('to')} />
+                <StandardField name="to" label="To" value={to} placeholder="0x1234...ABCDE" onChange={this.handleChange('to')} />
               </div> }
             { mode !== EXECUTE_CONTRACT && <div className="col">
                 <StandardField name="amount" label="Amount" value={amount} onChange={this.handleChange('amount')} suffix="wei" />
               </div> }
             {mode === EXECUTE_CONTRACT && <Fragment>
               <div className="col-4">
-                <StandardField name="contract" label="Contract" value={contract} onChange={this.handleChange('contract')} />
+                <StandardField name="contract" label="Contract" placeholder="0x1234...ABCDE" value={contract} onChange={this.handleChange('contract')} />
               </div>
               <div className="col">
-                <StandardField name="data" label="Data" value={data} onChange={this.handleChange('data')} />
+                <StandardField name="data" label="Data" placeholder="0x0" value={data} onChange={this.handleChange('data')} />
               </div>
             </Fragment>}
             <div className="col">

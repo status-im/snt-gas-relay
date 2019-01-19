@@ -1,19 +1,24 @@
-import React from 'react';
+import React, {Fragment} from 'react';
 import {FormGroup, Label, Input} from 'reactstrap';
 import PropTypes from 'prop-types';
+import {DIRECT_TRANSFER, CONVERT, EXECUTE_CONTRACT} from "../constants";
 
 const ModeSelector = (props) => (
       <FormGroup>
         <Label for="mode">Mode</Label>
         <Input type="select" name="select" id="mode" value={props.mode} onChange={props.onChange}>
-          <option value="DIRECT_TRANSFER">Direct Transfer</option>
-          <option value="CONVERT">Convert</option>
-          <option value="EXECUTE_CONTRACT">Execute allowed contract</option>
+          {!props.isContract && (
+            <Fragment>
+              <option value={DIRECT_TRANSFER}>Direct Transfer</option>
+              <option value={CONVERT}>Convert</option>
+              <option value={EXECUTE_CONTRACT}>Execute allowed contract</option>
+            </Fragment>)}
         </Input>
     </FormGroup>
 );
 
 ModeSelector.propTypes = {
+  isContract: PropTypes.bool,
   mode: PropTypes.string,
   onChange: PropTypes.func
 };
