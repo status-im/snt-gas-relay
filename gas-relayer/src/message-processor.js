@@ -138,7 +138,7 @@ class MessageProcessor {
             } catch(err){
                 reply("Couldn't mine transaction: " + err.message);
                 // TODO log this?
-                this.logger.error(err);
+                this.logger.error("Couldn't mine transaction: " + err.message);
             }
         }
     }  

@@ -116,30 +116,30 @@ events.on('setup:complete', async (settings) => {
   }
 });
 
-const replyFunction = (message) => (text, receipt) => {
+const replyFunction = (id, message) => (text, receipt) => {
   if(message.sig !== undefined){
-
-      let payloadContent;
-      if(typeof text === 'object'){
-        payloadContent = {...text, receipt};
-      } else {
-        payloadContent = {text, receipt};
-      }
-
-      web3.shh.post({ 
-          pubKey: message.sig, 
-          sig: shhOptions.kId,
-          ttl: config.node.whisper.ttl, 
-          powTarget:config.node.whisper.minPow, 
-          powTime: config.node.whisper.powTime, 
-          topic: message.topic, 
-          payload: web3.utils.fromAscii(JSON.stringify(payloadContent, null, " "))
-      }).catch(console.error);
+    let payloadContent;
+    if(typeof text === 'object'){
+      payloadContent = {id, ...text, receipt};
+    } else {
+      payloadContent = {id, text, receipt};
+    }
+    
+    web3.shh.post({ 
+        pubKey: message.sig, 
+        sig: shhOptions.kId,
+        ttl: config.node.whisper.ttl, 
+        powTarget:config.node.whisper.minPow, 
+        powTime: config.node.whisper.powTime, 
+        topic: message.topic, 
+        payload: web3.utils.fromAscii(JSON.stringify(payloadContent, null, " "))
+    }).catch(console.error);
   }
 };
 
 const extractInput = (message) => {
     let obj = {
+        id: null,
         contract: null,
         address: null,
         action: null
@@ -148,6 +148,7 @@ const extractInput = (message) => {
     try {
         const msg = web3.utils.toAscii(message.payload);
         let parsedObj = JSON.parse(msg);
+        obj.id = parsedObj.id;
         obj.contract = parsedObj.contract;
         obj.address = parsedObj.address;
         obj.action = parsedObj.action;
@@ -179,7 +180,7 @@ events.on('server:listen', (shhOptions, settings) => {
     const input = extractInput(message);
     const inputCheckSum = JSum.digest({input}, 'SHA256', 'hex');
 
-    const reply = replyFunction(message, inputCheckSum);
+    const reply = replyFunction(input.id, message, inputCheckSum);
 
     if(cache.get(inputCheckSum) && input.action != 'availability'){
       reply("Duplicated message received");

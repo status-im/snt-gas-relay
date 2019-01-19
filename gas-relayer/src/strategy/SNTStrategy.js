@@ -33,7 +33,7 @@ class SNTStrategy extends Strategy {
         } catch(exc){
             if(exc.message.indexOf("revert") > -1) return {success: false, message: "Transaction will revert"};
             else {
-                console.error(exc);
+                console.error(exc.message);
                 return {success: false, message: "Transaction will fail"};
             }
         }
