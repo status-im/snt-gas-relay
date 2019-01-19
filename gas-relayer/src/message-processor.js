@@ -128,11 +128,11 @@ class MessageProcessor {
             try {
                 this.web3.eth.sendTransaction(p)
                     .on('transactionHash', function(hash){
-                        reply("Transaction broadcasted: " + hash);
+                        reply({text: hash, type: "broadcast"});
                         cb();
                     })
                     .on('receipt', function(receipt){
-                        reply("Transaction mined", receipt);
+                        reply({text: "Transaction mined", type: "receipt"}, receipt);
                     });
                 
             } catch(err){

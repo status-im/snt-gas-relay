@@ -19,12 +19,12 @@ class RelayResponse extends Component {
   }
 
   render() {
-    const {text, sig, receipt} = this.props.response;
+    const {text, sig, receipt, type} = this.props.response;
 
     return this.state.show && <Alert color="secondary" isOpen={this.state.show} toggle={this.close}>
-    <h4 className="alert-heading">Relay Response</h4>
+    <h4 className="alert-heading">Relay Response <small>{type}</small></h4>
       <h6>{text}</h6>
-      <pre>{JSON.stringify(receipt, null, "\r\n")}</pre>
+      <pre>{JSON.stringify(receipt)}</pre>
       <pre>Pubkey: {sig}</pre>
   </Alert>;
   }
