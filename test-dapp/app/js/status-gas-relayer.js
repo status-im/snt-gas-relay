@@ -128,8 +128,11 @@ class StatusGasRelayer {
             sendOptions.symKeyID = skid;
         }
         
-        const msgId = await this.web3.shh.post(sendOptions);
-        return msgId;
+        await this.web3.shh.post(sendOptions);
+
+        console.log("Message ID: " + this.message.id);
+
+        return this.message.id;
     }
 
     validateBuild = (build) => {
@@ -326,6 +329,7 @@ class GasRelayAction extends Action {
         }
 
         return {
+            'id': (new Date()).getTime(),
             'contract': this.contractAddress,
             'address': this.accountAddress,
             'action': Actions.Transaction,
@@ -465,6 +469,7 @@ class TokenGasRelayAction extends Action {
         }
 
         return {
+            'id': (new Date()).getTime(),
             'contract': this.contractAddress,
             'address': this.accountAddress,
             'action': Actions.Transaction,
@@ -488,6 +493,7 @@ class AvailableRelayersAction extends Action {
 
     _getMessage = web3 => {
         return {
+            id: (new Date()).getTime(),
             contract: this.contractAddress,
             address: this.accountAddress || web3.eth.defaultAccount,
             action: Actions.Availability,
