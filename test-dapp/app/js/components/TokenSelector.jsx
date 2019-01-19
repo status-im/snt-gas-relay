@@ -25,7 +25,7 @@ class TokenSelector extends Component {
 
   componentDidUpdate(prevProps) {
     if (this.props.mode !== prevProps.mode) {
-      if(this.props.mode == "CONVERT") this.setState({token: SNT.options.address});
+      if(this.props.mode == "CONVERT") this.setState({token: MiniMeToken.options.address});
     }
   }
 

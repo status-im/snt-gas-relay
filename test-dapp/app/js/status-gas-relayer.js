@@ -128,8 +128,6 @@ class StatusGasRelayer {
             sendOptions.symKeyID = skid;
         }
         
-        console.log(sendOptions);
-
         const msgId = await this.web3.shh.post(sendOptions);
         return msgId;
     }
@@ -322,6 +320,7 @@ class GasRelayAction extends Action {
                     this.gasToken,
                     this.signature
                     ]);
+                break;
             default:
                 throw new Error("Function not allowed");
         }
@@ -355,7 +354,8 @@ class TokenGasRelayAction extends Action {
 
     convert = (value) => {
         this.value = value;
-        this.contractFunction = Function.TokenGasRelay.convert;
+        this.contractFunction = Functions.TokenGasRelay.convert;
+        return this;
     }
 
     execute = (contract, data) => {
@@ -388,7 +388,7 @@ class TokenGasRelayAction extends Action {
                     nonce,
                     this.gasPrice,
                     this.gasLimit,
-                    this.relayer
+                    this.gasRelayer
                 ).call();
                 break;
             case Functions.TokenGasRelay.transfer:
@@ -403,7 +403,7 @@ class TokenGasRelayAction extends Action {
                 break;
             case Functions.TokenGasRelay.convert:
                 hashedMessage = await contract.methods.getConvertGasRelayHash(
-                    this.amount,
+                    this.value,
                     nonce,
                     this.gasPrice,
                     this.gasLimit,
@@ -453,12 +453,13 @@ class TokenGasRelayAction extends Action {
                 break;
             case Functions.TokenGasRelay.convert:
                 funCall = web3.eth.abi.encodeFunctionCall(jsonAbi, [
-                            this.amount, 
+                            this.value, 
                             this.nonce, 
                             this.gasPrice, 
                             this.gasLimit,
                             this.signature
                             ]);
+                break;
             default:
                 throw new Error("Function not allowed");
         }

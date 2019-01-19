@@ -26,7 +26,7 @@ class App extends Component {
     contract: '',
     data: '',
     gasPrice: '10000',
-    gasLimit: '0',
+    gasLimit: '200000',
     amount: '123',
     token: MiniMeToken.options.address,
     isContract: false,
@@ -74,7 +74,7 @@ class App extends Component {
     this.setState({availableRelayers: [], busy: true});
     const {symmetricKeyID, asymmetricKeyID, gasPrice} = this.state;
     await queryRelayers(symmetricKeyID, asymmetricKeyID, gasPrice);
-    this.setState({busy: false});
+    setTimeout(() => { this.setState({busy: false}); }, 1500);
   }
 
   selectAccount = async (account) => {
@@ -113,7 +113,7 @@ class App extends Component {
   }
 
   render(){
-    const {loading, to, contract, data, gasPrice, amount, relayer, availableRelayers, mode, busy, response} = this.state;
+    const {loading, to, contract, data, gasPrice, gasLimit, amount, relayer, availableRelayers, mode, busy, response} = this.state;
     return <Fragment>
       {!loading && <Fragment>
         <Form>
@@ -131,16 +131,14 @@ class App extends Component {
             </div>
           </div>
           <div className="row">
-            {mode !== EXECUTE_CONTRACT && <Fragment>
-              <div className="col-6">
+            {mode !== EXECUTE_CONTRACT && mode !== CONVERT && <div className="col-6">
                 <StandardField name="to" label="To" value={to} onChange={this.handleChange('to')} />
-              </div>
-              <div className="col">
+              </div> }
+            { mode !== EXECUTE_CONTRACT && <div className="col">
                 <StandardField name="amount" label="Amount" value={amount} onChange={this.handleChange('amount')} suffix="wei" />
-              </div>
-            </Fragment>}
+              </div> }
             {mode === EXECUTE_CONTRACT && <Fragment>
-              <div className="col-6">
+              <div className="col-4">
                 <StandardField name="contract" label="Contract" value={contract} onChange={this.handleChange('contract')} />
               </div>
               <div className="col">
@@ -149,6 +147,9 @@ class App extends Component {
             </Fragment>}
             <div className="col">
               <StandardField name="gasPrice" label="Gas Price" value={gasPrice} onChange={this.handleChange('gasPrice')} suffix="wei" />
+            </div>
+            <div className="col">
+              <StandardField name="gasLimit" label="Gas Limit" value={gasLimit} onChange={this.handleChange('gasLimit')} suffix="wei" />
             </div>
           </div>
           <div className="row">
