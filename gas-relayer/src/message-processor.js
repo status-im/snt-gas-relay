@@ -128,7 +128,7 @@ class MessageProcessor {
             try {
                 this.web3.eth.sendTransaction(p)
                     .on('transactionHash', function(hash){
-                        reply({text: hash, type: "broadcast"});
+                        reply({text: "Transaction broadcasted: " + hash, hash, type: "broadcast"});
                         cb();
                     })
                     .on('receipt', function(receipt){

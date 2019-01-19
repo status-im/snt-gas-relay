@@ -30,7 +30,7 @@ export const convert = async (amount, gasPrice, gasLimit, relayerData, asymmetri
       .setRelayerAddress(relayerData.address)
       .setAsymmetricKeyID(asymmetricKeyID);
     const signature = await s.sign(web3);
-    await s.post(signature, web3);
+    return await s.post(signature, web3);
   }
   catch (error) {
     console.error(error);

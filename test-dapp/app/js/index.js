@@ -16,6 +16,9 @@ window.StatusRoot = StatusRoot;
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+let msgIds_identity = [];
+let msgIds_transactions = {};
+
 class App extends Component {
   state = {
     loading: true,
@@ -53,20 +56,20 @@ class App extends Component {
     StatusGasRelayer.subscribe(web3, this.processWhisperMessages, {privateKeyID: this.state.asymmetricKeyID});  
   }
 
-  processWhisperMessages = (error, result) => {
+  processWhisperMessages = (error, response) => {
     if(error) {
         console.error(error);
         return;
     }
 
-    if(result.message == Messages.available){ 
-        console.log("Relayer available: " + result.sig);
+    if(response.message == Messages.available){ 
+        console.log("Relayer available: " + response.sig);
         let availableRelayers = this.state.availableRelayers;
-        if(!availableRelayers.find(x => x.sig != result.sig)) availableRelayers.push(result);
+        if(!availableRelayers.find(x => x.sig != response.sig)) availableRelayers.push(response);
         this.setState({availableRelayers});
     } else {
-      console.log(result);
-      this.setState({response: result});
+      this.queryInstanceAddress(response);
+      this.setState({response});
     }
   }
 
@@ -100,8 +103,10 @@ class App extends Component {
       case DIRECT_TRANSFER:
         await directTransfer(to, amount, gasPrice, gasLimit, relayerData, asymmetricKeyID);
         break;
-      case CONVERT: 
-        await convert(amount, gasPrice, gasLimit, relayerData, asymmetricKeyID);
+      case CONVERT: {
+          const messageId = await convert(amount, gasPrice, gasLimit, relayerData, asymmetricKeyID);
+          msgIds_identity.push(messageId);
+        }
         break;
       case EXECUTE_CONTRACT:
         await execute(contract, data, gasPrice, gasLimit, relayerData, asymmetricKeyID);
@@ -111,6 +116,29 @@ class App extends Component {
     }
 
     this.setState({busy: false});
+  }
+
+  queryInstanceAddress(result) {
+    if (result.type === "broadcast") {
+      msgIds_transactions[result.id] = result.hash;
+    } else if (result.type === "receipt") {
+      msgIds_identity = msgIds_identity.filter(x => x != result.id);
+      // TODO: check if we havent already obtained logs for this trx
+      // TODO: obtain logs
+      console.log("Obtained receipt from 'receipt'");
+      console.log(result.receipt);
+    }
+
+    setInterval(() => {
+      msgIds_identity.forEach(async v => {
+        const receipt = await web3.eth.getTransactionReceipt(msgIds_transactions[v]);
+        msgIds_identity = msgIds_identity.filter(x => x != v);
+        // TODO: obtain logs
+        console.log("Obtained receipt from 'broadcast");
+        console.log(receipt);
+      });
+    }, 3000);
+
   }
 
   render(){
