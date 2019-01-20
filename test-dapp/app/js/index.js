@@ -16,9 +16,6 @@ window.StatusRoot = StatusRoot;
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-let msgIds_identity = [];
-let msgIds_transactions = {};
-
 class App extends Component {
   state = {
     loading: true,
@@ -37,6 +34,7 @@ class App extends Component {
     asymmetricKeyID: null,
     relayer: '',
     availableRelayers: [],
+    identities: [],
     showResponse: true,
     response: {}
   }
@@ -54,6 +52,13 @@ class App extends Component {
     this.setState({asymmetricKeyID, symmetricKeyID});
     await web3.shh.setMinPoW(0.002);
     StatusGasRelayer.subscribe(web3, this.processWhisperMessages, {privateKeyID: this.state.asymmetricKeyID});  
+
+    // Obtain identities for signer
+    StatusRoot.events.ConvertedAccount({fromBlock: 0, filter: {_msgSigner: web3.eth.defaultAccount}}, (error, event) => { 
+      const identities = this.state.identities;
+      identities.push(event.returnValues._identity);
+      this.setState({identities});
+    });
   }
 
   processWhisperMessages = (error, response) => {
@@ -68,7 +73,6 @@ class App extends Component {
         if(!availableRelayers.find(x => x.sig != response.sig)) availableRelayers.push(response);
         this.setState({availableRelayers});
     } else {
-      this.queryInstanceAddress(response);
       this.setState({response});
     }
   }
@@ -88,7 +92,7 @@ class App extends Component {
   }
 
   handleRelayerChange = (event) => {
-    const {availableRelayers, gasPrice, error} = this.state;
+    const {availableRelayers, gasPrice} = this.state;
     const relayer = event.target.value;
     this.setState({relayer});
 
@@ -115,10 +119,8 @@ class App extends Component {
       case DIRECT_TRANSFER:
         await directTransfer(to, amount, gasPrice, gasLimit, relayerData, asymmetricKeyID);
         break;
-      case CONVERT: {
-          const messageId = await convert(amount, gasPrice, gasLimit, relayerData, asymmetricKeyID);
-          msgIds_identity.push(messageId);
-        }
+      case CONVERT:
+        await convert(amount, gasPrice, gasLimit, relayerData, asymmetricKeyID);
         break;
       case EXECUTE_CONTRACT:
         await execute(contract, data, gasPrice, gasLimit, relayerData, asymmetricKeyID);
@@ -130,38 +132,15 @@ class App extends Component {
     this.setState({busy: false});
   }
 
-  queryInstanceAddress(result) {
-    if (result.type === "broadcast") {
-      msgIds_transactions[result.id] = result.hash;
-    } else if (result.type === "receipt") {
-      msgIds_identity = msgIds_identity.filter(x => x != result.id);
-      // TODO: check if we havent already obtained logs for this trx
-      // TODO: obtain logs
-      console.log("Obtained receipt from 'receipt'");
-      console.log(result.receipt);
-    }
-
-    setInterval(() => {
-      msgIds_identity.forEach(async v => {
-        const receipt = await web3.eth.getTransactionReceipt(msgIds_transactions[v]);
-        msgIds_identity = msgIds_identity.filter(x => x != v);
-        // TODO: obtain logs
-        console.log("Obtained receipt from 'broadcast");
-        console.log(receipt);
-      });
-    }, 3000);
-
-  }
-
   render(){
-    const {loading, to, contract, isContract, data, gasPrice, gasLimit, amount, relayer, availableRelayers, mode, busy, response, error} = this.state;
+    const {loading, to, contract, isContract, data, gasPrice, gasLimit, amount, relayer, availableRelayers, mode, busy, response, identities} = this.state;
 
     return <Fragment>
       {!loading && <Fragment>
         <Form>
           <div className="row">
             <div className="col">
-              <IdentitySelector onChange={this.selectAccount} />
+              <IdentitySelector onChange={this.selectAccount} identities={identities} />
             </div>
             <div className="col">
               <ModeSelector onChange={this.handleChange('mode')} isContract={isContract} />

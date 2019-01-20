@@ -45,8 +45,7 @@ class IdentitySelector extends Component {
         <DropdownItem onClick={this.handleMenuClick(web3.eth.defaultAccount)}>{web3.eth.defaultAccount}</DropdownItem>
         <DropdownItem divider />
         <DropdownItem header>Identities</DropdownItem>
-        <DropdownItem>0x1234567890123456789012345678901234567890</DropdownItem>
-        <DropdownItem divider />
+        {this.props.identities.map((id, i) => <DropdownItem key={i} onClick={this.handleMenuClick(id)}>{id}</DropdownItem>)}
       </DropdownMenu>
     </InputGroupButtonDropdown>
 
@@ -56,7 +55,8 @@ class IdentitySelector extends Component {
 }
 
 IdentitySelector.propTypes = {
-  onChange: PropTypes.func.isRequired
+  onChange: PropTypes.func.isRequired,
+  identities: PropTypes.array
 };
 
 export default IdentitySelector;
