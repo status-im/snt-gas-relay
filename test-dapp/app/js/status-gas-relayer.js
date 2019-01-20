@@ -244,7 +244,7 @@ class GasRelayAction extends Action {
                     this.gasPrice,
                     this.gasLimit,
                     this.gasToken,
-                    this.relayer
+                    this.gasRelayer
                 ).call();
                 break;
                 case Functions.GasRelay.approveAndCall:
@@ -256,7 +256,7 @@ class GasRelayAction extends Action {
                     nonce,
                     this.gasPrice,
                     this.gasLimit,
-                    this.relayer
+                    this.gasRelayer
                 ).call(); 
                 break;
                 case Functions.GasRelay.deploy:
@@ -267,7 +267,7 @@ class GasRelayAction extends Action {
                     this.gasPrice,
                     this.gasLimit,
                     this.gasToken,
-                    this.relayer
+                    this.gasRelayer
                 ).call(); 
                 break;
             default:

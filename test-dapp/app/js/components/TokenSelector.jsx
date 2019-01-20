@@ -31,11 +31,16 @@ class TokenSelector extends Component {
   }
 
   render() {
-    const {token, tokenList} = this.state;
-
+    let {token, tokenList} = this.state;
+    const {label, onlyTokens} = this.props;
+    
+    if(onlyTokens){
+      tokenList = tokenList.filter(x => x.address !== ZERO_ADDRESS);
+    }
+    
     return (
       <FormGroup>
-        <Label for="token">Token</Label>
+        <Label for="token">{label}</Label>
         <Input type="select" name="select" id="token" value={token} onChange={this.handleChange}>
           {tokenList.map((t, i) => <option key={i} value={t.address}>{t.name} ({t.symbol})</option>)}
         </Input>
@@ -45,7 +50,9 @@ class TokenSelector extends Component {
 
 TokenSelector.propTypes = {
   mode: PropTypes.string,
-  onChange: PropTypes.func
+  onChange: PropTypes.func,
+  label: PropTypes.string,
+  onlyTokens: PropTypes.bool
 };
 
 export default TokenSelector;

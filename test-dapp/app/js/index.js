@@ -8,8 +8,8 @@ import {IdentitySelector, ModeSelector, TokenSelector, RelayerSelector, Standard
 import StatusGasRelayer, {Messages} from "./status-gas-relayer";
 import MiniMeToken from 'Embark/contracts/MiniMeToken';
 import StatusRoot from 'Embark/contracts/StatusRoot';
-import {directTransfer, convert, execute, queryRelayers} from "./relay-utils";
-import {RELAY_SYMKEY, DIRECT_TRANSFER, CONVERT, EXECUTE_CONTRACT} from "./constants";
+import {directTransfer, convert, execute, queryRelayers, call, approveAndCall} from "./relay-utils";
+import {RELAY_SYMKEY, DIRECT_TRANSFER, CONVERT, EXECUTE_CONTRACT, IDENTITY_CALL, IDENTITY_APPROVEANDCALL} from "./constants";
 
 window.MiniMeToken = MiniMeToken;
 window.StatusRoot = StatusRoot;
@@ -24,11 +24,12 @@ class App extends Component {
     mode: DIRECT_TRANSFER,
     to: '0x0000000000000000000000000000000000000001',
     contract: '',
-    data: '',
+    data: '0x0',
     gasPrice: '10000',
     gasLimit: '200000',
     amount: '123',
     token: MiniMeToken.options.address,
+    baseToken: MiniMeToken.options.address,
     isContract: false,
     symmetricKeyID: null,
     asymmetricKeyID: null,
@@ -110,7 +111,7 @@ class App extends Component {
   }
 
   handleSubmit = async () => {
-    const {to, amount, data, contract, gasPrice, gasLimit, relayer, availableRelayers, asymmetricKeyID, mode} = this.state;
+    const {account, to, amount, data, contract, gasPrice, baseToken, gasLimit, relayer, availableRelayers, asymmetricKeyID, mode, token} = this.state;
     const relayerData = availableRelayers.find(x => x.address === relayer);
 
     this.setState({busy: true});
@@ -124,6 +125,12 @@ class App extends Component {
         break;
       case EXECUTE_CONTRACT:
         await execute(contract, data, gasPrice, gasLimit, relayerData, asymmetricKeyID);
+        break;
+      case IDENTITY_CALL:
+        await call(account, to, amount, data, token, gasPrice, gasLimit, relayerData, asymmetricKeyID);
+        break;
+      case IDENTITY_APPROVEANDCALL:
+        await approveAndCall(account, to, amount, data, baseToken, gasPrice, gasLimit, relayerData, asymmetricKeyID);
         break;
       default:
         throw new Error("Unknown mode");
@@ -146,11 +153,16 @@ class App extends Component {
               <ModeSelector onChange={this.handleChange('mode')} isContract={isContract} />
             </div>
           </div>
-          <div className="row">
+          {isContract && <div className="row">
             <div className="col">
-              <TokenSelector {...this.state} onChange={this.handleChange('token')} />
+              <TokenSelector label="Token" {...this.state} onChange={this.handleChange('token')} />
             </div>
-          </div>
+          </div>}
+          {mode === IDENTITY_APPROVEANDCALL && <div className="row">
+            <div className="col">
+              <TokenSelector label="Token to approve and call" {...this.state} onlyTokens={true} onChange={this.handleChange('baseToken')} />
+            </div>
+          </div>}
           <div className="row">
             {mode !== EXECUTE_CONTRACT && mode !== CONVERT && <div className="col-6">
                 <StandardField name="to" label="To" value={to} placeholder="0x1234...ABCDE" onChange={this.handleChange('to')} />
@@ -173,6 +185,11 @@ class App extends Component {
               <StandardField name="gasLimit" label="Gas Limit" value={gasLimit} onChange={this.handleChange('gasLimit')} suffix="wei" />
             </div>
           </div>
+          {isContract && <div className="row">
+              <div className="col">
+                <StandardField name="data" label="Data" placeholder="0x0" value={data} onChange={this.handleChange('data')} />
+              </div>
+            </div>}
           <div className="row">
             <div className="col">
               <RelayerSelector disabled={busy} onChange={this.handleRelayerChange} onClick={this.obtainRelayers} relayer={relayer} relayers={availableRelayers} />

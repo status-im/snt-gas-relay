@@ -1,7 +1,7 @@
 import React, {Fragment} from 'react';
 import {FormGroup, Label, Input} from 'reactstrap';
 import PropTypes from 'prop-types';
-import {DIRECT_TRANSFER, CONVERT, EXECUTE_CONTRACT} from "../constants";
+import {DIRECT_TRANSFER, CONVERT, EXECUTE_CONTRACT, IDENTITY_APPROVEANDCALL, IDENTITY_CALL} from "../constants";
 
 const ModeSelector = (props) => (
       <FormGroup>
@@ -12,6 +12,11 @@ const ModeSelector = (props) => (
               <option value={DIRECT_TRANSFER}>Direct Transfer</option>
               <option value={CONVERT}>Convert</option>
               <option value={EXECUTE_CONTRACT}>Execute allowed contract</option>
+            </Fragment>)}
+          {props.isContract && (
+            <Fragment>
+              <option value={IDENTITY_CALL}>Call</option>
+              <option value={IDENTITY_APPROVEANDCALL}>Approve and Call</option>
             </Fragment>)}
         </Input>
     </FormGroup>

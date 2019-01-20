@@ -1,6 +1,6 @@
 /* global web3 */
 
-import StatusGasRelayer, {Contracts} from "./status-gas-relayer";
+import StatusGasRelayer, {Contracts, Functions} from "./status-gas-relayer";
 import StatusRoot from 'Embark/contracts/StatusRoot';
 import MiniMeToken from 'Embark/contracts/MiniMeToken';
 
@@ -37,7 +37,6 @@ export const convert = async (amount, gasPrice, gasLimit, relayerData, asymmetri
   }
 };
 
-
 export const execute = async (contract, data, gasPrice, gasLimit, relayerData, asymmetricKeyID) => {
   try {
     const s = new StatusGasRelayer.TokenGasRelay(StatusRoot.options.address, web3.eth.defaultAccount)
@@ -64,5 +63,43 @@ export const queryRelayers = async (symmetricKeyID, asymmetricKeyID, gasPrice) =
   }
   catch (e) {
     console.error(e);
+  }
+};
+
+// ============== Identity
+
+export const call = async (identityAddress, to, value, data, gasToken, gasPrice, gasLimit, relayerData, asymmetricKeyID) => {
+  try {
+    const s = new StatusGasRelayer.GasRelay(identityAddress, web3.eth.defaultAccount)
+      .setContractFunction(Functions.GasRelay.call)
+      .setTransaction(to, value, data)
+      .setGas(gasToken, gasPrice, gasLimit)
+      .setRelayer(relayerData.sig)
+      .setRelayerAddress(relayerData.address)
+      .setAsymmetricKeyID(asymmetricKeyID);
+    const signature = await s.sign(web3);
+    await s.post(signature, web3);
+  }
+  catch (error) {
+    console.error(error);
+  }
+};
+
+
+export const approveAndCall = async (identityAddress, to, value, data, baseToken, gasPrice, gasLimit, relayerData, asymmetricKeyID) => {
+  try {
+    const s = new StatusGasRelayer.GasRelay(identityAddress, web3.eth.defaultAccount)
+      .setContractFunction(Functions.GasRelay.approveAndCall)
+      .setTransaction(to, value, data)
+      .setBaseToken(baseToken)
+      .setGas(MiniMeToken.options.address, gasPrice, gasLimit)
+      .setRelayer(relayerData.sig)
+      .setRelayerAddress(relayerData.address)
+      .setAsymmetricKeyID(asymmetricKeyID);
+    const signature = await s.sign(web3);
+    await s.post(signature, web3);
+  }
+  catch (error) {
+    console.error(error);
   }
 };
