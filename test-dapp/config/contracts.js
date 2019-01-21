@@ -52,14 +52,14 @@ module.exports = {
     strategy: 'explicit',
 
     contracts: {
-      "IdentityBase": {"deploy": true},
-      "IdentityGasRelayBase": {"deploy": true},
-      "IdentityInit": {"deploy": true},
-      "IdentityEmergency": {"deploy": true},
-      "IdentityGasRelayExt": {"deploy": true},
-      "IdentityGasChannelExt": {"deploy": true},
-      "NonceChannelFactory": {"deploy": true},
-      "IdentityFactory": {
+      "IdentityBase": {},
+      "IdentityGasRelayBase": {},
+      "IdentityInit": {},
+      "IdentityEmergency": {},
+      "IdentityGasRelayExt": {},
+      "IdentityGasChannelExt": {},
+      "NonceChannelFactory": {},
+      "IdentityFactory": {    
         "args":["$IdentityBase", "$IdentityInit", "$IdentityEmergency"], 
         "onDeploy": [
           "await IdentityFactory.methods.approveExtension(IdentityBase.address, IdentityGasRelayExt.address, true).send()",
@@ -72,11 +72,8 @@ module.exports = {
       "MiniMeToken": {
         "args":["$MiniMeTokenFactory", "0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000", "Status Test Token", 18, "STT", true]
       },
-      "StatusNetwork": {"deploy": false},
-      "TestStatusNetwork": {"deploy": false},
       "StatusRoot": {
         "instanceOf": "TestStatusNetwork",
-        "deploy": true,
         "args": ["0x0000000000000000000000000000000000000000", "$MiniMeToken", "$IdentityFactory"],
         "onDeploy": [
           "await MiniMeToken.methods.changeController(StatusRoot.address).send()",
@@ -103,23 +100,56 @@ module.exports = {
     }
   },
 
-  // merges with the settings in default
-  // used with "embark run privatenet"
-  privatenet: {
-  },
-
-  // merges with the settings in default
-  // used with "embark run testnet"
   testnet: {
+    contracts: {
+      "MiniMeTokenFactory": {
+        "address": "0x6bFa86A71A7DBc68566d5C741F416e3009804279"
+      },
+      "MiniMeToken": {
+        "address": "0xc55cF4B03948D7EBc8b9E8BAD92643703811d162"
+      },
+      "StatusRoot": {
+        "instanceOf": "TestStatusNetwork",
+        "address": "0x34358C45FbA99ef9b78cB501584E8cBFa6f85Cef"
+      }
+    }
   },
-
-  // merges with the settings in default
-  // used with "embark run livenet"
-  livenet: {
-  },
-
-  // you can name an environment with specific settings and then specify with
-  // "embark run custom_name" or "embark blockchain custom_name"
-  //custom_name: {
-  //}
+  rinkeby: {
+    contracts: {
+      "IdentityBase": {
+        "address": "0x59a8A7fd1fD67C3eAD41C3B17F5107B91BFf6C64"
+      }, 
+      "IdentityGasRelayBase": {
+        "address": "0x04E455E03383C5FaFCfaa25C1f52fA848a7dbd07"
+      }, 
+      "IdentityInit": {
+        "address": "0x9D66Ae8326B8627d887231f50Cd285eDe755c304"
+      }, 
+      "IdentityEmergency": {
+        "address": "0xedaB7DD4E42BD7A84700EcCA892fF4F4641018C8"
+      }, 
+      "IdentityGasRelayExt": {
+        "address": "0xAE56F49c5BBF33F86f115A783744e58d4b511312"
+      }, 
+      "IdentityGasChannelExt": {  
+        "address": "0x3Cc7eF7449bE6d60e18A8cE4d3f40A5Df5e6A2a4"
+      }, 
+      "NonceChannelFactory": {
+        "address": "0x21bfe2658BDBAd0ceCCcB77152A212EFbe12C852"
+      }, 
+      "IdentityFactory": {
+        "address": "0x2f70f304986167e905eb680e379ac67524c74da3"
+      },
+      "MiniMeTokenFactory": {
+        "address": "0x5bA5C786845CaacD45f5952E1135F4bFB8855469"
+      },
+      "MiniMeToken": {
+        "address": "0x43d5adC3B49130A575ae6e4b00dFa4BC55C71621"
+      },
+      "StatusRoot": {
+        "instanceOf": "TestStatusNetwork",
+        "address": "0xEdEB948dE35C6ac414359f97329fc0b4be70d3f1"
+      }
+    }
+  }
 };
