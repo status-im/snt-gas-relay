@@ -3,13 +3,13 @@
 import React, {Component, Fragment} from 'react';
 import ReactDOM from 'react-dom';
 import EmbarkJS from 'Embark/EmbarkJS';
-import {Form, Button} from 'reactstrap';
+import {Form, Button, Alert} from 'reactstrap';
 import {IdentitySelector, ModeSelector, TokenSelector, RelayerSelector, StandardField, RelayResponse} from "./components";
 import StatusGasRelayer, {Messages} from "./status-gas-relayer";
 import MiniMeToken from 'Embark/contracts/MiniMeToken';
 import StatusRoot from 'Embark/contracts/StatusRoot';
-import {directTransfer, convert, execute, queryRelayers} from "./relay-utils";
-import {RELAY_SYMKEY, DIRECT_TRANSFER, CONVERT, EXECUTE_CONTRACT} from "./constants";
+import {directTransfer, convert, execute, queryRelayers, call, approveAndCall} from "./relay-utils";
+import {RELAY_SYMKEY, DIRECT_TRANSFER, CONVERT, EXECUTE_CONTRACT, IDENTITY_CALL, IDENTITY_APPROVEANDCALL} from "./constants";
 
 window.MiniMeToken = MiniMeToken;
 window.StatusRoot = StatusRoot;
@@ -24,18 +24,21 @@ class App extends Component {
     mode: DIRECT_TRANSFER,
     to: '0x0000000000000000000000000000000000000001',
     contract: '',
-    data: '',
+    data: '0x0',
     gasPrice: '10000',
     gasLimit: '200000',
     amount: '123',
     token: MiniMeToken.options.address,
+    baseToken: MiniMeToken.options.address,
     isContract: false,
     symmetricKeyID: null,
     asymmetricKeyID: null,
     relayer: '',
     availableRelayers: [],
+    identities: [],
     showResponse: true,
-    response: {}
+    response: {},
+    error: ''
   }
 
   componentDidMount(){
@@ -51,21 +54,28 @@ class App extends Component {
     this.setState({asymmetricKeyID, symmetricKeyID});
     await web3.shh.setMinPoW(0.002);
     StatusGasRelayer.subscribe(web3, this.processWhisperMessages, {privateKeyID: this.state.asymmetricKeyID});  
+
+    // Obtain identities for signer
+    StatusRoot.events.ConvertedAccount({fromBlock: 0, filter: {_msgSigner: web3.eth.defaultAccount}}, (error, event) => { 
+      const identities = this.state.identities;
+      identities.push(event.returnValues._identity);
+      this.setState({identities});
+    });
   }
 
-  processWhisperMessages = (error, result) => {
+  processWhisperMessages = (error, response) => {
     if(error) {
         console.error(error);
         return;
     }
 
-    if(result.message == Messages.available){ 
-        console.log("Relayer available: " + result.sig);
+    if(response.message == Messages.available){ 
+        console.log("Relayer available: " + response.sig);
         let availableRelayers = this.state.availableRelayers;
-        if(!availableRelayers.find(x => x.sig != result.sig)) availableRelayers.push(result);
+        if(!availableRelayers.find(x => x.sig != response.sig)) availableRelayers.push(response);
         this.setState({availableRelayers});
     } else {
-      this.setState({response: result});
+      this.setState({response});
     }
   }
 
@@ -78,9 +88,26 @@ class App extends Component {
   }
 
   selectAccount = async (account) => {
-    this.setState({account});
-    const codeSize = await web3.eth.getCode(account);
-    this.setState({isContract: codeSize === "0x"});
+    this.setState({account, error: ''});
+    try {
+      const codeSize = await web3.eth.getCode(account);
+      this.setState({isContract: codeSize !== "0x"});
+    } catch(e) {
+      console.error(e);
+      this.setState({error: "Invalid 'from' address"});
+    }
+  }
+
+  handleRelayerChange = (event) => {
+    const {availableRelayers, gasPrice} = this.state;
+    const relayer = event.target.value;
+    this.setState({relayer});
+
+    if(!relayer) return;
+    const relayerData = availableRelayers.find(x => x.address === relayer);
+    if(web3.utils.toBN(gasPrice).lt(web3.utils.toBN(relayerData.minGasPrice))){
+      if(confirm("Gas Price is less than Relayer's min price. Update?")) this.setState({gasPrice: relayerData.minGasPrice});
+    }
   }
 
   handleChange = name => event => {
@@ -90,59 +117,81 @@ class App extends Component {
   }
 
   handleSubmit = async () => {
-    const {to, amount, data, contract, gasPrice, gasLimit, relayer, availableRelayers, asymmetricKeyID, mode} = this.state;
+    const {account, to, amount, data, contract, gasPrice, baseToken, gasLimit, relayer, availableRelayers, asymmetricKeyID, mode, token} = this.state;
     const relayerData = availableRelayers.find(x => x.address === relayer);
 
-    this.setState({busy: true});
-
-    switch(mode){
-      case DIRECT_TRANSFER:
-        await directTransfer(to, amount, gasPrice, gasLimit, relayerData, asymmetricKeyID);
-        break;
-      case CONVERT: 
-        await convert(amount, gasPrice, gasLimit, relayerData, asymmetricKeyID);
-        break;
-      case EXECUTE_CONTRACT:
-        await execute(contract, data, gasPrice, gasLimit, relayerData, asymmetricKeyID);
-        break;
-      default:
-        throw new Error("Unknown mode");
+    this.setState({busy: true, error: ''});
+    
+    try {
+      switch(mode){
+        case DIRECT_TRANSFER:
+          await directTransfer(to, amount, gasPrice, gasLimit, relayerData, asymmetricKeyID);
+          break;
+        case CONVERT:
+          await convert(amount, gasPrice, gasLimit, relayerData, asymmetricKeyID);
+          break;
+        case EXECUTE_CONTRACT:
+          await execute(contract, data, gasPrice, gasLimit, relayerData, asymmetricKeyID);
+          break;
+        case IDENTITY_CALL:
+          await call(account, to, amount, data, token, gasPrice, gasLimit, relayerData, asymmetricKeyID);
+          break;
+        case IDENTITY_APPROVEANDCALL:
+          await approveAndCall(account, to, amount, data, baseToken, gasPrice, gasLimit, relayerData, asymmetricKeyID);
+          break;
+        default:
+          throw new Error("Unknown mode");
+      }
+    } catch(e) {
+      console.error(e);
+      this.setState({error: e.message});
     }
 
     this.setState({busy: false});
   }
 
   render(){
-    const {loading, to, contract, data, gasPrice, gasLimit, amount, relayer, availableRelayers, mode, busy, response} = this.state;
+    const {error, loading, to, contract, isContract, data, gasPrice, gasLimit, amount, relayer, availableRelayers, mode, busy, response, identities} = this.state;
+
     return <Fragment>
       {!loading && <Fragment>
         <Form>
           <div className="row">
             <div className="col">
-              <IdentitySelector onChange={this.selectAccount} />
-            </div>
-            <div className="col">
-              <ModeSelector onChange={this.handleChange('mode')} />
+              {error && <Alert color="danger">{error}</Alert>}
             </div>
           </div>
           <div className="row">
             <div className="col">
-              <TokenSelector {...this.state} onChange={this.handleChange('token')} />
+              <IdentitySelector onChange={this.selectAccount} identities={identities} />
+            </div>
+            <div className="col">
+              <ModeSelector onChange={this.handleChange('mode')} isContract={isContract} />
             </div>
           </div>
+          {isContract && <div className="row">
+            <div className="col">
+              <TokenSelector label="Token" {...this.state} onChange={this.handleChange('token')} />
+            </div>
+          </div>}
+          {mode === IDENTITY_APPROVEANDCALL && <div className="row">
+            <div className="col">
+              <TokenSelector label="Token to approve and call" {...this.state} onlyTokens={true} onChange={this.handleChange('baseToken')} />
+            </div>
+          </div>}
           <div className="row">
             {mode !== EXECUTE_CONTRACT && mode !== CONVERT && <div className="col-6">
-                <StandardField name="to" label="To" value={to} onChange={this.handleChange('to')} />
+                <StandardField name="to" label="To" value={to} placeholder="0x1234...ABCDE" onChange={this.handleChange('to')} />
               </div> }
             { mode !== EXECUTE_CONTRACT && <div className="col">
                 <StandardField name="amount" label="Amount" value={amount} onChange={this.handleChange('amount')} suffix="wei" />
               </div> }
             {mode === EXECUTE_CONTRACT && <Fragment>
               <div className="col-4">
-                <StandardField name="contract" label="Contract" value={contract} onChange={this.handleChange('contract')} />
+                <StandardField name="contract" label="Contract" placeholder="0x1234...ABCDE" value={contract} onChange={this.handleChange('contract')} />
               </div>
               <div className="col">
-                <StandardField name="data" label="Data" value={data} onChange={this.handleChange('data')} />
+                <StandardField name="data" label="Data" placeholder="0x0" value={data} onChange={this.handleChange('data')} />
               </div>
             </Fragment>}
             <div className="col">
@@ -152,9 +201,14 @@ class App extends Component {
               <StandardField name="gasLimit" label="Gas Limit" value={gasLimit} onChange={this.handleChange('gasLimit')} suffix="wei" />
             </div>
           </div>
+          {isContract && <div className="row">
+              <div className="col">
+                <StandardField name="data" label="Data" placeholder="0x0" value={data} onChange={this.handleChange('data')} />
+              </div>
+            </div>}
           <div className="row">
             <div className="col">
-              <RelayerSelector disabled={busy} onChange={this.handleChange('relayer')} onClick={this.obtainRelayers} relayer={relayer} relayers={availableRelayers} />
+              <RelayerSelector disabled={busy} onChange={this.handleRelayerChange} onClick={this.obtainRelayers} relayer={relayer} relayers={availableRelayers} />
             </div>
           </div>
           <div className="row">

@@ -1,12 +1,16 @@
 /* global web3 */
 
 import React, {Component} from 'react';
-import {FormGroup, Label, Input} from 'reactstrap';
+import {FormGroup, Label, Input, InputGroup, InputGroupButtonDropdown, DropdownToggle, DropdownMenu, DropdownItem} from 'reactstrap';
 import PropTypes from 'prop-types';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faUser} from '@fortawesome/free-solid-svg-icons';
 
 class IdentitySelector extends Component {
   state = {
-    account: ''
+    account: web3.eth.defaultAccount,
+    availableIdentities: [],
+    dropdownOpen: false
   }
 
   handleChange = event => {
@@ -15,18 +19,44 @@ class IdentitySelector extends Component {
     this.props.onChange(account);
   };
 
+  handleMenuClick = account => event => {
+    event.preventDefault();
+    this.setState({account});
+    this.props.onChange(account);
+  }
+
+  toggleDropDown = () => {
+    this.setState({
+      dropdownOpen: !this.state.dropdownOpen
+    });
+  }
+
   render() {
     return <FormGroup>
     <Label for="account">From</Label>
-    <Input type="select" name="select" id="account" value={this.state.account} onChange={this.handleChange}>
-      <option key={1} value={web3.eth.defaultAccount}>{web3.eth.defaultAccount} (Default)</option>
-    </Input>
+    <InputGroup>
+      <Input type="text" name="select" id="account" value={this.state.account} onChange={this.handleChange} />
+      <InputGroupButtonDropdown addonType="append" isOpen={this.state.dropdownOpen} toggle={this.toggleDropDown}>
+      <DropdownToggle caret>
+        <FontAwesomeIcon icon={faUser} />
+      </DropdownToggle>
+      <DropdownMenu>
+        <DropdownItem header>Default Account</DropdownItem>
+        <DropdownItem onClick={this.handleMenuClick(web3.eth.defaultAccount)}>{web3.eth.defaultAccount}</DropdownItem>
+        <DropdownItem divider />
+        <DropdownItem header>Identities</DropdownItem>
+        {this.props.identities.map((id, i) => <DropdownItem key={i} onClick={this.handleMenuClick(id)}>{id}</DropdownItem>)}
+      </DropdownMenu>
+    </InputGroupButtonDropdown>
+
+    </InputGroup>
   </FormGroup>;
   }
 }
 
 IdentitySelector.propTypes = {
-  onChange: PropTypes.func.isRequired
+  onChange: PropTypes.func.isRequired,
+  identities: PropTypes.array
 };
 
 export default IdentitySelector;

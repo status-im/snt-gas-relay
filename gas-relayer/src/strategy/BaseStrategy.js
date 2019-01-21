@@ -65,7 +65,7 @@ class BaseStrategy {
                 cache.put(token.address, tokenRate, token.refreshPricePeriod);
                 return tokenRate;
             } catch (err) {
-                console.error(err);
+                console.error(err.message);
             }
         } else {
             return tokenRate;

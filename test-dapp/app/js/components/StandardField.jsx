@@ -6,7 +6,7 @@ const StandardField = (props) => (
   <FormGroup>
     <Label for={props.name}>{props.label}</Label>
     <InputGroup>
-      <Input type="text" name={props.name} id={props.name} value={props.value} onChange={props.onChange} />
+      <Input type="text" name={props.name} placeholder={props.placeholder} id={props.name} value={props.value} onChange={props.onChange} />
       {props.suffix && <InputGroupAddon addonType="append">
           <InputGroupText>{props.suffix}</InputGroupText>
         </InputGroupAddon>}
@@ -19,6 +19,7 @@ StandardField.propTypes = {
   label: PropTypes.string,
   value: PropTypes.any,
   onChange: PropTypes.func,
+  placeholder: PropTypes.string,
   suffix: PropTypes.string
 };
 

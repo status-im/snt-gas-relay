@@ -31,10 +31,10 @@ class SNTStrategy extends Strategy {
                 to: input.contract
             });
         } catch(exc){
-            if(exc.message.indexOf("revert") > -1) return {success: false, message: "Transaction will revert"};
+            if(exc.message.indexOf("revert") > -1) return {success: false, message: {text: "Transaction will revert", type: "estimation-fail"}};
             else {
-                console.error(exc);
-                return {success: false, message: "Transaction will fail"};
+                console.error(exc.message);
+                return {success: false, message: {text: "Transaction will fail", type: "estimation-fail"}};
             }
         }
 
@@ -75,7 +75,7 @@ class SNTStrategy extends Strategy {
             }
 
             if(balance.lt(estimatedGas)){
-                return {success: false, message: "Address has not enough balance to execute the transaction (" + estimatedGas.toString() + ")"};
+                return {success: false, message: {text: "Address has not enough balance to execute the transaction (" + estimatedGas.toString() + ")", type: "balance"}};
             }
 
             const gasMinimal = this.web3.utils.toBN(params('_gasMinimal'));
@@ -84,7 +84,7 @@ class SNTStrategy extends Strategy {
             }
 
             if(balance.lt(gasMinimal)){
-                return {success: false, message: "Address has not enough balance for the specified _gasMinimal"};
+                return {success: false, message: {text: "Address has not enough balance for the specified _gasMinimal", type: "balance"}};
             }
         }
         
