@@ -147,7 +147,7 @@ class App extends Component {
       this.setState({error: e.message});
     }
 
-    this.setState({busy: false});
+    this.setState({busy: false, relayer: '', availableRelayers: []});
   }
 
   render(){
