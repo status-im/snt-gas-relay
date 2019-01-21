@@ -142,10 +142,21 @@ module.exports = {
         password: "config/livenet/password"
       }
     ]
-  }
+  },
 
-  // you can name an environment with specific settings and then specify with
-  // "embark run custom_name" or "embark blockchain custom_name"
-  //custom_name: {
-  //}
+  rinkeby: {
+    enabled: true,
+    networkId: 4,
+    networkType: "custom",
+    syncMode: "light",
+    rpcHost: "localhost",
+    rpcPort: 8545,
+    rpcCorsDomain: "http://localhost:8000",
+    accounts: [
+      {
+        nodeAccounts: true,
+        password: "config/rinkeby/.password"
+      }
+    ]
+  }
 };

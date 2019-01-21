@@ -30,7 +30,9 @@ module.exports = {
   // used with "embark run livenet"
   livenet: {
   },
-
+  
+  rinkeby: {
+  }
   // you can name an environment with specific settings and then specify with
   // "embark run custom_name"
   //custom_name: {
