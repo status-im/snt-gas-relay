@@ -3,7 +3,7 @@
 import React, {Component, Fragment} from 'react';
 import ReactDOM from 'react-dom';
 import EmbarkJS from 'Embark/EmbarkJS';
-import {Form, Button} from 'reactstrap';
+import {Form, Button, Alert} from 'reactstrap';
 import {IdentitySelector, ModeSelector, TokenSelector, RelayerSelector, StandardField, RelayResponse} from "./components";
 import StatusGasRelayer, {Messages} from "./status-gas-relayer";
 import MiniMeToken from 'Embark/contracts/MiniMeToken';
@@ -37,7 +37,8 @@ class App extends Component {
     availableRelayers: [],
     identities: [],
     showResponse: true,
-    response: {}
+    response: {},
+    error: ''
   }
 
   componentDidMount(){
@@ -87,9 +88,14 @@ class App extends Component {
   }
 
   selectAccount = async (account) => {
-    this.setState({account});
-    const codeSize = await web3.eth.getCode(account);
-    this.setState({isContract: codeSize !== "0x"});
+    this.setState({account, error: ''});
+    try {
+      const codeSize = await web3.eth.getCode(account);
+      this.setState({isContract: codeSize !== "0x"});
+    } catch(e) {
+      console.error(e);
+      this.setState({error: "Invalid 'from' address"});
+    }
   }
 
   handleRelayerChange = (event) => {
@@ -114,37 +120,47 @@ class App extends Component {
     const {account, to, amount, data, contract, gasPrice, baseToken, gasLimit, relayer, availableRelayers, asymmetricKeyID, mode, token} = this.state;
     const relayerData = availableRelayers.find(x => x.address === relayer);
 
-    this.setState({busy: true});
-
-    switch(mode){
-      case DIRECT_TRANSFER:
-        await directTransfer(to, amount, gasPrice, gasLimit, relayerData, asymmetricKeyID);
-        break;
-      case CONVERT:
-        await convert(amount, gasPrice, gasLimit, relayerData, asymmetricKeyID);
-        break;
-      case EXECUTE_CONTRACT:
-        await execute(contract, data, gasPrice, gasLimit, relayerData, asymmetricKeyID);
-        break;
-      case IDENTITY_CALL:
-        await call(account, to, amount, data, token, gasPrice, gasLimit, relayerData, asymmetricKeyID);
-        break;
-      case IDENTITY_APPROVEANDCALL:
-        await approveAndCall(account, to, amount, data, baseToken, gasPrice, gasLimit, relayerData, asymmetricKeyID);
-        break;
-      default:
-        throw new Error("Unknown mode");
+    this.setState({busy: true, error: ''});
+    
+    try {
+      switch(mode){
+        case DIRECT_TRANSFER:
+          await directTransfer(to, amount, gasPrice, gasLimit, relayerData, asymmetricKeyID);
+          break;
+        case CONVERT:
+          await convert(amount, gasPrice, gasLimit, relayerData, asymmetricKeyID);
+          break;
+        case EXECUTE_CONTRACT:
+          await execute(contract, data, gasPrice, gasLimit, relayerData, asymmetricKeyID);
+          break;
+        case IDENTITY_CALL:
+          await call(account, to, amount, data, token, gasPrice, gasLimit, relayerData, asymmetricKeyID);
+          break;
+        case IDENTITY_APPROVEANDCALL:
+          await approveAndCall(account, to, amount, data, baseToken, gasPrice, gasLimit, relayerData, asymmetricKeyID);
+          break;
+        default:
+          throw new Error("Unknown mode");
+      }
+    } catch(e) {
+      console.error(e);
+      this.setState({error: e.message});
     }
 
     this.setState({busy: false});
   }
 
   render(){
-    const {loading, to, contract, isContract, data, gasPrice, gasLimit, amount, relayer, availableRelayers, mode, busy, response, identities} = this.state;
+    const {error, loading, to, contract, isContract, data, gasPrice, gasLimit, amount, relayer, availableRelayers, mode, busy, response, identities} = this.state;
 
     return <Fragment>
       {!loading && <Fragment>
         <Form>
+          <div className="row">
+            <div className="col">
+              {error && <Alert color="danger">{error}</Alert>}
+            </div>
+          </div>
           <div className="row">
             <div className="col">
               <IdentitySelector onChange={this.selectAccount} identities={identities} />
