@@ -1,4 +1,4 @@
-pragma solidity >=0.5.0 <0.6.0;
+pragma solidity >=0.5.3 <0.6.0;
 
 import "../deploy/Instance.sol";
 import "../deploy/PrototypeRegistry.sol";
@@ -28,13 +28,29 @@ contract InstanceFactory is PrototypeRegistry {
     function ()
         external 
     {
-        Instance instance = new Instance(
-                    base,
-                    prototypes[address(base)].init,
-                    msg.data
+        Instance instance = newInstance(
+            base,
+            prototypes[address(base)].init,
+            msg.data,
+            uint256(msg.sender)
         );
         emit InstanceCreated(instance);
         //TODO: Assembly return instance 
+    }
+
+    function newInstance(
+        InstanceAbstract _base,
+        InstanceAbstract _init,
+        bytes memory _data,
+        uint256 _salt
+    ) public returns (address createdContract) {
+        bool failed;
+        bytes memory _code = abi.encodePacked(type(Instance).creationCode,_base,_init,_data);
+        assembly {
+            createdContract := create2(0, add(_code, 0x20), mload(_code), _salt) //deploy
+            failed := iszero(extcodesize(createdContract))
+        }
+        require(!failed, "deploy failed");
     }
 
     function updateBase(

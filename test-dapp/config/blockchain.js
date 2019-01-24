@@ -145,13 +145,8 @@ module.exports = {
   },
 
   rinkeby: {
-    enabled: true,
-    networkId: 4,
-    networkType: "custom",
+    networkType: "rinkeby",
     syncMode: "light",
-    rpcHost: "localhost",
-    rpcPort: 8545,
-    rpcCorsDomain: "http://localhost:8000",
     accounts: [
       {
         nodeAccounts: true,

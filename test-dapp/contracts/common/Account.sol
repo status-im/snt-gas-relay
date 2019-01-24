@@ -52,6 +52,30 @@ contract Account {
         }
         emit Deployed(_nonce, !failed, createdContract);
     }
+
+    /**
+     * @notice creates new contract based on input `_code` and transfer `_value` ETH to this instance
+     * @param _value amount ether in wei to sent to deployed address at its initialization
+     * @param _code contract code
+     * @param _salt changes the contract address
+     */
+    function _deploy(
+        uint _value,
+        bytes memory _code,
+        uint256 _salt
+    ) 
+        internal
+        returns (uint256 _nonce)
+    {
+        address createdContract;
+        bool failed;
+        _nonce = nonce++; // Important: Must be incremented always BEFORE deploy
+        assembly {
+            createdContract := create2(_value, add(_code, 0x20), mload(_code), _salt) //deploy
+            failed := iszero(extcodesize(createdContract))
+        }
+        emit Deployed(_nonce, !failed, createdContract);
+    }
     
     function _approveAndCall(
         address _baseToken,

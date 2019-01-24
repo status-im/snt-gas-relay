@@ -11,19 +11,21 @@ contract IdentityFactory is InstanceFactory {
         InstanceFactory(_base, _init, _emergency)
         public
     { }
-
+    
     function createIdentity() 
         external 
         returns (InstanceAbstract instance)
     {
-        instance = new Instance(
+        instance = newInstance(
             base,
             prototypes[address(base)].init,
             abi.encodeWithSignature(
                 "createIdentity(bytes32)",
                 keccak256(abi.encodePacked(msg.sender))
-            )
+            ),
+            uint256(msg.sender)
         );
+        
         emit InstanceCreated(instance);
     }
 
@@ -32,9 +34,9 @@ contract IdentityFactory is InstanceFactory {
         bytes32
     ) 
         external 
-        returns (InstanceAbstract instance)
+        returns (InstanceAbstract instance) 
     {
-        instance = new Instance(base, prototypes[address(base)].init, msg.data);
+        instance = newInstance(base, prototypes[address(base)].init, msg.data, uint256(msg.sender));
         emit InstanceCreated(instance);
     }
 
