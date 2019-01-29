@@ -32,7 +32,7 @@ contract InstanceFactory is PrototypeRegistry {
             base,
             prototypes[address(base)].init,
             msg.data,
-            uint256(msg.sender)
+            uint256(keccak256(abi.encodePacked(msg.sender)))
         );
         emit InstanceCreated(instance);
         //TODO: Assembly return instance 
@@ -43,9 +43,9 @@ contract InstanceFactory is PrototypeRegistry {
         InstanceAbstract _init,
         bytes memory _data,
         uint256 _salt
-    ) public returns (address createdContract) {
+    ) public returns (Instance createdContract) {
         bool failed;
-        bytes memory _code = abi.encodePacked(type(Instance).creationCode,_base,_init,_data);
+        bytes memory _code = abi.encodePacked(type(Instance).creationCode, abi.encode(_base,_init,_data));
         assembly {
             createdContract := create2(0, add(_code, 0x20), mload(_code), _salt) //deploy
             failed := iszero(extcodesize(createdContract))
