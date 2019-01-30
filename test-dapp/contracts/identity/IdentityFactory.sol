@@ -16,42 +16,75 @@ contract IdentityFactory is InstanceFactory {
         external 
         returns (InstanceAbstract instance)
     {
+        bytes32 senderKey = keccak256(abi.encodePacked(msg.sender));
         instance = newInstance(
             base,
             prototypes[address(base)].init,
             abi.encodeWithSignature(
                 "createIdentity(bytes32)",
-                keccak256(abi.encodePacked(msg.sender))
+                senderKey
             ),
-            uint256(msg.sender)
+            uint256(senderKey)
         );
         
         emit InstanceCreated(instance);
     }
 
-    /** @dev should be the same method signature of `init` function */
+
     function createIdentity(
-        bytes32
+        bytes32 _senderKey
     ) 
         external 
         returns (InstanceAbstract instance) 
     {
-        instance = newInstance(base, prototypes[address(base)].init, msg.data, uint256(msg.sender));
+        instance = newInstance(base, prototypes[address(base)].init, msg.data, uint256(_senderKey));
         emit InstanceCreated(instance);
     }
 
-    /** @dev should be the same method signature of `init` function */
+
+    function createIdentity(
+        bytes32 _senderKey,
+        uint256 _salt
+    ) 
+        external 
+        returns (InstanceAbstract instance) 
+    {
+        instance = newInstance(
+            base,
+            prototypes[address(base)].init,
+            abi.encodeWithSignature(
+                "createIdentity(bytes32)",
+                _senderKey
+            ),
+            _salt
+        );
+        emit InstanceCreated(instance);
+    }
+
     function createIdentity(   
-        bytes32[] calldata,
-        uint256[] calldata,
-        uint256[] calldata,
-        uint256,
-        uint256
+        bytes32[] calldata _keys,
+        Purpose[] calldata _purposes,
+        uint256[] calldata _types,
+        uint256 _managerThreshold,
+        uint256 _actorThreshold,
+        uint256 _salt
     ) 
         external 
         returns (InstanceAbstract instance)
     {
-        instance = new Instance(base, prototypes[address(base)].init, msg.data);
+        instance = newInstance(
+            base,
+            prototypes[address(base)].init,
+            abi.encodeWithSignature(
+                "createIdentity(bytes32[],uint256[],uint256[],uint256,uint256)",
+                _keys,
+                _purposes,
+                _types,
+                _managerThreshold,
+                _actorThreshold
+            ),
+            _salt
+        );
         emit InstanceCreated(instance);
     }
 
