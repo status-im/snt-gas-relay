@@ -63,7 +63,7 @@ contract IdentityFactory is InstanceFactory {
 
     function createIdentity(   
         bytes32[] calldata _keys,
-        Purpose[] calldata _purposes,
+        uint8[] calldata _purposes,
         uint256[] calldata _types,
         uint256 _managerThreshold,
         uint256 _actorThreshold,
@@ -76,7 +76,7 @@ contract IdentityFactory is InstanceFactory {
             base,
             prototypes[address(base)].init,
             abi.encodeWithSignature(
-                "createIdentity(bytes32[],uint256[],uint256[],uint256,uint256)",
+                "createIdentity(bytes32[],uint8[],uint256[],uint256,uint256)",
                 _keys,
                 _purposes,
                 _types,
