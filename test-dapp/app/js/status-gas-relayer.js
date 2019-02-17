@@ -32,10 +32,11 @@ const relayerSymmmetricKeyID = "0xd0d905c1c62b810b787141430417caf2b3f54cffadb395
 const emptyBytesSha = "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470";
 
 class StatusGasRelayer {
-    constructor(build, web3) {
-        if (arguments.length !== 2 || !this.validateBuild(build)) throw new Error("Invalid build");
+    constructor(build, web3, whisper) {
+        if (arguments.length !== 3 || !this.validateBuild(build)) throw new Error("Invalid build");
 
         this.web3 = web3;
+        this.whisper = whisper;
 
         Object.defineProperties(this, {
             message: {
@@ -69,27 +70,28 @@ class StatusGasRelayer {
         }
     }
 
-    static async subscribe(web3, cb, options) {
+    static async subscribe(whisper, cb, options) {
         options = options || {};
 
         if(!options.privateKeyID){
-            options.privateKeyID = await web3.shh.newKeyPair();
+            options.privateKeyID = await whisper.shh.newKeyPair();
             // TODO: keypair should be shared between actions and this class.
         }
 
-        web3.shh.subscribe('messages', {
+        whisper.shh.subscribe('messages', {
             "privateKeyID": options.privateKeyID,
             "ttl": options.ttl || 1000,
             "minPow": options.minPow || 0.002,
             "powTime": options.powTime || 1000
           }, (error, message) => {
+
             if(error){
                 cb(error);
                 return;
             }
 
             try {
-                const msg = web3.utils.toAscii(message.payload);
+                const msg = whisper.utils.toAscii(message.payload);
                 const msgObj = JSON.parse(msg);
                 msgObj.sig =  message.sig;
                 cb(false, msgObj);
@@ -107,7 +109,7 @@ class StatusGasRelayer {
 
         let kid = options.kid || this.kid;
         if(!kid){
-            kid = await this.web3.shh.newKeyPair();
+            kid = await this.whisper.shh.newKeyPair();
         }
 
         const sendOptions = {
@@ -123,16 +125,11 @@ class StatusGasRelayer {
             sendOptions.pubKey = pubKey;
         } else {
             if(!skid){
-                skid = await this.web3.shh.addSymKey(relayerSymmmetricKeyID);
+                skid = await this.whisper.shh.addSymKey(relayerSymmmetricKeyID);
             }
             sendOptions.symKeyID = skid;
         }
-        
-        await this.web3.shh.post(sendOptions);
-
-        console.log("Message ID: " + this.message.id);
-
-        return this.message.id;
+        this.whisper.shh.post(sendOptions);
     }
 
     validateBuild = (build) => {
@@ -423,10 +420,10 @@ class TokenGasRelayAction extends Action {
         return signedMessage;
     }
 
-    post = async (signature, web3, options) => {
+    post = async (signature, web3, whisper, options) => {
         this.nonce = await this.getNonce(web3);
         this.signature = signature;
-        const s = new StatusGasRelayer(this, web3);
+        const s = new StatusGasRelayer(this, web3, whisper);
         return s.post(options);
     }
 
@@ -502,8 +499,8 @@ class AvailableRelayersAction extends Action {
         };
     }
 
-    post(web3, options) {
-        const s = new StatusGasRelayer(this, web3);
+    post(web3, whisper, options) {
+        const s = new StatusGasRelayer(this, web3, whisper);
         return s.post(options);
     }
 }

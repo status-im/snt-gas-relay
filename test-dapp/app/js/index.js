@@ -10,11 +10,24 @@ import MiniMeToken from 'Embark/contracts/MiniMeToken';
 import StatusRoot from 'Embark/contracts/StatusRoot';
 import {directTransfer, convert, execute, queryRelayers, call, approveAndCall} from "./relay-utils";
 import {RELAY_SYMKEY, DIRECT_TRANSFER, CONVERT, EXECUTE_CONTRACT, IDENTITY_CALL, IDENTITY_APPROVEANDCALL} from "./constants";
+import Murmur from 'murmur-client';
+import Web3 from 'web3';
 
 window.MiniMeToken = MiniMeToken;
 window.StatusRoot = StatusRoot;
 
 import 'bootstrap/dist/css/bootstrap.min.css';
+
+const murmurClient = new Murmur({
+  protocols: ["libp2p"],
+  signalServer: ["/dns4/web-bridge.status.im/tcp/443/wss/p2p-webrtc-star"],
+  bootnodes: []
+});
+
+murmurClient.start();
+
+const whisperConn = new Web3();
+whisperConn.shh.setProvider(murmurClient.provider);
 
 class App extends Component {
   state = {
@@ -43,17 +56,19 @@ class App extends Component {
 
   componentDidMount(){
     EmbarkJS.onReady(async (err) => {
-      if(!err) this.setState({loading: false});
+      if(err) return;
+      this.setState({loading: false});
       await this.whisperSetup();
     });
   }
 
   async whisperSetup() {
-    const asymmetricKeyID = await web3.shh.newKeyPair();
-    const symmetricKeyID = await web3.shh.addSymKey(RELAY_SYMKEY);
+    const asymmetricKeyID = await whisperConn.shh.newKeyPair();
+    const symmetricKeyID = await whisperConn.shh.addSymKey(RELAY_SYMKEY);
     this.setState({asymmetricKeyID, symmetricKeyID});
-    await web3.shh.setMinPoW(0.002);
-    StatusGasRelayer.subscribe(web3, this.processWhisperMessages, {privateKeyID: this.state.asymmetricKeyID});  
+    await whisperConn.shh.setMinPoW(0.002);
+
+    StatusGasRelayer.subscribe(whisperConn, this.processWhisperMessages, {privateKeyID: this.state.asymmetricKeyID});  
 
     // Obtain identities for signer
     StatusRoot.events.ConvertedAccount({fromBlock: 0, filter: {_msgSigner: web3.eth.defaultAccount}}, (error, event) => { 
@@ -83,8 +98,8 @@ class App extends Component {
     event.preventDefault();
     this.setState({availableRelayers: [], busy: true});
     const {symmetricKeyID, asymmetricKeyID, gasPrice} = this.state;
-    await queryRelayers(symmetricKeyID, asymmetricKeyID, gasPrice);
     setTimeout(() => { this.setState({busy: false}); }, 1500);
+    await queryRelayers(symmetricKeyID, asymmetricKeyID, gasPrice)(whisperConn);
   }
 
   selectAccount = async (account) => {
@@ -123,25 +138,27 @@ class App extends Component {
     this.setState({busy: true, error: ''});
     
     try {
+      let f;
       switch(mode){
         case DIRECT_TRANSFER:
-          await directTransfer(to, amount, gasPrice, gasLimit, relayerData, asymmetricKeyID);
+          f =  await directTransfer(to, amount, gasPrice, gasLimit, relayerData, asymmetricKeyID);
           break;
         case CONVERT:
-          await convert(amount, gasPrice, gasLimit, relayerData, asymmetricKeyID);
+          f = await convert(amount, gasPrice, gasLimit, relayerData, asymmetricKeyID);
           break;
         case EXECUTE_CONTRACT:
-          await execute(contract, data, gasPrice, gasLimit, relayerData, asymmetricKeyID);
+          f = await execute(contract, data, gasPrice, gasLimit, relayerData, asymmetricKeyID);
           break;
         case IDENTITY_CALL:
-          await call(account, to, amount, data, token, gasPrice, gasLimit, relayerData, asymmetricKeyID);
+          f = await call(account, to, amount, data, token, gasPrice, gasLimit, relayerData, asymmetricKeyID);
           break;
         case IDENTITY_APPROVEANDCALL:
-          await approveAndCall(account, to, amount, data, baseToken, gasPrice, gasLimit, relayerData, asymmetricKeyID);
+          f = await approveAndCall(account, to, amount, data, baseToken, gasPrice, gasLimit, relayerData, asymmetricKeyID);
           break;
         default:
           throw new Error("Unknown mode");
       }
+      await f(whisperConn);
     } catch(e) {
       console.error(e);
       this.setState({error: e.message});
@@ -162,10 +179,10 @@ class App extends Component {
             </div>
           </div>
           <div className="row">
-            <div className="col">
+            <div className="col-sm-6">
               <IdentitySelector onChange={this.selectAccount} identities={identities} />
             </div>
-            <div className="col">
+            <div className="col-sm-6">
               <ModeSelector onChange={this.handleChange('mode')} isContract={isContract} />
             </div>
           </div>

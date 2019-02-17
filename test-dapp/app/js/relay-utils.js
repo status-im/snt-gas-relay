@@ -12,7 +12,9 @@ export const directTransfer = async (to, amount, gasPrice, gasLimit, relayerData
     .setRelayerAddress(relayerData.address)
     .setAsymmetricKeyID(asymmetricKeyID);
   const signature = await s.sign(web3);
-  await s.post(signature, web3);
+  return async (whisper) => {
+    await s.post(signature, web3, whisper);
+  };
 };
 
 export const convert = async (amount, gasPrice, gasLimit, relayerData, asymmetricKeyID) => {
@@ -23,7 +25,9 @@ export const convert = async (amount, gasPrice, gasLimit, relayerData, asymmetri
     .setRelayerAddress(relayerData.address)
     .setAsymmetricKeyID(asymmetricKeyID);
   const signature = await s.sign(web3);
-  return await s.post(signature, web3);
+  return async (whisper) => {
+    await s.post(signature, web3, whisper);
+  };
 };
 
 export const execute = async (contract, data, gasPrice, gasLimit, relayerData, asymmetricKeyID) => {
@@ -37,12 +41,14 @@ export const execute = async (contract, data, gasPrice, gasLimit, relayerData, a
   await s.post(signature, web3);
 };
 
-export const queryRelayers = async (symmetricKeyID, asymmetricKeyID, gasPrice) => {
+export const queryRelayers = (symmetricKeyID, asymmetricKeyID, gasPrice) => {
   const s = new StatusGasRelayer.AvailableRelayers(Contracts.TokenGasRelay, StatusRoot.options.address, web3.eth.defaultAccount)
     .setRelayersSymKeyID(symmetricKeyID)
     .setAsymmetricKeyID(asymmetricKeyID)
     .setGas(MiniMeToken.options.address, gasPrice);
-  await s.post(web3);
+  return async (whisper) => {
+    await s.post(web3, whisper);
+  };
 };
 
 // ============== Identity
@@ -56,7 +62,9 @@ export const call = async (identityAddress, to, value, data, gasToken, gasPrice,
     .setRelayerAddress(relayerData.address)
     .setAsymmetricKeyID(asymmetricKeyID);
   const signature = await s.sign(web3);
-  await s.post(signature, web3);
+  return async (whisper) => {
+    await s.post(signature, web3, whisper);
+  };
 };
 
 
@@ -70,5 +78,7 @@ export const approveAndCall = async (identityAddress, to, value, data, baseToken
     .setRelayerAddress(relayerData.address)
     .setAsymmetricKeyID(asymmetricKeyID);
   const signature = await s.sign(web3);
-  await s.post(signature, web3);
+  return async (whisper) => {
+    await s.post(signature, web3, whisper);
+  };
 };

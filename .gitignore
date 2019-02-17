@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+gas-relayer.log
+
 # embark
 .embark/
 chains.json
